@@ -4,14 +4,14 @@ import SiteHeader from "./SiteHeader";
 export default function Landing() {
   return <div className="landing-page">
     <SiteHeader />
-    <main id="main-content">
+    <main>
       <section className="hero-section" id="home" aria-labelledby="landing-title">
         <div className="torn-paper" aria-hidden="true" />
         <div className="hero-overlay" aria-hidden="true" />
         <div className="title-container">
           <h1 id="landing-title" className="main-title">VŨ ĐIỆU<br /><span>RỪNG XANH</span></h1>
           <p className="hero-description">Cùng thiên nhiên tạo nên những giá trị xanh bền vững</p>
-          <Link className="btn-contact hero-cta" href="/dashboard">Khám phá không gian xanh <span aria-hidden="true">→</span></Link>
+          <Link className="btn-contact hero-cta" href="/dashboard">Khám phá không gian xanh <span aria-hidden="true">↗</span></Link>
         </div>
       </section>
       <section className="landing-about" id="about">
