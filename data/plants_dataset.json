@@ -1,0 +1,282 @@
+[
+  {
+    "ten": "Cây Xoài Cát Hòa Lộc",
+    "nhom": "Cây ăn quả",
+    "mo_ta": "Giống xoài nổi tiếng với thịt quả mịn, ngọt đậm và hương thơm đặc trưng.",
+    "cham_soc": "Tưới nước 2-3 lần/tuần, cần nhiều ánh nắng mặt trời và bón phân hữu cơ định kỳ.",
+    "anh": "anh1.jpg"
+  },
+  {
+    "ten": "Cây Bưởi Da Xanh",
+    "nhom": "Cây ăn quả",
+    "mo_ta": "Loại cây ăn quả cho tép bưởi màu hồng đỏ, vị ngọt thanh và dễ trồng.",
+    "cham_soc": "Giữ đất ẩm vừa phải, tỉa cành thừa sau mỗi đợt thu hoạch quả.",
+    "anh": "anh2.jpg"
+  },
+  {
+    "ten": "Cây Dâu Tây",
+    "nhom": "Cây ăn quả",
+    "mo_ta": "Cây thân thảo thấp, quả đỏ mọng, vị chua ngọt thích hợp trồng chậu hoặc ban công.",
+    "cham_soc": "Tưới nước hàng ngày vào sáng sớm, cần ánh nắng nhẹ và đất tơi xốp.",
+    "anh": "anh3.jpg"
+  },
+  {
+    "ten": "Cây Chanh Vàng",
+    "nhom": "Cây ăn quả",
+    "mo_ta": "Cây ăn quả mọng nước, vỏ vàng mỏng, tỏa mùi thơm dễ chịu.",
+    "cham_soc": "Ưa nắng toàn phần, tưới nước khi mặt đất khô, bón phân vi lượng thường xuyên.",
+    "anh": "anh4.jpg"
+  },
+  {
+    "ten": "Cây Ổi Nữ Hoàng",
+    "nhom": "Cây ăn quả",
+    "mo_ta": "Giống ổi ruột trắng, giòn ngọt, cây nhanh cho trái sau vài tháng trồng.",
+    "cham_soc": "Cần nhiều ánh sáng, tưới nước đều đặn và bọc quả khi còn nhỏ.",
+    "anh": "anh5.jpg"
+  },
+  {
+    "ten": "Cây Mãn Cầu Ta (Mãng Cầu)",
+    "nhom": "Cây ăn quả",
+    "mo_ta": "Quả nhiều múi dai ngọt, thân gỗ nhỏ thích hợp trồng sân vườn.",
+    "cham_soc": "Chịu hạn tốt, thụ phấn bổ sung bằng tay để quả tròn đẹp hơn.",
+    "anh": "anh6.jpg"
+  },
+  {
+    "ten": "Cây Nhãn Xuồng Cơm Vàng",
+    "nhom": "Cây ăn quả",
+    "mo_ta": "Cây ăn quả nhiệt đới, cơm nhãn dày, ráo nước và rất ngọt.",
+    "cham_soc": "Tưới nước đầy đủ giai đoạn ra hoa kết quả, cắt tỉa tán cây hàng năm.",
+    "anh": "anh7.jpg"
+  },
+  {
+    "ten": "Cây Khế Ngọt",
+    "nhom": "Cây ăn quả",
+    "mo_ta": "Cây thân gỗ nhỏ, ra hoa chùm màu tím và quả hình sao 5 cánh.",
+    "cham_soc": "Ưa bóng râm nhẹ hoặc nắng vừa, giữ ẩm gốc tốt bằng rơm rạ.",
+    "anh": "anh8.jpg"
+  },
+  {
+    "ten": "Cây Đu Đủ Hồng Phi",
+    "nhom": "Cây ăn quả",
+    "mo_ta": "Cây thân thảo cao, ruột đỏ cam, vị ngọt đậm và ra quả quanh năm.",
+    "cham_soc": "Đất phải thoát nước cực tốt để tránh thối rễ, tưới 2 ngày/lần.",
+    "anh": "anh9.jpg"
+  },
+  {
+    "ten": "Cây Mận An Phước",
+    "nhom": "Cây ăn quả",
+    "mo_ta": "Quả hình chuông màu đỏ thẫm, thịt mọng nước và không hạt.",
+    "cham_soc": "Tưới nước thường xuyên mùa khô, bón phân Kali khi cây bắt đầu đậu trái.",
+    "anh": "anh10.jpg"
+  },
+  {
+    "ten": "Cây Bàng Đài Loan",
+    "nhom": "Cây bóng mát",
+    "mo_ta": "Thân thẳng, tán lá mọc thành từng tầng tròn xòe rộng tạo cảnh quan hiện đại.",
+    "cham_soc": "Chịu khắc nghiệt tốt, cắt tỉa cành thấp để cây phát triển chiều cao.",
+    "anh": "anh11.jpg"
+  },
+  {
+    "ten": "Cây Phượng Vĩ",
+    "nhom": "Cây bóng mát",
+    "mo_ta": "Cây bóng mát lớn, nổi tiếng với sắc hoa đỏ rực rỡ vào mùa hè.",
+    "cham_soc": "Chịu hạn giỏi, cần không gian rộng để tán xòe tự do.",
+    "anh": "anh12.jpg"
+  },
+  {
+    "ten": "Cây Bằng Lăng Tím",
+    "nhom": "Cây bóng mát",
+    "mo_ta": "Tán rộng tạo bóng mát tốt, hoa nở thành chùm màu tím nhạt thơ mộng.",
+    "cham_soc": "Tưới nước đều khi cây còn nhỏ, tỉa cành khô sau mùa hoa.",
+    "anh": "anh13.jpg"
+  },
+  {
+    "ten": "Cây Chuông Vàng",
+    "nhom": "Cây bóng mát",
+    "mo_ta": "Cây thân gỗ nhỏ đến trung bình, hoa có hình chuông màu vàng rực rỡ.",
+    "cham_soc": "Cần nhiều nắng, tưới nước 2 lần/tuần, bón phân định kỳ 2 tháng/lần.",
+    "anh": "anh14.jpg"
+  },
+  {
+    "ten": "Cây Giáng Hương",
+    "nhom": "Cây bóng mát",
+    "mo_ta": "Cây gỗ quý có tán lá xanh mượt, hoa vàng nhỏ có hương thơm nhẹ.",
+    "cham_soc": "Đòi hỏi đất sâu và thoát nước, ít tốn công chăm sóc khi đã lớn.",
+    "anh": "anh15.jpg"
+  },
+  {
+    "ten": "Cây Lộc Vừng",
+    "nhom": "Cây bóng mát",
+    "mo_ta": "Cây bóng mát mang ý nghĩa may mắn, hoa màu đỏ rủ xuống như chuỗi ngọc.",
+    "cham_soc": "Ưa nước, có thể trồng gần hồ nước, tưới giữ ẩm gốc hàng ngày.",
+    "anh": "anh16.jpg"
+  },
+  {
+    "ten": "Cây Sữa (Hoa Sữa)",
+    "nhom": "Cây bóng mát",
+    "mo_ta": "Cây cao lớn, tán xòe rộng, hoa tỏa hương nồng nàn vào mùa thu.",
+    "cham_soc": "Sinh trưởng nhanh, chỉ cần tưới nước trong những năm đầu.",
+    "anh": "anh17.jpg"
+  },
+  {
+    "ten": "Cây Sao Đen",
+    "nhom": "Cây bóng mát",
+    "mo_ta": "Cây thân gỗ cao lớn thẳng đứng, tán hình chóp dày che nắng rất tốt.",
+    "cham_soc": "Thích hợp trồng đường phố hoặc sân vườn rộng, ít bị sâu bệnh.",
+    "anh": "anh18.jpg"
+  },
+  {
+    "ten": "Cây Muồng Hoàng Yến (Yến Anh)",
+    "nhom": "Cây bóng mát",
+    "mo_ta": "Cho tán che nắng tuyệt vời cùng những chùm hoa màu vàng rủ xuống quyến rũ.",
+    "cham_soc": "Cần ánh sáng mặt trời đầy đủ, chịu được đất khô hạn tốt.",
+    "anh": "anh19.jpg"
+  },
+  {
+    "ten": "Cây Me Tây (Cây Còng)",
+    "nhom": "Cây bóng mát",
+    "mo_ta": "Cây có tán lá cực rộng, lá khép lại vào buổi tối hoặc khi trời mưa.",
+    "cham_soc": "Cần diện tích đất lớn, cắt tỉa cành mục trước mùa mưa bão.",
+    "anh": "anh20.jpg"
+  },
+  {
+    "ten": "Cây Trầu Bà Thanh Xuân",
+    "nhom": "Cây trong nhà",
+    "mo_ta": "Lá xẻ thùy độc đáo, lọc không khí rất tốt và chịu được bóng râm.",
+    "cham_soc": "Tưới 2 lần/tuần, lau sạch lá định kỳ và tránh ánh nắng gay gắt.",
+    "anh": "anh21.jpg"
+  },
+  {
+    "ten": "Cây Lưỡi Hổ",
+    "nhom": "Cây trong nhà",
+    "mo_ta": "Lá mọc thẳng đứng cứng cáp, nhả khí oxy vào ban đêm giúp ngủ ngon.",
+    "cham_soc": "Chịu hạn giỏi, chỉ cần tưới 10-15 ngày/lần khi đất thật khô.",
+    "anh": "anh22.jpg"
+  },
+  {
+    "ten": "Cây Kim Tiền",
+    "nhom": "Cây trong nhà",
+    "mo_ta": "Lá xanh bóng mượt mọc đối xứng, tượng trưng cho tài lộc và may mắn.",
+    "cham_soc": "Sợ úng nước, tưới 1-2 tuần/lần, để nơi có ánh sáng tán xạ.",
+    "anh": "anh23.jpg"
+  },
+  {
+    "ten": "Cây Kim Ngân",
+    "nhom": "Cây trong nhà",
+    "mo_ta": "Thân cây bện thắt đẹp mắt, xòe lá 5 nhánh tượng trưng cho ngũ hành.",
+    "cham_soc": "Tưới vừa phải, xịt phun sương lên lá để giữ độ ẩm phòng máy lạnh.",
+    "anh": "anh24.jpg"
+  },
+  {
+    "ten": "Cây Lan Ý (Huệ Hòa Bình)",
+    "nhom": "Cây trong nhà",
+    "mo_ta": "Lá xanh đậm cùng hoa màu trắng thanh khiết, lọc độc tố benzen rất hiệu quả.",
+    "cham_soc": "Giữ đất ẩm đều, tưới ngay khi thấy lá hơi rủ xuống.",
+    "anh": "anh25.jpg"
+  },
+  {
+    "ten": "Cây Bàng Singapore",
+    "nhom": "Cây trong nhà",
+    "mo_ta": "Lá to bản tròn màu xanh đậm, mang phong cách trang trí nội thất hiện đại.",
+    "cham_soc": "Đặt gần cửa sổ, tưới nước khi lớp đất bề mặt đã khô hoàn toàn.",
+    "anh": "anh26.jpg"
+  },
+  {
+    "ten": "Cây Ngũ Gia Bì",
+    "nhom": "Cây trong nhà",
+    "mo_ta": "Lá xòe như bàn tay, có khả năng xua đuổi muỗi và côn trùng tự nhiên.",
+    "cham_soc": "Dễ sống, tưới 1-2 lần/tuần, thỉnh thoảng mang ra nắng nhẹ.",
+    "anh": "anh27.jpg"
+  },
+  {
+    "ten": "Cây Trầu Bà Đế Vương Đỏ",
+    "nhom": "Cây trong nhà",
+    "mo_ta": "Lá non màu đỏ tía quý phái, tạo điểm nhấn sang trọng cho bàn làm việc.",
+    "cham_soc": "Ưa bóng râm, tưới nước nhẹ nhàng quanh gốc 2 lần/tuần.",
+    "anh": "anh28.jpg"
+  },
+  {
+    "ten": "Cây Tuyết Tùng (Tùng Bồng Lai)",
+    "nhom": "Cây trong nhà",
+    "mo_ta": "Lá nhỏ dạng kim mọc thành chùm xanh mượt, thích hợp để bàn trang trí.",
+    "cham_soc": "Cần độ ẩm cao, phun sương lá hàng ngày và tưới gốc vừa đủ.",
+    "anh": "anh29.jpg"
+  },
+  {
+    "ten": "Cây Ngọc Ngân",
+    "nhom": "Cây trong nhà",
+    "mo_ta": "Lá xen kẽ dải màu trắng xanh bắt mắt, đại diện cho tình yêu chân thành.",
+    "cham_soc": "Có thể trồng thủy sinh hoặc trồng đất, tưới 2 lần/tuần.",
+    "anh": "anh30.jpg"
+  },
+  {
+    "ten": "Cây Cà Chua",
+    "nhom": "Cây nông nghiệp",
+    "mo_ta": "Cây rau ăn quả ngắn ngày, chứa nhiều vitamin C và lycopene tốt cho sức khỏe.",
+    "cham_soc": "Cần làm giàn đỡ, tưới nước hàng ngày tại gốc và cần nhiều nắng.",
+    "anh": "anh31.jpg"
+  },
+  {
+    "ten": "Cây Ớt Chỉ Thiên",
+    "nhom": "Cây nông nghiệp",
+    "mo_ta": "Cây gia vị dễ trồng, quả nhỏ mọc hướng lên trời và có độ cay nồng.",
+    "cham_soc": "Chịu nắng tốt, tưới nước vừa đủ để tránh úng thối rễ.",
+    "anh": "anh32.jpg"
+  },
+  {
+    "ten": "Cây Lúa Nước",
+    "nhom": "Cây nông nghiệp",
+    "mo_ta": "Cây lương thực chủ đạo cung cấp hạt gạo cho đời sống hàng ngày.",
+    "cham_soc": "Cần duy trì mực nước trên ruộng theo từng giai đoạn đẻ nhánh và làm bông.",
+    "anh": "anh33.jpg"
+  },
+  {
+    "ten": "Cây Ngô (Bắp)",
+    "nhom": "Cây nông nghiệp",
+    "mo_ta": "Cây ngũ cốc thân thảo cao, bắp hạt đều nhiều dinh dưỡng.",
+    "cham_soc": "Vun gốc cao khi cây phát triển, bón phân đạm và tưới giữ ẩm đất.",
+    "anh": "anh34.jpg"
+  },
+  {
+    "ten": "Cây Cà Phê Robusta",
+    "nhom": "Cây nông nghiệp",
+    "mo_ta": "Cây công nghiệp chủ lực mang lại giá trị kinh tế cao tại Tây Nguyên.",
+    "cham_soc": "Cần tưới ép hoa vào mùa khô và tỉa cành định kỳ sau khi thu hoạch.",
+    "anh": "anh35.jpg"
+  },
+  {
+    "ten": "Cây Chè (Trà)",
+    "nhom": "Cây nông nghiệp",
+    "mo_ta": "Cây thu hoạch búp non làm thức uống truyền thống đậm đà.",
+    "cham_soc": "Trồng trên đất đồi dốc thoát nước tốt, đốn hái cành đúng kỹ thuật.",
+    "anh": "anh36.jpg"
+  },
+  {
+    "ten": "Cây Đậu Tương (Đậu Nành)",
+    "nhom": "Cây nông nghiệp",
+    "mo_ta": "Cây họ đậu ngắn ngày, hạt giàu đạm thực vật và cải tạo đất tốt.",
+    "cham_soc": "Tới nước nhẹ, làm cỏ đợt đầu và phòng trừ sâu cuốn lá.",
+    "anh": "anh37.jpg"
+  },
+  {
+    "ten": "Cây Dưa Hấu",
+    "nhom": "Cây nông nghiệp",
+    "mo_ta": "Cây bò mặt đất cho quả to mọng nước, vị ngọt mát giải nhiệt.",
+    "cham_soc": "Bấm ngọn tuyển quả đẹp, giảm tưới nước giai đoạn dưa sắp thu hoạch.",
+    "anh": "anh38.jpg"
+  },
+  {
+    "ten": "Cây Khoai Khoai Mì (Sắn)",
+    "nhom": "Cây nông nghiệp",
+    "mo_ta": "Cây lấy củ chứa hàm lượng tinh bột cao, dễ trồng trên đất bạc màu.",
+    "cham_soc": "Trồng bằng giâm cành, làm sạch cỏ dại giai đoạn 3 tháng đầu.",
+    "anh": "anh39.jpg"
+  },
+  {
+    "ten": "Cây Dưa Leo (Dưa Chuột)",
+    "nhom": "Cây nông nghiệp",
+    "mo_ta": "Cây dây leo ngắn ngày, quả giòn ngọt dùng ăn sống hoặc làm salad.",
+    "cham_soc": "Cần cắm giàn cho dây leo, tưới nước 2 lần/ngày vào mùa nóng.",
+    "anh": "anh40.jpg"
+  }
+]
