@@ -13,7 +13,7 @@ $fullTitle = $pageTitle === '' ? 'Vũ Điệu Rừng Xanh' : $pageTitle . ' | V�
     <title><?= e($fullTitle) ?></title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;900&family=Patrick+Hand&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="<?= e($bodyClass) ?>">
