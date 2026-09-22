@@ -15,7 +15,6 @@ require __DIR__ . '/includes/navbar.php';
         <div class="torn-paper" aria-hidden="true"></div>
         <div class="hero-overlay"></div>
         <div class="title-container">
-            <p class="eyebrow" style="color:#dfe8d2;">KHÔNG GIAN SỐNG XANH</p>
             <h1 class="main-title">VŨ ĐIỆU<br>RỪNG XANH</h1>
             <p class="hero-description">Cùng thiên nhiên tạo nên những giá trị xanh bền vững.</p>
             <a class="btn-brand hero-cta" href="dashboard.php">Khám phá bộ sưu tập ↗</a>
