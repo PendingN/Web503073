@@ -19,6 +19,10 @@
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78Z"/></svg>
             Yêu thích <span class="favorite-count"><?= count(favorite_ids()) ?></span>
         </a>
+        <a class="dashboard-nav-link<?= $dashboardActive === 'profile' ? ' is-active' : '' ?>" <?= $dashboardActive === 'profile' ? 'aria-current="page"' : '' ?> href="profile.php">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c.8-3.6 3.1-5.5 7-5.5s6.2 1.9 7 5.5"/></svg>
+            Trang cá nhân
+        </a>
     </nav>
     <div class="dashboard-sidebar-foot">
         <span>40 giống cây xanh</span>
