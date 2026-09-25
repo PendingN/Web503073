@@ -24,7 +24,6 @@ require __DIR__ . '/includes/header.php';
                     <p class="lead">Quản lý thông tin cơ bản và những lựa chọn xanh bạn đã lưu lại.</p>
                 </div>
             </header>
-
             <section class="profile-card">
                 <div class="profile-avatar"><?= e(strtoupper(substr($userEmail, 0, 1))) ?></div>
                 <div><p class="eyebrow">TÀI KHOẢN HIỆN TẠI</p><h2><?= e($userEmail) ?></h2><p>Phiên làm việc được lưu trên trình duyệt này.</p></div>

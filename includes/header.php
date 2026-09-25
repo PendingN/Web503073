@@ -17,4 +17,3 @@ $fullTitle = $pageTitle === '' ? 'Vũ Điệu Rừng Xanh' : $pageTitle . ' | V�
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="<?= e($bodyClass) ?>">
-
