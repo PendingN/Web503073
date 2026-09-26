@@ -33,7 +33,7 @@ require __DIR__ . '/includes/navbar.php';
                 <p class="detail-description"><?= e($plant['description']) ?></p>
                 <div class="care-box"><strong>Gợi ý chăm sóc</strong><?= e($plant['care']) ?></div>
                 <div class="dashboard-actions">
-                    <form class="favorite-form" method="post" action="favorite-action.php" style="position:static;">
+                    <form class="favorite-form" method="post" action="actions/favorite-action.php" style="position:static;">
                         <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
                         <input type="hidden" name="plant_id" value="<?= (int) $plant['id'] ?>">
                         <input type="hidden" name="return_to" value="<?= e(current_request_url()) ?>">

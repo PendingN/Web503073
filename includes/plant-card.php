@@ -6,7 +6,7 @@ $returnTo = $returnTo ?? current_request_url();
     <a class="plant-card-image" href="plant-detail.php?id=<?= (int) $plant['id'] ?>">
         <img src="images/<?= e($plant['image']) ?>" alt="<?= e($plant['name']) ?>" loading="lazy" width="900" height="1200">
     </a>
-    <form class="favorite-form" method="post" action="favorite-action.php">
+    <form class="favorite-form" method="post" action="actions/favorite-action.php">
         <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
         <input type="hidden" name="plant_id" value="<?= (int) $plant['id'] ?>">
         <input type="hidden" name="return_to" value="<?= e($returnTo) ?>">

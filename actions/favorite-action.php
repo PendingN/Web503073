@@ -1,13 +1,16 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/includes/init.php';
+require_once __DIR__ . '/../includes/init.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    redirect_to('collection.php');
+    redirect_to('../collection.php');
 }
 
 $returnTo = safe_return_url($_POST['return_to'] ?? null);
+if (!str_starts_with($returnTo, '/')) {
+    $returnTo = '../' . $returnTo;
+}
 $plantId = filter_var($_POST['plant_id'] ?? null, FILTER_VALIDATE_INT);
 
 if (!valid_csrf_token($_POST['csrf_token'] ?? null) || $plantId === false || find_plant((int) $plantId) === null) {
