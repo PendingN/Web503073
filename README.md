@@ -1,10 +1,10 @@
 # Vũ Điệu Rừng Xanh — PHP thuần
 
-Đây là phiên bản PHP độc lập của website Next.js ban đầu. Thư mục này chỉ dùng PHP, HTML5, CSS3 và JavaScript thuần; dữ liệu cây, blog và admin là dữ liệu demo trong các mảng PHP, không cần MySQL.
+Thư mục này chỉ dùng PHP, HTML5, CSS3 và JavaScript thuần; dữ liệu cây, blog và admin là dữ liệu demo trong các mảng PHP, không cần MySQL.
 
 ## Chạy bằng XAMPP
 
-1. Sao chép toàn bộ thư mục `php-version` vào `C:\xampp\htdocs\project-name\`.
+1. Sao chép toàn bộ thư mục `project-name` vào `C:\xampp\htdocs\project-name\`.
 2. Mở XAMPP và khởi động Apache.
 3. Truy cập `http://localhost/project-name/`.
 
