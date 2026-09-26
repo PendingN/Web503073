@@ -1,76 +1,78 @@
-# Vũ Điệu Rừng Xanh — PHP
+# Vũ Điệu Rừng Xanh — PHP + MySQL
 
-Thư mục này chỉ dùng PHP, HTML5, CSS3 và JavaScript thuần; dữ liệu cây, blog và admin là dữ liệu demo trong các mảng PHP, không cần MySQL.
+Website dùng PHP 8.0+, MySQL/MariaDB, HTML, CSS và JavaScript thuần. Backend lưu tài khoản, danh mục cây và cây yêu thích trong MySQL. Bài viết vẫn nằm trong `data/content.php`; form newsletter hiện chỉ hiển thị thông báo ở giao diện.
 
 ## Chạy bằng XAMPP
 
-1. Sao chép toàn bộ thư mục `project-name` vào `C:\xampp\htdocs\project-name\`.
-2. Mở XAMPP và khởi động Apache.
-3. Truy cập `http://localhost/project-name/`.
+1. Mở thư mục `C:\xampp\htdocs\Web503073` và khởi động **Apache** cùng **MySQL** trong XAMPP.
+2. Mở terminal PowerShell tại thư mục dự án:
 
-Nếu đổi tên thư mục thành `green-site`, URL sẽ là `http://localhost/green-site/`.
+   ```powershell
+   cd C:\xampp\htdocs\Web503073
+   C:\xampp\php\php.exe scripts/setup-database.php
+   ```
 
-## Chạy bằng Laragon
+   Lệnh tạo database `web503073`, ba bảng `users`, `plants`, `favorites` và nhập 40 cây từ `data/plants.php`. Chạy lại lệnh sẽ giữ nguyên tài khoản, cây và mục yêu thích đã có.
+3. Tạo tài khoản quản trị bằng CLI:
 
-Đặt thư mục vào `C:\laragon\www\project-name\`, khởi động Laragon và mở `http://project-name.test/` hoặc `http://localhost/project-name/`.
+   ```powershell
+   C:\xampp\php\php.exe scripts/create-admin.php
+   ```
 
-## Tài khoản demo
+   Nhập họ tên, email riêng cho quản trị viên và mật khẩu ít nhất 8 ký tự, tối đa 72 byte. Mật khẩu nhập ở terminal có hiển thị. Lệnh không thay đổi hoặc nâng quyền tài khoản đã tồn tại.
+4. Mở [website](http://localhost/Web503073/), [đăng ký](http://localhost/Web503073/register.php) hoặc [đăng nhập](http://localhost/Web503073/login.php). Đăng nhập bằng tài khoản quản trị rồi chọn **Quản trị** trên dashboard.
 
-- Email: `demo@dv03.vn`
-- Mật khẩu: `123456`
+Không còn tài khoản demo dùng mật khẩu cố định. Tài khoản đăng ký trên website luôn có vai trò thành viên.
 
-Đăng nhập chỉ phục vụ minh họa. Session PHP lưu email người dùng và danh sách cây yêu thích trong cùng trình duyệt.
+## Cấu hình database
 
-## Các route chính
+Mặc định: host `127.0.0.1`, port `3306`, database `web503073`, user `root`, mật khẩu rỗng (XAMPP local). Nếu khác, sao chép `config/database.local.example.php` thành `config/database.local.php` rồi sửa thông tin. File cấu hình local được Git bỏ qua.
+
+Có thể dùng biến môi trường `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`; chúng được ưu tiên hơn file local. CLI tạo admin cũng nhận `APP_ADMIN_NAME`, `APP_ADMIN_EMAIL`, `APP_ADMIN_PASSWORD`.
+
+PHP cần bật `pdo_mysql` và `mbstring`; bộ kiểm tra cần thêm `curl`. XAMPP hiện tại đã có các extension này. Khi kết nối hoặc bảng database chưa sẵn sàng, website trả HTTP 503 và ghi chi tiết vào error log của server.
+
+## Chức năng và route
 
 | URL | Chức năng |
 |---|---|
-| `index.php` | Landing page |
-| `login.php` | Đăng nhập demo |
-| `actions/logout.php` | Đăng xuất |
-| `dashboard.php` | Dashboard và 4 cây nổi bật |
-| `collection.php` | 40 cây, tìm kiếm và lọc nhóm |
-| `favorites.php` | Cây yêu thích trong PHP session |
-| `profile.php` | Trang cá nhân |
-| `plant-detail.php?id=22` | Chi tiết cây |
-| `blog.php` | Danh sách bài viết |
-| `blog-post.php?slug=...` | Chi tiết bài viết |
-| `admin.php` | Giao diện quản trị demo |
+| `index.php`, `dashboard.php` | Trang chủ và tổng quan công khai |
+| `collection.php?search=...&category=...` | Tìm kiếm và lọc cây từ MySQL |
+| `plant-detail.php?id=22` | Chi tiết cây; ID không tồn tại trả 404 |
+| `register.php`, `login.php` | Đăng ký, đăng nhập bằng mật khẩu đã băm |
+| `favorites.php` | Danh sách yêu thích riêng, lưu qua các lần đăng nhập |
+| `profile.php` | Sửa họ tên, email, mật khẩu; cần đăng nhập |
+| `admin.php` | Thống kê, tìm kiếm, phân trang, xem/sửa/khóa/mở khóa người dùng |
+| `blog.php`, `blog-post.php?slug=...` | Bài viết từ dữ liệu PHP |
 
-Tìm kiếm dùng `collection.php?search=...&category=...`. Thao tác yêu thích dùng POST tới `actions/favorite-action.php`, có CSRF token và redirect về trang trước đó.
+Admin sửa họ tên và email; tài khoản quản trị không thể bị khóa qua website. Khóa tài khoản kết thúc các phiên đăng nhập, và mở khóa yêu cầu người dùng đăng nhập lại. Đổi email hoặc mật khẩu ở trang cá nhân cần mật khẩu hiện tại và kết thúc các phiên khác.
 
-Các trang hiển thị nằm ở thư mục gốc. Thư mục `actions/` chứa các file xử lý thao tác (`favorite-action.php`, `logout.php`); `includes/` chứa phần giao diện dùng chung và khởi tạo ứng dụng. `login.php` hiển thị form và xử lý đăng nhập ngay trên cùng trang.
+Các thao tác yêu thích, sửa tài khoản và đăng xuất dùng POST với CSRF token. Câu lệnh SQL dùng prepared statements; dữ liệu hiển thị được escape. Session chỉ lưu ID và phiên bản đăng nhập, dùng cookie HttpOnly, SameSite=Lax và Secure khi chạy HTTPS.
 
-## Mapping từ Next.js
+## Cấu trúc
 
-| Next.js | PHP |
-|---|---|
-| `app/page.tsx` + `components/Landing.tsx` | `index.php` |
-| `components/SiteHeader.tsx` | `includes/navbar.php` |
-| `app/login/page.tsx` + login API | `login.php`, `actions/logout.php` |
-| `app/dashboard/page.tsx` | `dashboard.php` |
-| Dashboard collection/favorites state | `collection.php`, `favorites.php`, `actions/favorite-action.php` |
-| `data/plants_dataset.json` | `data/plants.php` |
-| `app/blog/page.tsx` | `blog.php` |
-| `app/blog/[slug]/page.tsx` | `blog-post.php` |
-| `app/admin/page.tsx` | `admin.php` |
-| `app/globals.css` + `shared/theme.css` | `css/style.css` |
-| React state/event handlers | `js/main.js` và PHP session |
+- Trang PHP ở thư mục gốc; `actions/` xử lý POST.
+- `includes/` chứa giao diện, khởi tạo, kết nối PDO, truy vấn và kiểm tra quyền.
+- `config/` cấu hình kết nối; `database/schema.sql` định nghĩa bảng.
+- `scripts/` chứa lệnh setup và tạo admin, chỉ chạy bằng CLI.
+- `data/plants.php` là dữ liệu seed; `data/content.php` chứa bài viết.
+- `css/`, `js/`, `images/` chứa tài nguyên; `tests/` chứa kiểm tra tích hợp.
 
-Các include trong `includes/` có thể tái sử dụng bằng `require`/`require_once`. Ảnh nằm trong `images/`, không phụ thuộc vào thư mục asset của Next.js.
-
-## Kiểm tra nhanh bằng PHP CLI
-
-Từ thư mục project, chạy:
+## Kiểm tra
 
 ```powershell
-$phpFiles = Get-ChildItem -Recurse -Filter *.php
-foreach ($file in $phpFiles) { C:\xampp\php\php.exe -l $file.FullName }
+Get-ChildItem -Recurse -Filter *.php | ForEach-Object { C:\xampp\php\php.exe -l $_.FullName }
+C:\xampp\php\php.exe tests/run.php
+C:\xampp\php\php.exe tests/run.php --subdirectory
 ```
 
-Hoặc chạy server PHP tích hợp:
+Bộ kiểm tra tự tạo database `web503073_test_<random>` và server PHP local, kiểm tra các luồng thực tế qua HTTP rồi xóa tài nguyên tạm. `--subdirectory` kiểm tra đường dẫn có tên thư mục như khi chạy trong XAMPP. MySQL phải đang chạy và tài khoản database cần quyền tạo/xóa database test. Dữ liệu của database chính được giữ nguyên.
+
+Để chạy bằng server PHP tích hợp sau khi setup database:
 
 ```powershell
 C:\xampp\php\php.exe -S 127.0.0.1:8090 -t .
 ```
+
+Mở [http://127.0.0.1:8090/](http://127.0.0.1:8090/). Với Laragon, đặt dự án trong `C:\laragon\www\Web503073`, bật web server/MySQL và chạy hai lệnh CLI bằng PHP của Laragon.
 

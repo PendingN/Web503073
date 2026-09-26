@@ -2,7 +2,9 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../includes/init.php';
-
-unset($_SESSION['user_email']);
-set_flash('Bạn đã đăng xuất khỏi phiên làm việc.');
-redirect_to('../login.php');
+require_post();
+require_csrf();
+$_SESSION = [];
+session_regenerate_id(true);
+set_flash('Bạn đã đăng xuất.');
+redirect_to(app_url('login.php'));

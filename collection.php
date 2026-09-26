@@ -3,19 +3,12 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/includes/init.php';
 
-$search = trim((string) ($_GET['search'] ?? ''));
-$category = trim((string) ($_GET['category'] ?? ''));
-$lowerSearch = function_exists('mb_strtolower') ? mb_strtolower($search, 'UTF-8') : strtolower($search);
+$search = mb_substr(trim(request_string($_GET, 'search')), 0, 200, 'UTF-8');
+$category = trim(request_string($_GET, 'category'));
 $categories = array_values(array_unique(array_column($plants, 'category')));
 sort($categories);
 
-$filteredPlants = array_values(array_filter($plants, static function (array $plant) use ($lowerSearch, $category): bool {
-    $haystack = implode(' ', [$plant['name'], $plant['category'], $plant['description'], $plant['care']]);
-    $haystack = function_exists('mb_strtolower') ? mb_strtolower($haystack, 'UTF-8') : strtolower($haystack);
-    $matchesSearch = $lowerSearch === '' || str_contains($haystack, $lowerSearch);
-    $matchesCategory = $category === '' || $plant['category'] === $category;
-    return $matchesSearch && $matchesCategory;
-}));
+$filteredPlants = list_plants($search, $category);
 
 $pageTitle = 'Bộ sưu tập';
 $bodyClass = 'dashboard-page';
@@ -32,7 +25,7 @@ require __DIR__ . '/includes/header.php';
             <?php if ($flashMessage !== null): ?><div class="status-note" data-auto-dismiss><?= e($flashMessage) ?></div><?php endif; ?>
             <header>
                 <div>
-                    <p class="eyebrow">40 GIỐNG CÂY XANH</p>
+                    <p class="eyebrow"><?= count($plants) ?> GIỐNG CÂY XANH</p>
                     <h1>Bộ sưu tập</h1>
                     <p class="lead">Tìm một người bạn xanh phù hợp với ánh sáng, không gian và nhịp sống của bạn.</p>
                 </div>
@@ -56,7 +49,7 @@ require __DIR__ . '/includes/header.php';
 
             <div class="section-heading">
                 <h2><?= count($filteredPlants) ?> kết quả</h2>
-                <span class="sample-label">Yêu thích được lưu trong phiên trình duyệt này</span>
+                <span class="sample-label"><?= current_user() ? 'Yêu thích được lưu trong tài khoản của bạn' : 'Đăng nhập để lưu cây yêu thích' ?></span>
             </div>
 
             <?php if ($filteredPlants === []): ?>

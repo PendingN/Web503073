@@ -1,7 +1,7 @@
 <?php
 $activePage = $activePage ?? 'home';
-$loginTarget = $activePage === 'login' ? 'dashboard.php' : 'login.php';
-$loginLabel = $activePage === 'login' ? 'Khám phá' : 'Đăng nhập';
+$loginTarget = current_user() ? 'profile.php' : ($activePage === 'login' ? 'dashboard.php' : 'login.php');
+$loginLabel = current_user() ? 'Tài khoản' : ($activePage === 'login' ? 'Khám phá' : 'Đăng nhập');
 ?>
 <header class="navbar site-header">
     <a class="brand-link" href="index.php" aria-label="Vũ Điệu Rừng Xanh — Trang chủ">

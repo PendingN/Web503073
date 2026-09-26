@@ -25,7 +25,7 @@
         </a>
     </nav>
     <div class="dashboard-sidebar-foot">
-        <span>40 giống cây xanh</span>
+        <span><?= count($plants) ?> giống cây xanh</span>
         <a href="blog.php">Nhật ký chăm cây →</a>
     </div>
 </aside>
