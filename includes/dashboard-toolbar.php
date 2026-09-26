@@ -13,7 +13,7 @@
         <a href="index.php">Trang chủ ↗</a>
         <a href="blog.php">Blog ↗</a>
         <a href="admin.php">Quản trị ↗</a>
-        <?php if (!empty($_SESSION['user_email'])): ?><a href="logout.php">Đăng xuất</a><?php endif; ?>
+        <?php if (!empty($_SESSION['user_email'])): ?><a href="actions/logout.php">Đăng xuất</a><?php endif; ?>
     </nav>
 </header>
 
