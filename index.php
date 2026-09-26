@@ -28,7 +28,7 @@ require __DIR__ . '/includes/navbar.php';
         </div>
         <div>
             <p>Vũ Điệu Rừng Xanh là nơi bạn có thể tìm thấy những giống cây phù hợp với không gian sống, đọc những ghi chú chăm cây đơn giản và lưu lại các lựa chọn yêu thích của mình.</p>
-            <a class="btn-outline-brand" href="collection.php">Xem 40 giống cây ↗</a>
+            <a class="btn-outline-brand" href="collection.php">Xem <?= count($plants) ?> giống cây ↗</a>
         </div>
     </section>
 </main>

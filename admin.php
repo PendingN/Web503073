@@ -2,61 +2,123 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/includes/init.php';
-
-$pageTitle = 'Quản trị';
+$admin = require_admin();
+$search = mb_substr(trim(request_string($_GET, 'search')), 0, 200, 'UTF-8');
+$status = request_string($_GET, 'status');
+if (!in_array($status, ['active', 'blocked'], true)) {
+    $status = '';
+}
+$page = filter_var($_GET['page'] ?? 1, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 1;
+$result = list_users($search, $status, $page);
+$stats = user_statistics();
+$editId = filter_var($_GET['edit'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+$editUser = $editId === false ? null : find_user((int) $editId);
+if (isset($_GET['edit']) && $editUser === null) {
+    abort_request(404, 'Không tìm thấy tài khoản này.');
+}
+$errors = $_SESSION['admin_errors'] ?? [];
+$input = $_SESSION['admin_input'] ?? null;
+unset($_SESSION['admin_errors'], $_SESSION['admin_input']);
+if ($editUser !== null && ($input['id'] ?? null) !== (int) $editUser['id']) {
+    $input = ['name' => $editUser['name'], 'email' => $editUser['email']];
+    $errors = [];
+}
+$pageTitle = 'Quản lý người dùng';
 $bodyClass = 'admin-page';
 $flashMessage = take_flash();
-$statusClasses = ['Hoàn thành' => 'status-hoan-thanh', 'Đang giao' => 'status-dang-giao', 'Chờ xác nhận' => 'status-cho-xac-nhan'];
 require __DIR__ . '/includes/header.php';
 ?>
-
 <div class="admin-shell">
     <aside class="admin-sidebar">
         <a class="admin-brand" href="index.php"><span>↗</span><strong>VŨ ĐIỆU<br>RỪNG XANH</strong></a>
         <p class="admin-label">KHÔNG GIAN QUẢN TRỊ</p>
         <nav aria-label="Điều hướng quản trị">
-            <button type="button" class="is-active" data-admin-nav="overview"><span>⌂</span>Tổng quan</button>
-            <button type="button" data-admin-nav="orders"><span>▣</span>Đơn hàng</button>
-            <button type="button" data-admin-nav="plants"><span>♧</span>Cây xanh</button>
-            <button type="button" data-admin-nav="articles"><span>✎</span>Bài viết</button>
-            <button type="button" data-admin-nav="settings"><span>⚙</span>Cài đặt</button>
+            <a href="admin.php#overview"><span>⌂</span>Tổng quan</a>
+            <a class="is-active" href="admin.php#users" aria-current="page"><span>♧</span>Người dùng</a>
+            <a href="dashboard.php"><span>↗</span>Xem website</a>
         </nav>
-        <div class="admin-sidebar-foot"><span class="admin-avatar">AD</span><div><strong>Admin demo</strong><small>Quản trị viên</small></div><a href="index.php">↗</a></div>
+        <div class="admin-sidebar-foot"><span class="admin-avatar">AD</span><div><strong><?= e($admin['name']) ?></strong><small>Quản trị viên</small></div><a href="profile.php" aria-label="Trang cá nhân">↗</a></div>
     </aside>
-
     <div class="admin-content">
-        <header class="admin-topbar"><div><p>THỨ HAI, 14 THÁNG 9, 2026</p><h1>Chào buổi sáng, Admin.</h1></div><div class="admin-actions"><a href="dashboard.php">Xem website ↗</a><button type="button" data-admin-action="Tính năng thêm cây sẽ được mở trong bản tiếp theo.">+ Thêm nội dung</button></div></header>
+        <header class="admin-topbar">
+            <div><p><?= e(date('d/m/Y')) ?></p><h1>Quản lý người dùng</h1></div>
+            <div class="admin-actions">
+                <a href="dashboard.php">Xem website ↗</a>
+                <form class="logout-form" method="post" action="actions/logout.php">
+                    <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+                    <button type="submit">Đăng xuất</button>
+                </form>
+            </div>
+        </header>
         <main class="admin-main">
-            <?php if ($flashMessage !== null): ?><div class="admin-toast" data-auto-dismiss><?= e($flashMessage) ?></div><?php endif; ?>
-            <section class="admin-stats" data-admin-section="overview">
-                <article><div class="stat-top"><span>Doanh thu tháng</span><i>↗</i></div><strong>12.84M</strong><small>+12.5% so với tháng trước</small></article>
-                <article><div class="stat-top"><span>Đơn hàng mới</span><i>▣</i></div><strong>48</strong><small>+8 đơn trong tuần này</small></article>
-                <article><div class="stat-top"><span>Khách ghé thăm</span><i>◌</i></div><strong>2,840</strong><small>+18.2% so với tuần trước</small></article>
-                <article><div class="stat-top"><span>Cây đang bán</span><i>♧</i></div><strong>40</strong><small>Danh mục đang hoạt động</small></article>
+            <?php if ($flashMessage !== null): ?><div class="status-note" role="status" data-auto-dismiss><?= e($flashMessage) ?></div><?php endif; ?>
+            <section class="admin-stats" id="overview" aria-label="Thống kê tài khoản">
+                <article><div class="stat-top"><span>Tổng tài khoản</span><i>◌</i></div><strong><?= (int) $stats['total'] ?></strong><small>Thành viên và quản trị viên</small></article>
+                <article><div class="stat-top"><span>Đang hoạt động</span><i>↗</i></div><strong><?= (int) $stats['active'] ?></strong><small>Có thể đăng nhập</small></article>
+                <article><div class="stat-top"><span>Đã khóa</span><i>×</i></div><strong><?= (int) $stats['blocked'] ?></strong><small>Chờ quản trị viên mở khóa</small></article>
+                <article><div class="stat-top"><span>Quản trị viên</span><i>⌂</i></div><strong><?= (int) $stats['admins'] ?></strong><small>Quản lý tài khoản thành viên</small></article>
             </section>
-
-            <section class="admin-columns" data-admin-section="overview">
-                <article class="admin-panel">
-                    <div class="panel-head"><div><p class="eyebrow">HIỆU QUẢ KINH DOANH</p><h2>Doanh thu theo tháng</h2></div><button type="button" data-admin-action="Bộ lọc doanh thu hiện đang ở chế độ demo.">6 tháng qua⌄</button></div>
-                    <div class="chart-area" aria-label="Biểu đồ doanh thu 6 tháng">
-                        <?php foreach ([62, 74, 48, 82, 68, 91] as $index => $height): ?><div class="chart-column"><div class="chart-bar"><span style="height:<?= $height ?>%"></span></div><small><?= e(['T4', 'T5', 'T6', 'T7', 'T8', 'T9'][$index]) ?></small></div><?php endforeach; ?>
-                    </div>
-                    <div class="chart-summary"><span><i></i>Doanh thu thực tế</span><strong>12.84M ₫</strong></div>
-                </article>
-                <article class="admin-panel quick-panel"><div class="panel-head"><div><p class="eyebrow">CẦN XỬ LÝ</p><h2>Việc nhanh</h2></div><span class="count-badge">04</span></div><ul>
-                    <li><span>▣</span><div><strong>Đơn cần xác nhận</strong><small>3 đơn mới</small></div><button type="button" data-admin-action="Đang mở danh sách đơn cần xác nhận.">→</button></li>
-                    <li><span>✎</span><div><strong>Bài viết nháp</strong><small>1 bài chờ duyệt</small></div><button type="button" data-admin-action="Đang mở kho bài viết nháp.">→</button></li>
-                    <li><span>♧</span><div><strong>Cây sắp hết hàng</strong><small>4 sản phẩm</small></div><button type="button" data-admin-action="Đang mở danh sách cây sắp hết hàng.">→</button></li>
-                </ul></article>
+            <?php if ($editUser !== null): ?>
+                <section class="admin-panel account-panel" id="edit-user">
+                    <div class="panel-head"><div><p class="eyebrow">TÀI KHOẢN #<?= (int) $editUser['id'] ?></p><h2>Thông tin người dùng</h2></div><a href="admin.php#users">Đóng ×</a></div>
+                    <p class="account-meta"><?= $editUser['role'] === 'admin' ? 'Quản trị viên' : 'Thành viên' ?> · <?= $editUser['status'] === 'active' ? 'Đang hoạt động' : 'Đã khóa' ?> · Tham gia <?= e(date('d/m/Y', strtotime($editUser['created_at']))) ?> · <?= count(user_favorite_ids((int) $editUser['id'])) ?> cây yêu thích</p>
+                    <?php if ($errors !== []): ?><div class="login-error" role="alert"><ul><?php foreach ($errors as $error): ?><li><?= e($error) ?></li><?php endforeach; ?></ul></div><?php endif; ?>
+                    <form class="account-form" method="post" action="actions/user-action.php">
+                        <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+                        <input type="hidden" name="user_id" value="<?= (int) $editUser['id'] ?>">
+                        <input type="hidden" name="operation" value="update">
+                        <input type="hidden" name="return_to" value="admin.php?edit=<?= (int) $editUser['id'] ?>">
+                        <div class="form-group"><label class="form-label" for="user_name">Họ tên</label><input class="form-control" id="user_name" name="name" value="<?= e($input['name']) ?>" minlength="2" maxlength="100" required></div>
+                        <div class="form-group"><label class="form-label" for="user_email">Email</label><input class="form-control" id="user_email" name="email" type="email" value="<?= e($input['email']) ?>" maxlength="254" required></div>
+                        <div><button class="btn-brand" type="submit">Lưu thông tin</button></div>
+                    </form>
+                </section>
+            <?php endif; ?>
+            <section class="admin-panel orders-panel users-panel" id="users">
+                <div class="panel-head"><div><p class="eyebrow">THÀNH VIÊN KHU VƯỜN</p><h2><?= (int) $result['total'] ?> tài khoản</h2></div></div>
+                <form class="filter-panel" method="get" action="admin.php">
+                    <label>Tìm người dùng<input type="search" name="search" value="<?= e($search) ?>" maxlength="200" placeholder="Họ tên hoặc email"></label>
+                    <label>Trạng thái<select name="status"><option value="">Tất cả</option><option value="active"<?= $status === 'active' ? ' selected' : '' ?>>Đang hoạt động</option><option value="blocked"<?= $status === 'blocked' ? ' selected' : '' ?>>Đã khóa</option></select></label>
+                    <button type="submit">Tìm kiếm</button>
+                    <?php if ($search !== '' || $status !== ''): ?><a href="admin.php">Xóa bộ lọc</a><?php endif; ?>
+                </form>
+                <div class="admin-table-wrap">
+                    <table>
+                        <thead><tr><th>ID</th><th>Họ tên / Email</th><th>Vai trò</th><th>Trạng thái</th><th>Yêu thích</th><th>Ngày tham gia</th><th>Thao tác</th></tr></thead>
+                        <tbody>
+                            <?php foreach ($result['users'] as $member): ?>
+                                <tr>
+                                    <td>#<?= (int) $member['id'] ?></td>
+                                    <td><strong><?= e($member['name']) ?></strong><small class="user-email"><?= e($member['email']) ?></small></td>
+                                    <td><?= $member['role'] === 'admin' ? 'Quản trị viên' : 'Thành viên' ?></td>
+                                    <td><span class="user-status status-<?= e($member['status']) ?>"><?= $member['status'] === 'active' ? 'Đang hoạt động' : 'Đã khóa' ?></span></td>
+                                    <td><?= (int) $member['favorite_count'] ?></td>
+                                    <td><?= e(date('d/m/Y', strtotime($member['created_at']))) ?></td>
+                                    <td><div class="user-actions">
+                                        <a href="admin.php?edit=<?= (int) $member['id'] ?>#edit-user">Xem / sửa</a>
+                                        <?php if ($member['role'] !== 'admin'): ?>
+                                            <form method="post" action="actions/user-action.php">
+                                                <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+                                                <input type="hidden" name="user_id" value="<?= (int) $member['id'] ?>">
+                                                <input type="hidden" name="operation" value="<?= $member['status'] === 'active' ? 'block' : 'unblock' ?>">
+                                                <input type="hidden" name="return_to" value="<?= e(current_request_url()) ?>">
+                                                <button class="<?= $member['status'] === 'active' ? 'block-button' : '' ?>" type="submit"><?= $member['status'] === 'active' ? 'Khóa' : 'Mở khóa' ?></button>
+                                            </form>
+                                        <?php endif; ?>
+                                    </div></td>
+                                </tr>
+                            <?php endforeach; ?>
+                            <?php if ($result['users'] === []): ?><tr><td colspan="7">Không tìm thấy tài khoản phù hợp.</td></tr><?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+                <nav class="pagination" aria-label="Phân trang người dùng">
+                    <span>Trang <?= (int) $result['page'] ?> / <?= (int) $result['pages'] ?></span>
+                    <?php if ($result['page'] > 1): ?><a href="admin.php?<?= e(http_build_query(['search' => $search, 'status' => $status, 'page' => $result['page'] - 1])) ?>#users">← Trước</a><?php endif; ?>
+                    <?php if ($result['page'] < $result['pages']): ?><a href="admin.php?<?= e(http_build_query(['search' => $search, 'status' => $status, 'page' => $result['page'] + 1])) ?>#users">Tiếp →</a><?php endif; ?>
+                </nav>
             </section>
-
-            <section class="admin-panel orders-panel" data-admin-section="orders"><div class="panel-head"><div><p class="eyebrow">GIAO DỊCH GẦN ĐÂY</p><h2>Đơn hàng mới nhất</h2></div><button type="button" data-admin-action="Đã chọn xem toàn bộ đơn hàng.">Xem tất cả →</button></div><div class="admin-table-wrap"><table><thead><tr><th>Mã đơn</th><th>Khách hàng</th><th>Sản phẩm</th><th>Tổng tiền</th><th>Trạng thái</th><th></th></tr></thead><tbody>
-                <?php foreach ($orders as $order): ?><tr><td><strong><?= e($order['id']) ?></strong></td><td><?= e($order['customer']) ?></td><td><?= e($order['product']) ?></td><td><?= e($order['total']) ?></td><td><span class="order-status <?= e($statusClasses[$order['status']] ?? '') ?>"><?= e($order['status']) ?></span></td><td><button type="button" data-admin-action="Chi tiết <?= e($order['id']) ?> đang ở chế độ demo.">•••</button></td></tr><?php endforeach; ?>
-            </tbody></table></div></section>
-
-            <section class="admin-panel editorial-panel" data-admin-section="articles"><div><p class="eyebrow">NỘI DUNG TRANG CHỦ</p><h2>“Bắt đầu một góc xanh từ đâu?”</h2><p>Giữ cho bài viết nổi bật luôn được cập nhật để truyền cảm hứng cho những người làm vườn mới.</p></div><label class="publish-toggle"><input type="checkbox" checked data-publish-toggle><span></span><small data-publish-label>Đang xuất bản</small></label><a href="blog-post.php?slug=bat-dau-mot-goc-xanh-tu-dau">Xem bài ↗</a></section>
         </main>
     </div>
 </div>
-
 <?php $showSiteFooter = false; require __DIR__ . '/includes/footer.php'; ?>

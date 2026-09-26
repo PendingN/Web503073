@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/includes/init.php';
+require_login();
 
 $favoritePlants = array_values(array_filter(array_map('find_plant', favorite_ids())));
 $pageTitle = 'Yêu thích';

@@ -2,7 +2,7 @@
     <form class="dashboard-search" method="get" action="collection.php" role="search">
         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
         <label class="sr-only" for="dashboard-search">Tìm tên cây</label>
-        <input id="dashboard-search" name="search" type="search" placeholder="Tìm tên cây..." value="<?= e($_GET['search'] ?? '') ?>">
+        <input id="dashboard-search" name="search" type="search" placeholder="Tìm tên cây..." value="<?= e(request_string($_GET, 'search')) ?>">
         <button type="submit">Tìm</button>
     </form>
     <nav class="toolbar-links" aria-label="Liên kết nhanh">
@@ -12,8 +12,15 @@
         </a>
         <a href="index.php">Trang chủ ↗</a>
         <a href="blog.php">Blog ↗</a>
-        <a href="admin.php">Quản trị ↗</a>
-        <?php if (!empty($_SESSION['user_email'])): ?><a href="actions/logout.php">Đăng xuất</a><?php endif; ?>
+        <?php if (is_admin()): ?><a href="admin.php">Quản trị ↗</a><?php endif; ?>
+        <?php if (current_user()): ?>
+            <form class="logout-form" method="post" action="actions/logout.php">
+                <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+                <button type="submit">Đăng xuất</button>
+            </form>
+        <?php else: ?>
+            <a href="login.php">Đăng nhập</a>
+        <?php endif; ?>
     </nav>
 </header>
 
