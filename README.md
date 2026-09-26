@@ -1,4 +1,4 @@
-# Vũ Điệu Rừng Xanh — PHP thuần
+# Vũ Điệu Rừng Xanh — PHP
 
 Thư mục này chỉ dùng PHP, HTML5, CSS3 và JavaScript thuần; dữ liệu cây, blog và admin là dữ liệu demo trong các mảng PHP, không cần MySQL.
 
