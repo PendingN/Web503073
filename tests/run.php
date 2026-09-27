@@ -99,7 +99,7 @@ try {
     if (!extension_loaded('curl') || !extension_loaded('pdo_mysql') || !extension_loaded('mbstring')) {
         throw new RuntimeException('Tests require curl, pdo_mysql, and mbstring.');
     }
-    $server = database_connection(false);
+    $server = database_setup_connection(false);
     putenv('DB_NAME=' . $testName);
     run_cli(['scripts/setup-database.php']);
     check((int) db()->query('SELECT COUNT(*) FROM plants')->fetchColumn() === 40, 'Seed must import all 40 plants.');
