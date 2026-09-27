@@ -1,4 +1,73 @@
+# Dependency directories
 node_modules/
-config/database.local.php
+vendor/
+
+# Local configuration and secrets
+config/*local.php
 .env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.csr
+credentials*.json
+secrets/
+
+# Runtime state, logs, caches, and temporary files
+.runtime/
+logs/
+tmp/
+temp/
 *.log
+*.cache
+*.tmp
+*.pid
+*.trace
+*.prof
+*.bak
+*.old
+*.orig
+*.save
+phpunit.xml.bak
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local database exports and generated database files
+*.dump
+*.sql.gz
+*.zip
+*.7z
+*.tar
+*.tar.gz
+*.sqlite
+*.sqlite3
+*.db
+*.db-shm
+*.db-wal
+database/*.local.sql
+
+# Test and coverage output
+.phpunit.result.cache
+.phpunit.cache/
+.php-cs-fixer.cache
+.phpstan.cache/
+.eslintcache
+coverage/
+clover.xml
+
+# IDE and operating-system files
+.idea/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+Desktop.ini

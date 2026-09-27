@@ -8,8 +8,8 @@ if (PHP_SAPI !== 'cli') {
 require_once __DIR__ . '/../includes/database.php';
 
 try {
-    $config = database_config();
-    $connection = database_connection(false);
+    $config = database_setup_config();
+    $connection = database_setup_connection(false);
     $connection->exec('CREATE DATABASE IF NOT EXISTS `' . $config['name'] . '` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
     $connection->exec('USE `' . $config['name'] . '`');
     $schema = file_get_contents(__DIR__ . '/../database/schema.sql');

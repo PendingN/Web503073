@@ -3,6 +3,19 @@ declare(strict_types=1);
 
 date_default_timezone_set('Asia/Ho_Chi_Minh');
 if (session_status() !== PHP_SESSION_ACTIVE) {
+    $configuredSessionPath = getenv('APP_SESSION_PATH');
+    $sessionPath = is_string($configuredSessionPath) && $configuredSessionPath !== ''
+        ? $configuredSessionPath
+        : rtrim(sys_get_temp_dir(), '\\/') . DIRECTORY_SEPARATOR . 'web503073-sessions';
+    if (!is_dir($sessionPath)) {
+        @mkdir($sessionPath, 0700, true);
+    }
+    if (!is_dir($sessionPath) || !is_writable($sessionPath)) {
+        error_log('Secure session storage is unavailable: ' . $sessionPath);
+        http_response_code(503);
+        exit('Session storage is unavailable.');
+    }
+    session_save_path($sessionPath);
     session_name('web503073_session');
     ini_set('session.use_strict_mode', '1');
     ini_set('session.use_only_cookies', '1');
