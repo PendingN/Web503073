@@ -45,7 +45,7 @@ require __DIR__ . '/includes/header.php';
                 <article class="stat-card"><span>Tổng số giống cây</span><strong><?= count($plants) ?></strong></article>
                 <article class="stat-card"><span>Nhóm cây</span><strong><?= count(array_unique(array_column($plants, 'category'))) ?></strong></article>
                 <article class="stat-card"><span>Đã yêu thích</span><strong><?= count(favorite_ids()) ?></strong></article>
-                <article class="stat-card"><span>Bài viết chăm cây</span><strong><?= count($posts) + 1 ?></strong></article>
+                <article class="stat-card"><span>Bài viết chăm cây</span><strong><?= count_blog_posts() ?></strong></article>
             </section>
 
             <section>

@@ -5,6 +5,7 @@ require_once __DIR__ . '/includes/init.php';
 
 $pageTitle = '';
 $pageDescription = 'Một không gian nhỏ để tìm cây, học cách chăm cây và sống chậm hơn cùng thiên nhiên.';
+$bodyClass = 'landing-page';
 $activePage = 'home';
 require __DIR__ . '/includes/header.php';
 require __DIR__ . '/includes/navbar.php';

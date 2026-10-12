@@ -16,20 +16,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = strtolower(trim(request_string($_POST, 'email')));
     $password = request_string($_POST, 'password');
     $user = strlen($email) <= 254 && filter_var($email, FILTER_VALIDATE_EMAIL) ? find_user_by_email($email) : null;
-    if ($user !== null && strlen($password) <= 72 && password_verify($password, $user['password_hash'])) {
-        if ($user['status'] === 'blocked') {
-            $loginError = 'Tài khoản đang bị khóa. Vui lòng liên hệ quản trị viên.';
-        } else {
-            if (password_needs_rehash($user['password_hash'], PASSWORD_DEFAULT)) {
-                $statement = db()->prepare('UPDATE users SET password_hash = ? WHERE id = ?');
-                $statement->execute([password_hash($password, PASSWORD_DEFAULT), $user['id']]);
-            }
-            sign_in($user);
-            set_flash('Đăng nhập thành công. Chào mừng bạn trở lại!');
-            redirect_to($returnTo);
-        }
-    } else {
+    if ($user === null || strlen($password) > 72 || !password_verify($password, $user['password_hash'])) {
         $loginError = 'Email hoặc mật khẩu chưa đúng.';
+    } elseif ($user['status'] === 'blocked') {
+        $loginError = 'Tài khoản đang bị khóa. Vui lòng liên hệ quản trị viên.';
+    } else {
+        if (password_needs_rehash($user['password_hash'], PASSWORD_DEFAULT)) {
+            $statement = db()->prepare('UPDATE users SET password_hash = ? WHERE id = ?');
+            $statement->execute([password_hash($password, PASSWORD_DEFAULT), $user['id']]);
+        }
+        sign_in($user);
+        set_flash('Đăng nhập thành công. Chào mừng bạn trở lại!');
+        redirect_to($returnTo);
     }
 }
 

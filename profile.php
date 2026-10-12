@@ -48,7 +48,7 @@ require __DIR__ . '/includes/header.php';
             <section class="profile-summary">
                 <article><strong><?= count(favorite_ids()) ?></strong><span>Cây yêu thích</span><a href="favorites.php">Xem danh sách →</a></article>
                 <article><strong><?= count($plants) ?></strong><span>Giống cây trong vườn</span><a href="collection.php">Khám phá thêm →</a></article>
-                <article><strong><?= count($posts) + 1 ?></strong><span>Bài viết chăm cây</span><a href="blog.php">Đọc nhật ký →</a></article>
+                <article><strong><?= count_blog_posts() ?></strong><span>Bài viết chăm cây</span><a href="blog.php">Đọc nhật ký →</a></article>
             </section>
         </main>
     </div>
