@@ -99,7 +99,7 @@ try {
     if (!extension_loaded('curl') || !extension_loaded('pdo_mysql') || !extension_loaded('mbstring')) {
         throw new RuntimeException('Tests require curl, pdo_mysql, and mbstring.');
     }
-    $server = database_setup_connection(false);
+    $server = create_database_connection(load_database_config(true), false);
     putenv('DB_NAME=' . $testName);
     run_cli(['scripts/setup-database.php']);
     check((int) db()->query('SELECT COUNT(*) FROM plants')->fetchColumn() === 40, 'Seed must import all 40 plants.');
@@ -158,7 +158,7 @@ try {
     $category = 'Cây ăn quả';
     $expected = count(list_plants('', $category));
     check(str_contains($guest->request('collection.php?category=' . rawurlencode($category))['body'], $expected . ' kết quả'), 'Category filter failed.');
-    foreach (['favorite-action.php', 'profile-action.php', 'user-action.php', 'logout.php'] as $handler) {
+    foreach (['favorite-action.php', 'profile-action.php', 'user-action.php', 'blog-action.php', 'logout.php'] as $handler) {
         check($guest->request('actions/' . $handler)['status'] === 405, 'GET must not mutate: ' . $handler);
         check($guest->request('actions/' . $handler, [])['status'] === 403, 'Missing CSRF accepted: ' . $handler);
     }
@@ -189,6 +189,7 @@ try {
     $response = $duplicate->request('register.php', $aliceData);
     check($response['status'] === 200 && str_contains($response['body'], 'đã được đăng ký'), 'Duplicate email must be rejected.');
     $aliceBrowser = new TestBrowser($base);
+    check(str_contains($aliceBrowser->login('invalid-email', 'Garden123!')['body'], 'Email hoặc mật khẩu chưa đúng.'), 'Invalid email must show the login error.');
     check($aliceBrowser->login('alice@example.test', 'wrong-password')['status'] === 200, 'Bad password must fail.');
     check($aliceBrowser->login('alice@example.test', 'Garden123!')['status'] === 303, 'Valid login failed.');
     check(str_contains($aliceBrowser->request('favorites.php')['body'], 'Cây Lưỡi Hổ'), 'Favorites did not persist across sessions.');
@@ -234,6 +235,7 @@ try {
     $block = ['csrf_token' => $adminToken, 'user_id' => $bob['id'], 'operation' => 'block'];
     check($adminBrowser->request('actions/user-action.php', $block)['status'] === 303 && find_user((int) $bob['id'])['status'] === 'blocked', 'Blocking failed.');
     $blockedLogin = new TestBrowser($base);
+    check(str_contains($blockedLogin->login('bob@example.test', 'wrong-password')['body'], 'Email hoặc mật khẩu chưa đúng.'), 'Wrong password must not reveal blocked account status.');
     check(str_contains($blockedLogin->login('bob@example.test', 'BobGarden123!')['body'], 'đang bị khóa'), 'Blocked user could log in.');
     check(str_contains($adminBrowser->request('admin.php?status=blocked')['body'], 'Bob Edited'), 'Blocked-user filter failed.');
     $block['operation'] = 'unblock';
@@ -241,6 +243,8 @@ try {
     check(find_user((int) $bob['id'])['status'] === 'active', 'Unblocking failed.');
     check($bobBrowser->request('profile.php')['status'] === 303, 'Old session returned after unblock.');
     check($blockedLogin->login('bob@example.test', 'BobGarden123!')['status'] === 303, 'Unblocked user cannot log in again.');
+
+    require __DIR__ . '/blog.php';
 
     $statement = db()->prepare('INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)');
     for ($index = 0; $index < 22; $index++) {
@@ -253,8 +257,8 @@ try {
     check(find_plant(1)['name'] === 'Preserved plant' && find_user((int) $alice['id'])['name'] === 'Alice Updated' && user_favorite_ids((int) $alice['id']) === [22], 'Repeat setup overwrote existing records.');
 
     // Deliberately remove only a table in this disposable database to test 503 handling.
-    db()->exec('DROP TABLE favorites');
-    db()->exec('DROP TABLE plants');
+    $server->exec('DROP TABLE `' . $testName . '`.favorites');
+    $server->exec('DROP TABLE `' . $testName . '`.plants');
     check($guest->request('index.php')['status'] === 503, 'Database failure must give a clean 503 response.');
 } catch (Throwable $exception) {
     $failure = $exception->getMessage();

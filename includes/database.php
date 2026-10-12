@@ -1,30 +1,7 @@
 <?php
 declare(strict_types=1);
 
-function database_config(): array
-{
-    require_once __DIR__ . '/../config/database.php';
-
-    return load_database_config();
-}
-
-function database_setup_config(): array
-{
-    require_once __DIR__ . '/../config/database.php';
-
-    return load_database_config(true);
-}
-
-function database_connection(bool $withDatabase = true): PDO
-{
-    $config = database_config();
-    return create_database_connection($config, $withDatabase);
-}
-
-function database_setup_connection(bool $withDatabase = true): PDO
-{
-    return create_database_connection(database_setup_config(), $withDatabase);
-}
+require_once __DIR__ . '/../config/database.php';
 
 function create_database_connection(array $config, bool $withDatabase): PDO
 {
@@ -44,7 +21,7 @@ function db(): PDO
 {
     static $connection;
     if ($connection === null) {
-        $connection = database_connection();
+        $connection = create_database_connection(load_database_config(), true);
     }
     return $connection;
 }

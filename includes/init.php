@@ -29,9 +29,9 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 }
 header('Cache-Control: no-store');
 
-require_once __DIR__ . '/../data/content.php';
 require_once __DIR__ . '/database.php';
 require_once __DIR__ . '/repositories.php';
+require_once __DIR__ . '/blog-repository.php';
 require_once __DIR__ . '/auth.php';
 
 function e(mixed $value): string
@@ -109,17 +109,6 @@ function favorite_ids(): array
 function is_favorite(int $plantId): bool
 {
     return in_array($plantId, favorite_ids(), true);
-}
-
-function find_post(string $slug): ?array
-{
-    global $featuredPost, $posts;
-    foreach ([$featuredPost, ...$posts] as $post) {
-        if ($post['slug'] === $slug) {
-            return $post;
-        }
-    }
-    return null;
 }
 
 function set_flash(string $message): void

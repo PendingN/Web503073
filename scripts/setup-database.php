@@ -8,8 +8,8 @@ if (PHP_SAPI !== 'cli') {
 require_once __DIR__ . '/../includes/database.php';
 
 try {
-    $config = database_setup_config();
-    $connection = database_setup_connection(false);
+    $config = load_database_config(true);
+    $connection = create_database_connection($config, false);
     $connection->exec('CREATE DATABASE IF NOT EXISTS `' . $config['name'] . '` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
     $connection->exec('USE `' . $config['name'] . '`');
     $schema = file_get_contents(__DIR__ . '/../database/schema.sql');
@@ -28,9 +28,17 @@ try {
     foreach ($plants as $plant) {
         $statement->execute([$plant['id'], $plant['name'], $plant['category'], $plant['description'], $plant['care'], $plant['image']]);
     }
+    require __DIR__ . '/../data/content.php';
+    $statement = $connection->prepare('INSERT INTO blog_posts (slug, title, tag, excerpt, content, illustration, tone, created_at)'
+        . ' VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE slug = VALUES(slug)');
+    foreach ([$featuredPost, ...$posts] as $post) {
+        $date = DateTimeImmutable::createFromFormat('!d.m.Y', $post['date']);
+        $statement->execute([$post['slug'], $post['title'], $post['tag'], $post['excerpt'],
+            implode("\n\n", $post['body']), $post['illustration'], $post['tone'], $date->format('Y-m-d H:i:s')]);
+    }
     $connection->commit();
     fwrite(STDOUT, 'Database ' . $config['name'] . ' is ready. Plants: ' . $connection->query('SELECT COUNT(*) FROM plants')->fetchColumn() . PHP_EOL);
-    fwrite(STDOUT, 'Existing users, favorites, and plant records were preserved.' . PHP_EOL);
+    fwrite(STDOUT, 'Existing users, favorites, plants, and blog records were preserved.' . PHP_EOL);
 } catch (Throwable $exception) {
     if (isset($connection) && $connection->inTransaction()) {
         $connection->rollBack();

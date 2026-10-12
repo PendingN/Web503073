@@ -1,6 +1,6 @@
 # Vũ Điệu Rừng Xanh
 
-Website quản lý và tra cứu cây cảnh, xây dựng bằng PHP, MySQL/MariaDB, HTML, CSS và JavaScript thuần. Ứng dụng có tài khoản người dùng, tìm kiếm cây, bộ sưu tập yêu thích, trang cá nhân và khu vực quản trị.
+Website quản lý và tra cứu cây cảnh, xây dựng bằng PHP, MySQL/MariaDB, HTML, CSS và JavaScript thuần. Ứng dụng có tài khoản người dùng, tìm kiếm cây, bộ sưu tập yêu thích, trang cá nhân, blog cộng đồng và khu vực quản trị.
 
 Đây là dự án PHP server-rendered dùng cho môi trường học tập và chạy local. GitHub lưu mã nguồn; GitHub Pages không chạy được PHP hoặc MySQL.
 
@@ -154,9 +154,9 @@ Remove-Item Env:DB_SETUP_USER, Env:DB_SETUP_PASSWORD
 Lệnh này:
 
 - tạo database <code>web503073</code> nếu chưa có;
-- tạo ba bảng <code>users</code>, <code>plants</code>, <code>favorites</code> từ <code>database/schema.sql</code>;
-- nhập 40 cây từ <code>data/plants.php</code>;
-- giữ lại tài khoản, cây và lượt yêu thích đã tồn tại khi chạy lại.
+- tạo bảng tài khoản, cây, yêu thích và bốn bảng blog từ <code>database/schema.sql</code>;
+- nhập 40 cây từ <code>data/plants.php</code> và 7 bài blog từ <code>data/content.php</code>;
+- giữ lại tài khoản, cây, lượt yêu thích và nội dung bài viết đã tồn tại khi chạy lại. Bài mẫu đã xóa sẽ được thêm lại nếu chạy setup lần nữa.
 
 Nếu thiếu <code>DB_SETUP_USER</code> hoặc <code>DB_SETUP_PASSWORD</code>, lệnh sẽ dừng và không dùng <code>root</code> thay thế.
 
@@ -221,15 +221,42 @@ C:/xampp/php/php.exe -S 127.0.0.1:8090 -t .
 | <code>favorites.php</code> | Danh sách cây yêu thích | Cần đăng nhập |
 | <code>profile.php</code> | Sửa thông tin và password | Cần đăng nhập |
 | <code>admin.php</code> | Thống kê, tìm kiếm, phân trang và quản lý user | Chỉ admin |
-| <code>blog.php</code> | Danh sách bài viết | Công khai |
+| <code>blog.php</code> | Tìm kiếm, sắp xếp, phân trang và viết/sửa bài | Đọc công khai; viết cần đăng nhập |
+| <code>blog.php?view=mine</code> / <code>?view=saved</code> | Bài của tôi / Bài đã lưu | Cần đăng nhập |
 | <code>blog-post.php?slug=...</code> | Chi tiết bài viết | Công khai |
 | <code>actions/favorite-action.php</code> | Thêm/xóa yêu thích | POST + CSRF + đăng nhập |
 | <code>actions/profile-action.php</code> | Cập nhật cá nhân | POST + CSRF + đăng nhập |
 | <code>actions/user-action.php</code> | Sửa/khóa/mở khóa user | POST + CSRF + admin |
+| <code>actions/blog-action.php</code> | Đăng/sửa/xóa bài, bình chọn, lưu và bình luận | POST + CSRF + đăng nhập |
 | <code>actions/logout.php</code> | Đăng xuất | POST + CSRF |
 
 Các ID không hợp lệ trả <code>404</code>. Request GET tới handler thay đổi dữ liệu trả <code>405</code>; request POST thiếu CSRF token trả <code>403</code>.
 
+
+### Blog: cách dùng và cấu trúc
+
+Sau khi cập nhật mã nguồn, chạy lại bước **3.4** để bổ sung bảng blog trước khi mở website. Cần MySQL đang chạy và tài khoản setup riêng; không dùng tài khoản quản trị website thay cho tài khoản MySQL.
+
+- Khách đọc, tìm kiếm và sắp xếp bài. Mỗi trang có 6 bài; trang chi tiết có tối đa 20 bình luận mỗi trang.
+- Thành viên đăng bài, sửa/xóa bài của mình, thích/không thích, lưu/bỏ lưu và bình luận. Bấm lại lựa chọn bình chọn đang bật để bỏ chọn.
+- Chủ bình luận hoặc admin được xóa bình luận. Admin được sửa/xóa mọi bài viết qua cùng giao diện.
+- Trước khi xóa bài, mở mục **Xóa bài viết** và bấm **Xác nhận xóa bài**. Bình luận, bình chọn và lượt lưu của bài cũng bị xóa.
+- Bài, bình luận, bình chọn và lượt lưu nằm trong MySQL, được giữ khi tải lại hoặc đăng nhập lại. Nội dung là văn bản thuần, không hỗ trợ HTML hay tải ảnh lên.
+
+Luồng xử lý: **trang PHP → biểu mẫu POST → `actions/blog-action.php` → MySQL → chuyển về trang kết quả**. JavaScript không bắt buộc cho các thao tác blog.
+
+| File | Trách nhiệm |
+|---|---|
+| `blog.php` | Danh sách, tìm kiếm, lọc, phân trang và biểu mẫu viết/sửa |
+| `blog-post.php` | Nội dung đầy đủ, bình luận và xác nhận xóa |
+| `includes/blog-repository.php` | Truy vấn đọc, kiểm tra quyền tác giả, kiểm tra nội dung |
+| `includes/blog-actions.php` | Biểu mẫu bình chọn/lưu dùng chung ở danh sách và chi tiết |
+| `actions/blog-action.php` | Xác thực, CSRF, quyền sở hữu và ghi dữ liệu trong transaction |
+| `database/schema.sql` | `blog_posts`, `blog_comments`, `blog_votes`, `blog_saves` |
+| `data/content.php` | Bài mẫu, chỉ dùng khi setup |
+| `tests/blog.php` | Các tình huống blog, được gọi từ `tests/run.php` |
+
+Không thêm framework, thư viện hoặc công đoạn build.
 
 ## 6. Bảo mật quan trọng
 
@@ -285,12 +312,13 @@ Bộ test kiểm tra các luồng:
 - yêu thích, profile, đổi password và vô hiệu hóa session;
 - khóa/mở khóa user, phân trang admin;
 - setup lặp lại không ghi đè dữ liệu cũ;
+- blog: đăng/sửa/xóa, phân quyền, tìm kiếm, phân trang, bình chọn/lưu qua phiên đăng nhập, bình luận, XSS và dữ liệu liên quan sau khi xóa bài;
 - lỗi database trả response an toàn.
 
 Kết quả thành công có dạng:
 
 ~~~text
-PASS: 161 total checks. Temporary database and web server removed.
+PASS: 303 total checks. Temporary database and web server removed.
 ~~~
 
 Database test có dạng <code>web503073_test_&lt;random&gt;</code> và sẽ được xóa khi test kết thúc bình thường. Nếu dừng test bằng <code>Ctrl+C</code>, kiểm tra và xóa các database test còn sót sau khi chắc chắn không còn test server đang chạy.

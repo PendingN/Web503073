@@ -5,22 +5,26 @@ function current_user(): ?array
 {
     static $loaded = false;
     static $user = null;
-    if (!$loaded) {
-        $loaded = true;
-        $id = $_SESSION['user_id'] ?? null;
-        if (is_int($id)) {
-            $record = find_user($id);
-            if ($record !== null && $record['status'] === 'active'
-                && (int) $record['session_version'] === ($_SESSION['auth_version'] ?? null)) {
-                unset($record['password_hash']);
-                $user = $record;
-            } else {
-                unset($_SESSION['user_id'], $_SESSION['auth_version']);
-                session_regenerate_id(true);
-                set_flash('Phiên đăng nhập đã kết thúc. Vui lòng đăng nhập lại; tài khoản bị khóa cần được quản trị viên mở khóa.');
-            }
-        }
+    if ($loaded) {
+        return $user;
     }
+    $loaded = true;
+    $id = $_SESSION['user_id'] ?? null;
+    if (!is_int($id)) {
+        return null;
+    }
+
+    $record = find_user($id);
+    if ($record === null || $record['status'] !== 'active'
+        || (int) $record['session_version'] !== ($_SESSION['auth_version'] ?? null)) {
+        unset($_SESSION['user_id'], $_SESSION['auth_version']);
+        session_regenerate_id(true);
+        set_flash('Phiên đăng nhập đã kết thúc. Vui lòng đăng nhập lại; tài khoản bị khóa cần được quản trị viên mở khóa.');
+        return null;
+    }
+
+    unset($record['password_hash']);
+    $user = $record;
     return $user;
 }
 

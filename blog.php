@@ -1,179 +1,143 @@
 <?php
 declare(strict_types=1);
-
 require_once __DIR__ . '/includes/init.php';
 
 $pageTitle = 'Blog';
-$pageDescription = 'Một bảng tin nhẹ nhàng để chia sẻ câu chuyện, kinh nghiệm và cảm hứng sống cùng cây xanh.';
+$pageDescription = 'Chia sẻ kinh nghiệm và cảm hứng sống cùng cây xanh.';
 $bodyClass = 'blog-page';
 $activePage = 'blog';
-
-$feedItems = [
-    [
-        'post' => $featuredPost,
-        'community' => 'r/góc xanh',
-        'author' => 'Mai Hạ',
-        'initials' => 'MH',
-        'time' => '2 giờ trước',
-        'votes' => '248',
-        'comments' => '18',
-        'featured' => true,
-    ],
-    [
-        'post' => $posts[0],
-        'community' => 'r/chăm cây',
-        'author' => 'Minh Anh',
-        'initials' => 'MA',
-        'time' => '5 giờ trước',
-        'votes' => '139',
-        'comments' => '24',
-    ],
-    [
-        'post' => $posts[1],
-        'community' => 'r/không gian sống',
-        'author' => 'Quỳnh Nhi',
-        'initials' => 'QN',
-        'time' => '7 giờ trước',
-        'votes' => '96',
-        'comments' => '11',
-    ],
-    [
-        'post' => $posts[2],
-        'community' => 'r/ban công nhỏ',
-        'author' => 'An Nhiên',
-        'initials' => 'AN',
-        'time' => '1 ngày trước',
-        'votes' => '82',
-        'comments' => '9',
-    ],
-    [
-        'post' => $posts[3],
-        'community' => 'r/chăm cây',
-        'author' => 'Bảo Ngọc',
-        'initials' => 'BN',
-        'time' => '2 ngày trước',
-        'votes' => '71',
-        'comments' => '7',
-    ],
-    [
-        'post' => $posts[4],
-        'community' => 'r/góc xanh',
-        'author' => 'Hoàng Nam',
-        'initials' => 'HN',
-        'time' => '3 ngày trước',
-        'votes' => '58',
-        'comments' => '6',
-    ],
-];
-
+$user = current_user();
+$search = trim(request_string($_GET, 'search'));
+$sort = request_string($_GET, 'sort') === 'popular' ? 'popular' : 'new';
+$view = request_string($_GET, 'view');
+$view = in_array($view, ['saved', 'mine'], true) ? $view : 'all';
+if ($view !== 'all') {
+    $user = require_login();
+}
+$page = max(1, (int) request_string($_GET, 'page', '1'));
+$result = list_blog_posts($search, $sort, $view, (int) ($user['id'] ?? 0), $page);
+$latestPosts = array_slice(list_blog_posts('', 'new', 'all', (int) ($user['id'] ?? 0), 1)['posts'], 0, 5);
+$editSlug = request_string($_GET, 'edit');
+$editing = null;
+if ($editSlug !== '') {
+    $user = require_login();
+    $editing = find_post($editSlug);
+    if ($editing === null) {
+        abort_request(404, 'Không tìm thấy bài viết.');
+    }
+    if (!can_edit_post($editing, $user)) {
+        abort_request(403, 'Bạn không có quyền sửa bài viết này.');
+    }
+}
+$draft = $_SESSION['blog_draft'] ?? null;
+unset($_SESSION['blog_draft']);
+$form = is_array($draft) && $draft['slug'] === $editSlug ? $draft : ($editing ?? ['title' => '', 'content' => '', 'tag' => 'Chăm cây']);
+$query = ['search' => $search, 'sort' => $sort, 'view' => $view];
 require __DIR__ . '/includes/header.php';
 require __DIR__ . '/includes/navbar.php';
 require __DIR__ . '/includes/plant-illustration.php';
 ?>
-
 <main class="blog-feed-main">
     <section class="feed-hero" aria-labelledby="feed-title">
         <div class="feed-hero-copy">
             <p class="eyebrow">NHẬT KÝ RỪNG XANH</p>
             <h1 id="feed-title">Chuyện cây cỏ,<br><em>kể cùng nhau.</em></h1>
-            <p class="feed-hero-lead">Một góc nhỏ để chia sẻ những điều bạn học được, những chiếc lá mới và nhịp sống dịu dàng hơn cùng thiên nhiên.</p>
+            <p class="feed-hero-lead">Chia sẻ kinh nghiệm chăm cây, những chiếc lá mới và nhịp sống gần gũi với thiên nhiên.</p>
         </div>
-        <div class="feed-hero-note">
-            <span class="feed-hero-note-icon" aria-hidden="true">✦</span>
-            <div>
-                <strong>Không cần nói thật to.</strong>
-                <p>Một câu chuyện nhỏ cũng có thể giúp ai đó chăm cây dễ hơn hôm nay.</p>
+        <div class="feed-hero-note" aria-labelledby="latest-posts-title">
+            <div class="feed-ticker-heading">
+                <span class="feed-hero-note-icon" aria-hidden="true">✦</span>
+                <div>
+                    <strong id="latest-posts-title">Bài viết mới nhất</strong>
+                    <span>Những câu chuyện vừa được chia sẻ</span>
+                </div>
+            </div>
+            <div class="feed-ticker-viewport">
+                <div class="feed-ticker-track">
+                    <?php foreach ([$latestPosts, $latestPosts] as $copyIndex => $tickerPosts): ?>
+                        <div class="feed-ticker-group"<?= $copyIndex === 1 ? ' aria-hidden="true"' : '' ?>>
+                            <?php foreach ($tickerPosts as $tickerPost): ?>
+                                <a class="feed-ticker-card" href="blog-post.php?slug=<?= e(rawurlencode($tickerPost['slug'])) ?>">
+                                    <span class="feed-ticker-label"><?= e($tickerPost['tag']) ?></span>
+                                    <strong><?= e($tickerPost['title']) ?></strong>
+                                    <time datetime="<?= e(str_replace(' ', 'T', $tickerPost['created_at'])) ?>"><?= e(date('d/m/Y', strtotime($tickerPost['created_at']))) ?></time>
+                                </a>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
             </div>
         </div>
     </section>
-
+    <?php if ($flash = take_flash()): ?><p class="status-note" role="status"><?= e($flash) ?></p><?php endif; ?>
     <div class="feed-layout">
         <section class="feed-column" aria-label="Bảng tin bài viết">
-            <section class="feed-composer" id="write-post" aria-labelledby="composer-title">
-                <div class="feed-composer-bar">
-                    <span class="feed-avatar feed-avatar-user" aria-hidden="true">bạn</span>
-                    <button class="composer-trigger" type="button" data-composer-toggle aria-expanded="false" aria-controls="demo-post-form">
-                        <span id="composer-title">Bạn muốn chia sẻ điều gì với khu vườn?</span>
-                    </button>
-                    <button class="composer-add" type="button" data-composer-toggle aria-label="Mở khung viết bài" aria-expanded="false" aria-controls="demo-post-form">+</button>
-                </div>
-                <form class="demo-post-form" id="demo-post-form" data-demo-post-form hidden>
-                    <p class="demo-form-note"><span aria-hidden="true">✦</span> Bản demo giao diện — bài viết chưa được lưu vào hệ thống.</p>
-                    <label for="demo-post-title">Tiêu đề bài viết</label>
-                    <input id="demo-post-title" name="title" type="text" maxlength="120" placeholder="Ví dụ: Chiếc lá mới đầu tiên của mình" required>
-                    <label for="demo-post-content">Bạn muốn kể điều gì?</label>
-                    <textarea id="demo-post-content" name="content" rows="4" maxlength="500" placeholder="Viết vài dòng về góc xanh của bạn..." required></textarea>
-                    <div class="demo-form-actions">
-                        <span>Hiển thị công khai · bản thử nghiệm</span>
-                        <div>
-                            <button class="btn-quiet" type="button" data-composer-cancel>Huỷ</button>
-                            <button class="btn-brand" type="submit">Đăng thử bài viết</button>
-                        </div>
-                    </div>
-                </form>
+            <section class="feed-composer" id="write-post" aria-label="Viết bài">
+                <?php if ($user !== null): ?>
+                    <details<?= $editing !== null || $draft !== null ? ' open' : '' ?>>
+                        <summary><?= $editing !== null ? 'Sửa bài viết' : 'Bạn muốn chia sẻ điều gì với khu vườn?' ?></summary>
+                        <form class="blog-form" action="actions/blog-action.php" method="post">
+                            <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+                            <input type="hidden" name="operation" value="<?= $editing !== null ? 'update' : 'create' ?>">
+                            <input type="hidden" name="slug" value="<?= e($editSlug) ?>">
+                            <label for="post-title">Tiêu đề</label>
+                            <input id="post-title" name="title" minlength="3" maxlength="120" value="<?= e($form['title']) ?>" required>
+                            <label for="post-tag">Chủ đề</label>
+                            <select id="post-tag" name="tag">
+                                <?php foreach (['Chăm cây', 'Không gian', 'Cảm hứng', 'Mẹo hay', 'Sống xanh', 'Bài nổi bật'] as $tag): ?>
+                                    <option<?= $form['tag'] === $tag ? ' selected' : '' ?>><?= e($tag) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                            <label for="post-content">Nội dung</label>
+                            <textarea id="post-content" name="content" rows="7" minlength="10" maxlength="10000" required><?= e($form['content']) ?></textarea>
+                            <p>Bài viết hiển thị công khai. Nội dung từ 10 đến 10.000 ký tự.</p>
+                            <div class="blog-form-actions"><a class="btn-quiet" href="blog.php">Hủy</a><button class="btn-brand" type="submit"><?= $editing !== null ? 'Lưu thay đổi' : 'Đăng bài viết' ?></button></div>
+                        </form>
+                    </details>
+                <?php else: ?>
+                    <a class="btn-brand" href="login.php?return_to=<?= e(rawurlencode(app_url('blog.php'))) ?>">Đăng nhập để viết bài</a>
+                <?php endif; ?>
             </section>
-
-            <div class="feed-toolbar">
-                <div>
-                    <p class="eyebrow">BẢNG TIN</p>
-                    <h2>Bài viết mới</h2>
-                </div>
-                <div class="feed-filters" role="group" aria-label="Sắp xếp bài viết">
-                    <button class="is-active" type="button" data-feed-filter="new" aria-pressed="true">Mới nhất</button>
-                    <button type="button" data-feed-filter="popular" aria-pressed="false">Được yêu thích</button>
-                </div>
-            </div>
-
+            <form class="blog-search" action="blog.php" method="get">
+                <label for="blog-search">Tìm bài viết</label>
+                <input id="blog-search" name="search" value="<?= e($search) ?>" placeholder="Tiêu đề, nội dung hoặc chủ đề">
+                <label for="blog-sort">Sắp xếp</label>
+                <select id="blog-sort" name="sort"><option value="new"<?= $sort === 'new' ? ' selected' : '' ?>>Mới nhất</option><option value="popular"<?= $sort === 'popular' ? ' selected' : '' ?>>Được yêu thích</option></select>
+                <input type="hidden" name="view" value="<?= e($view) ?>">
+                <button class="btn-brand" type="submit">Tìm kiếm</button>
+            </form>
+            <nav class="blog-tabs" aria-label="Lọc bài viết">
+                <?php foreach (['all' => 'Tất cả', 'mine' => 'Bài của tôi', 'saved' => 'Đã lưu'] as $key => $label): ?>
+                    <a href="blog.php?<?= e(http_build_query(array_merge($query, ['view' => $key]))) ?>"<?= $view === $key ? ' aria-current="page"' : '' ?>><?= e($label) ?></a>
+                <?php endforeach; ?>
+            </nav>
+            <div class="feed-toolbar"><h2>Bài viết</h2><p><?= e($result['total']) ?> kết quả</p></div>
             <div class="feed-list">
-                <?php foreach ($feedItems as $feedIndex => $item):
-                    $post = $item['post'];
-                    $isFeatured = $item['featured'] ?? false;
-                ?>
-                    <article class="feed-post<?= $isFeatured ? ' feed-post-featured' : '' ?>" data-feed-score="<?= e($item['votes']) ?>" data-feed-order="<?= e((string) $feedIndex) ?>">
-                        <header class="feed-post-head">
-                            <div class="feed-author">
-                                <span class="feed-avatar feed-avatar-<?= e($post['tone']) ?>" aria-hidden="true"><?= e($item['initials']) ?></span>
-                                <div>
-                                    <p><strong><?= e($item['community']) ?></strong><span aria-hidden="true"> · </span><span><?= e($item['time']) ?></span></p>
-                                    <small>Đăng bởi <?= e($item['author']) ?></small>
-                                </div>
-                            </div>
-                            <div class="feed-post-controls">
-                                <button class="feed-more" type="button" aria-label="Tuỳ chọn bài viết">•••</button>
-                            </div>
-                        </header>
-
+                <?php foreach ($result['posts'] as $post): ?>
+                    <article class="feed-post">
+                        <header class="feed-post-head"><div class="feed-author">
+                            <span class="feed-avatar feed-avatar-<?= e($post['tone']) ?>" aria-hidden="true"><?= e(mb_substr($post['author'], 0, 1)) ?></span>
+                            <div><p><strong><?= e($post['author']) ?></strong></p><time datetime="<?= e(str_replace(' ', 'T', $post['created_at'])) ?>"><?= e(date('d/m/Y H:i', strtotime($post['created_at']))) ?></time></div>
+                        </div></header>
                         <div class="feed-post-content">
                             <div class="feed-post-copy">
                                 <span class="feed-topic"><?= e($post['tag']) ?></span>
-                                <h3><a href="blog-post.php?slug=<?= e($post['slug']) ?>"><?= e($post['title']) ?></a></h3>
+                                <h3><a href="blog-post.php?slug=<?= e(rawurlencode($post['slug'])) ?>"><?= e($post['title']) ?></a></h3>
                                 <p><?= e($post['excerpt']) ?></p>
-                                <div class="feed-post-actions">
-                                    <div class="feed-vote-group" data-vote-group>
-                                        <button class="feed-action feed-vote" type="button" data-feed-action="up" aria-label="Thích bài viết" aria-pressed="false"><span aria-hidden="true">↑</span><span data-count><?= e($item['votes']) ?></span></button>
-                                        <button class="feed-action feed-vote feed-vote-down" type="button" data-feed-action="down" aria-label="Không thích bài viết" aria-pressed="false"><span aria-hidden="true">↓</span></button>
-                                    </div>
-                                    <button class="feed-action" type="button" data-feed-action="comment" aria-label="Xem <?= e($item['comments']) ?> bình luận"><span aria-hidden="true">◯</span><span><?= e($item['comments']) ?></span></button>
-                                    <button class="feed-action" type="button" data-feed-action="save" aria-label="Lưu bài viết" aria-pressed="false"><span aria-hidden="true">♡</span><span class="feed-action-text">Lưu</span></button>
-                                    <a class="feed-read-link" href="blog-post.php?slug=<?= e($post['slug']) ?>">Đọc tiếp <span aria-hidden="true">↗</span></a>
-                                </div>
+                                <?php require __DIR__ . '/includes/blog-actions.php'; ?>
                             </div>
-                            <a class="feed-post-art feed-art-<?= e($post['tone']) ?>" href="blog-post.php?slug=<?= e($post['slug']) ?>" aria-label="Đọc bài: <?= e($post['title']) ?>">
-                                <?php render_plant_illustration($post['illustration'], 'feed-plant-illustration'); ?>
-                                <?php if ($isFeatured): ?><span class="feed-art-badge">Bài nổi bật</span><?php endif; ?>
-                            </a>
+                            <a class="feed-post-art feed-art-<?= e($post['tone']) ?>" href="blog-post.php?slug=<?= e(rawurlencode($post['slug'])) ?>" aria-label="Đọc bài: <?= e($post['title']) ?>"><?php render_plant_illustration($post['illustration'], 'feed-plant-illustration'); ?></a>
                         </div>
                     </article>
                 <?php endforeach; ?>
+                <?php if ($result['posts'] === []): ?><p class="blog-empty">Chưa có bài viết phù hợp. Hãy thử từ khóa khác, lưu bài để đọc sau hoặc chia sẻ câu chuyện đầu tiên.</p><?php endif; ?>
             </div>
-
-            <div class="feed-end-note">
-                <span class="feed-end-line" aria-hidden="true"></span>
-                <p>Bạn đã đi qua những chiếc lá mới nhất.</p>
-                <a href="#write-post">Viết một câu chuyện <span aria-hidden="true">↗</span></a>
-            </div>
+            <nav class="pagination" aria-label="Phân trang bài viết">
+                <?php if ($result['page'] > 1): ?><a href="blog.php?<?= e(http_build_query($query + ['page' => $result['page'] - 1])) ?>">← Trước</a><?php endif; ?>
+                <span>Trang <?= e($result['page']) ?> / <?= e($result['pages']) ?></span>
+                <?php if ($result['page'] < $result['pages']): ?><a href="blog.php?<?= e(http_build_query($query + ['page' => $result['page'] + 1])) ?>">Sau →</a><?php endif; ?>
+            </nav>
         </section>
     </div>
 </main>
-
 <?php require __DIR__ . '/includes/footer.php'; ?>

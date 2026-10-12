@@ -1,0 +1,98 @@
+digraph Web503073Database {
+    graph [
+        bgcolor="#F6F8F3",
+        color="#D9E2D2",
+        fontname="Segoe UI",
+        fontsize=18,
+        label=<<FONT POINT-SIZE="24"><B>THIẾT KẾ CƠ SỞ DỮ LIỆU — WEB503073</B></FONT><BR/><FONT POINT-SIZE="12" COLOR="#526052">MySQL / MariaDB • InnoDB • utf8mb4 • 3 bảng</FONT>>,
+        labelloc=t,
+        nodesep=0.85,
+        ranksep=1.05,
+        pad=0.45,
+        rankdir=LR,
+        splines=ortho
+    ];
+
+    node [
+        shape=plain,
+        fontname="Segoe UI"
+    ];
+
+    edge [
+        color="#6D8765",
+        fontcolor="#40563D",
+        fontname="Segoe UI",
+        fontsize=12,
+        penwidth=1.7,
+        arrowsize=0.8
+    ];
+
+    users [label=<
+        <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="8" COLOR="#9BB494" BGCOLOR="#FFFFFF">
+            <TR><TD BGCOLOR="#527A4B" ALIGN="LEFT"><FONT COLOR="white" POINT-SIZE="16"><B>users</B></FONT><BR/><FONT COLOR="#EAF4E8" POINT-SIZE="10">Tài khoản &amp; phân quyền</FONT></TD></TR>
+            <TR><TD ALIGN="LEFT"><FONT COLOR="#8E5A25"><B>🔑 PK</B></FONT>  <B>id</B> <FONT COLOR="#697569">INT UNSIGNED AUTO_INCREMENT</FONT></TD></TR>
+            <TR><TD ALIGN="LEFT"><B>name</B> <FONT COLOR="#697569">VARCHAR(100) NOT NULL</FONT></TD></TR>
+            <TR><TD ALIGN="LEFT"><B>email</B> <FONT COLOR="#697569">VARCHAR(254) UNIQUE</FONT></TD></TR>
+            <TR><TD ALIGN="LEFT"><B>password_hash</B> <FONT COLOR="#697569">VARCHAR(255)</FONT></TD></TR>
+            <TR><TD ALIGN="LEFT"><B>role</B> <FONT COLOR="#697569">ENUM(user, admin)</FONT></TD></TR>
+            <TR><TD ALIGN="LEFT"><B>status</B> <FONT COLOR="#697569">ENUM(active, blocked)</FONT></TD></TR>
+            <TR><TD ALIGN="LEFT"><B>session_version</B> <FONT COLOR="#697569">INT UNSIGNED</FONT></TD></TR>
+            <TR><TD ALIGN="LEFT"><B>last_login_at</B> <FONT COLOR="#697569">DATETIME NULL</FONT></TD></TR>
+            <TR><TD ALIGN="LEFT"><B>created_at</B> <FONT COLOR="#697569">DATETIME</FONT></TD></TR>
+            <TR><TD ALIGN="LEFT"><B>updated_at</B> <FONT COLOR="#697569">DATETIME</FONT></TD></TR>
+        </TABLE>
+    >];
+
+    favorites [label=<
+        <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="8" COLOR="#D2A86A" BGCOLOR="#FFFFFF">
+            <TR><TD BGCOLOR="#B9792C" ALIGN="LEFT"><FONT COLOR="white" POINT-SIZE="16"><B>favorites</B></FONT><BR/><FONT COLOR="#FFF1DD" POINT-SIZE="10">Cây yêu thích của người dùng</FONT></TD></TR>
+            <TR><TD ALIGN="LEFT"><FONT COLOR="#8E5A25"><B>🔑 PK, FK</B></FONT>  <B>user_id</B> <FONT COLOR="#697569">INT UNSIGNED</FONT></TD></TR>
+            <TR><TD ALIGN="LEFT"><FONT COLOR="#8E5A25"><B>🔑 PK, FK</B></FONT>  <B>plant_id</B> <FONT COLOR="#697569">INT UNSIGNED</FONT></TD></TR>
+            <TR><TD ALIGN="LEFT"><B>created_at</B> <FONT COLOR="#697569">DATETIME</FONT></TD></TR>
+            <TR><TD ALIGN="LEFT" BGCOLOR="#FFF8EC"><FONT COLOR="#8E5A25"><B>PK kép:</B></FONT> (user_id, plant_id)</TD></TR>
+        </TABLE>
+    >];
+
+    plants [label=<
+        <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="8" COLOR="#8FB5C9" BGCOLOR="#FFFFFF">
+            <TR><TD BGCOLOR="#3C7894" ALIGN="LEFT"><FONT COLOR="white" POINT-SIZE="16"><B>plants</B></FONT><BR/><FONT COLOR="#E5F4FA" POINT-SIZE="10">Danh mục cây cảnh</FONT></TD></TR>
+            <TR><TD ALIGN="LEFT"><FONT COLOR="#8E5A25"><B>🔑 PK</B></FONT>  <B>id</B> <FONT COLOR="#697569">INT UNSIGNED</FONT></TD></TR>
+            <TR><TD ALIGN="LEFT"><B>name</B> <FONT COLOR="#697569">VARCHAR(150)</FONT></TD></TR>
+            <TR><TD ALIGN="LEFT"><B>category</B> <FONT COLOR="#697569">VARCHAR(100)</FONT></TD></TR>
+            <TR><TD ALIGN="LEFT"><B>description</B> <FONT COLOR="#697569">TEXT</FONT></TD></TR>
+            <TR><TD ALIGN="LEFT"><B>care</B> <FONT COLOR="#697569">TEXT</FONT></TD></TR>
+            <TR><TD ALIGN="LEFT"><B>image</B> <FONT COLOR="#697569">VARCHAR(255)</FONT></TD></TR>
+        </TABLE>
+    >];
+
+    legend [label=<
+        <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#EDF3EA">
+            <TR><TD ALIGN="LEFT"><FONT COLOR="#8E5A25"><B>🔑 PK</B></FONT> khóa chính</TD><TD ALIGN="LEFT"><FONT COLOR="#8E5A25"><B>FK</B></FONT> khóa ngoại</TD><TD ALIGN="LEFT"><FONT COLOR="#40563D"><B>1:N</B></FONT> một-nhiều</TD></TR>
+            <TR><TD COLSPAN="3" ALIGN="LEFT"><FONT COLOR="#526052">favorites tạo quan hệ N:N giữa users và plants; xóa user/cây sẽ xóa bản ghi yêu thích liên quan (ON DELETE CASCADE).</FONT></TD></TR>
+        </TABLE>
+    >];
+
+    users -> favorites [
+        dir=both,
+        arrowhead=none,
+        arrowtail=none,
+        headlabel="N",
+        taillabel="1",
+        label="  sở hữu  ",
+        labeldistance=1.5,
+        labelangle=0
+    ];
+
+    favorites -> plants [
+        dir=both,
+        arrowhead=none,
+        arrowtail=none,
+        headlabel="1",
+        taillabel="N",
+        label="  tham chiếu  ",
+        labeldistance=1.5,
+        labelangle=0
+    ];
+
+    { rank=sink; legend; }
+}
