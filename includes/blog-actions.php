@@ -1,7 +1,7 @@
 <?php $postUrl = 'blog-post.php?slug=' . rawurlencode($post['slug']); ?>
 <div class="feed-post-actions">
     <?php if ($user !== null): ?>
-        <form class="feed-vote-group" action="actions/blog-action.php" method="post">
+        <form class="feed-vote-group" action="actions/blog-action.php" method="post" data-inline-action="vote">
             <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
             <input type="hidden" name="operation" value="vote">
             <input type="hidden" name="slug" value="<?= e($post['slug']) ?>">

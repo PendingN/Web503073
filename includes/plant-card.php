@@ -7,7 +7,7 @@ $detailUrl = 'plant-detail.php?' . http_build_query(['id' => (int) $plant['id'],
     <a class="plant-card-image" href="<?= e($detailUrl) ?>">
         <img src="<?= e(image_url($plant['image'])) ?>" alt="<?= e($plant['name']) ?>" loading="lazy" decoding="async" width="900" height="1200">
     </a>
-    <form class="favorite-form" method="post" action="actions/favorite-action.php">
+    <form class="favorite-form" method="post" action="actions/favorite-action.php"<?= ($dashboardActive ?? '') === 'collection' ? ' data-inline-action="favorite"' : '' ?>>
         <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
         <input type="hidden" name="plant_id" value="<?= (int) $plant['id'] ?>">
         <input type="hidden" name="return_to" value="<?= e($returnTo) ?>">

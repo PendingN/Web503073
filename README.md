@@ -440,7 +440,7 @@ Dự án hiện không có package manager, build step hoặc formatter bắt bu
 
 - Trang chủ, bộ sưu tập, trang chi tiết, blog và trang cá nhân dùng thanh điều hướng chung. Trang cá nhân có bố cục riêng; sidebar trong bộ sưu tập chỉ điều hướng các mục của bộ sưu tập.
 - Nút **Đăng nhập** hiển thị khi chưa đăng nhập và ẩn khi đã đăng nhập; trang `login.php` vẫn mở được bằng URL khi đang có phiên đăng nhập. Đăng nhập hoặc đăng ký trực tiếp mặc định mở trang cá nhân. Nếu đi từ một chức năng yêu cầu đăng nhập, ứng dụng quay lại URL nội bộ đã được kiểm tra, giữ bộ lọc và vị trí neo trong trang.
-- Liên kết quay lại từ chi tiết cây giữ lại trang nguồn và bộ lọc tìm kiếm. Các thao tác thay đổi dữ liệu vẫn dùng POST, CSRF và chuyển hướng sau khi ghi; JavaScript chỉ hỗ trợ giao diện và ngăn gửi biểu mẫu lặp trong lúc đang chuyển trang.
+- Liên kết quay lại từ chi tiết cây giữ lại trang nguồn và bộ lọc tìm kiếm. Các thao tác thay đổi dữ liệu dùng POST và CSRF. Nút yêu thích ở bộ sưu tập và bình chọn blog cập nhật tại chỗ qua JSON để giữ vị trí cuộn; khi không có JavaScript, biểu mẫu vẫn hoạt động qua chuyển hướng sau khi ghi. JavaScript ngăn gửi biểu mẫu lặp khi đang xử lý.
 - Font được phục vụ từ `fonts/` qua `css/fonts.css`; giấy phép nằm cùng thư mục. Website không cần tải font từ Google khi mở trang.
 - `images/optimized/` chứa các bản WebP giữ nguyên kích thước của ảnh gốc. Ảnh gốc được giữ lại. `image_url()` ưu tiên bản WebP; nếu thay ảnh gốc mới hơn bản tối ưu, helper tự dùng lại ảnh gốc. Hai ảnh nền trong CSS trỏ trực tiếp tới bản WebP, cần cập nhật bản này khi thay nền.
 - CSS, JavaScript và ảnh trong HTML có phiên bản dựa trên thời gian sửa file để trình duyệt lấy đúng tài nguyên sau mỗi lần thay đổi.

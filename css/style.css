@@ -35,6 +35,8 @@ button, input, select, textarea { font: inherit; }
 button, a { -webkit-tap-highlight-color: transparent; }
 button { cursor: pointer; }
 form[aria-busy="true"] [aria-disabled="true"] { cursor: wait; opacity: .65; }
+.inline-action-notice { position: fixed; z-index: 300; right: 24px; bottom: 24px; max-width: min(420px, calc(100vw - 48px)); padding: 16px 20px; border: 1px solid #cbd8bd; border-radius: 14px; background: #edf2e6; color: #314724; box-shadow: 0 8px 28px #24382422; font-size: 13px; line-height: 1.7; }
+.inline-action-notice.is-error { background: #fff1ed; border-color: #e9b8aa; color: #8c3727; }
 a { text-decoration: none; }
 :focus-visible { outline: 3px solid var(--brand-hover); outline-offset: 4px; }
 input:focus-visible { outline-offset: 2px; }
