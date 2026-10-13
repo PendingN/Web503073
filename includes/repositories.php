@@ -33,6 +33,29 @@ function find_plant(int $plantId): ?array
     return $statement->fetch() ?: null;
 }
 
+function plant_catalog_statistics(): array
+{
+    static $statistics = null;
+    if ($statistics === null) {
+        $rows = db()->query('SELECT category, COUNT(*) AS total FROM plants GROUP BY category ORDER BY category')->fetchAll();
+        $statistics = ['total' => array_sum(array_column($rows, 'total')), 'categories' => array_column($rows, 'category')];
+    }
+    return $statistics;
+}
+
+function plants_by_ids(array $ids): array
+{
+    $ids = array_values(array_unique(array_map('intval', $ids)));
+    if ($ids === []) {
+        return [];
+    }
+    $statement = db()->prepare('SELECT id, name, category, description, care, image FROM plants WHERE id IN ('
+        . implode(',', array_fill(0, count($ids), '?')) . ')');
+    $statement->execute($ids);
+    $plants = array_column($statement->fetchAll(), null, 'id');
+    return array_values(array_filter(array_map(static fn (int $id): ?array => $plants[$id] ?? null, $ids)));
+}
+
 function find_user(int $userId): ?array
 {
     $statement = db()->prepare('SELECT * FROM users WHERE id = ?');

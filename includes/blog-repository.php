@@ -23,6 +23,11 @@ function count_blog_posts(): int
     return (int) db()->query('SELECT COUNT(*) FROM blog_posts')->fetchColumn();
 }
 
+function latest_blog_posts(): array
+{
+    return db()->query('SELECT slug, title, tag, created_at FROM blog_posts ORDER BY created_at DESC, id DESC LIMIT 5')->fetchAll();
+}
+
 function list_blog_posts(string $search, string $sort, string $view, int $userId, int $page): array
 {
     $where = ' WHERE 1 = 1';

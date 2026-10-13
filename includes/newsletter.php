@@ -1,7 +1,3 @@
-<form class="newsletter-form" data-newsletter-form>
-    <label class="sr-only" for="newsletter-email">Email của bạn</label>
-    <input id="newsletter-email" name="email" type="email" placeholder="Email của bạn" required>
-    <button type="submit">Đăng ký →</button>
-</form>
-<p class="newsletter-success" role="status" hidden data-newsletter-success>✓ Cảm ơn bạn! Lá thư xanh tiếp theo sẽ sớm ghé hộp thư.</p>
+<p>Tham gia cộng đồng để lưu cây yêu thích và chia sẻ câu chuyện của bạn.</p>
+<a class="btn-brand" href="<?= e(app_url('register.php')) ?>">Tạo tài khoản</a>
 

@@ -4,12 +4,14 @@ declare(strict_types=1);
 require_once __DIR__ . '/includes/init.php';
 require_login();
 
-$favoritePlants = array_values(array_filter(array_map('find_plant', favorite_ids())));
+$favoritePlants = plants_by_ids(favorite_ids());
 $pageTitle = 'Yêu thích';
 $bodyClass = 'dashboard-page';
 $dashboardActive = 'favorites';
+$activePage = 'collection';
 $flashMessage = take_flash();
 require __DIR__ . '/includes/header.php';
+require __DIR__ . '/includes/navbar.php';
 ?>
 
 <div class="dashboard-shell">
@@ -29,7 +31,7 @@ require __DIR__ . '/includes/header.php';
                 <div class="empty-state">
                     <h2>Góc này vẫn đang chờ những chiếc lá đầu tiên.</h2>
                     <p>Hãy bấm biểu tượng trái tim trên một thẻ cây để lưu lại lựa chọn của bạn.</p>
-                    <a class="btn-brand" href="collection.php">Khám phá bộ sưu tập ↗</a>
+                    <a class="btn-brand" href="collection.php">Khám phá bộ sưu tập</a>
                 </div>
             <?php else: ?>
                 <div class="plant-grid">

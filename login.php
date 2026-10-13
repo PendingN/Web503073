@@ -5,12 +5,8 @@ require_once __DIR__ . '/includes/init.php';
 
 $loginError = null;
 $email = '';
-$returnTo = safe_return_url($_POST['return_to'] ?? $_GET['return_to'] ?? null, 'dashboard.php');
+$returnTo = safe_return_url($_POST['return_to'] ?? $_GET['return_to'] ?? null, 'profile.php');
 $flashMessage = take_flash();
-if (current_user() !== null) {
-    redirect_to($returnTo);
-}
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_csrf();
     $email = strtolower(trim(request_string($_POST, 'email')));
@@ -52,6 +48,9 @@ require __DIR__ . '/includes/navbar.php';
             <p class="eyebrow">CHÀO MỪNG TRỞ LẠI</p>
             <h1>Đăng nhập</h1>
             <p>Tiếp tục hành trình chăm cây của bạn.</p>
+            <?php if ($signedInUser = current_user()): ?>
+                <p class="login-help">Bạn đang đăng nhập với tên <?= e($signedInUser['name']) ?>. <a href="profile.php">Mở trang cá nhân</a> hoặc dùng biểu mẫu dưới đây để đăng nhập tài khoản khác.</p>
+            <?php endif; ?>
 
             <?php if ($flashMessage !== null): ?><div class="status-note" role="status"><?= e($flashMessage) ?></div><?php endif; ?>
 
@@ -73,11 +72,11 @@ require __DIR__ . '/includes/navbar.php';
                         <button class="password-toggle" type="button" data-password-toggle aria-controls="password" aria-label="Hiện mật khẩu">Hiện</button>
                     </div>
                 </div>
-                <button class="btn-brand" type="submit">Đăng nhập ↗</button>
+                <button class="btn-brand" type="submit">Đăng nhập</button>
             </form>
 
             <p class="login-help">Chưa có tài khoản? <a href="register.php?return_to=<?= rawurlencode($returnTo) ?>">Đăng ký ngay</a></p>
-            <p class="login-help">Chưa muốn đăng nhập? <a href="dashboard.php">Khám phá dashboard</a></p>
+            <p class="login-help">Chưa muốn đăng nhập? <a href="collection.php">Khám phá bộ sưu tập</a></p>
         </div>
     </section>
 </main>

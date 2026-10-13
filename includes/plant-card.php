@@ -1,10 +1,11 @@
 <?php
 $favorite = is_favorite((int) $plant['id']);
 $returnTo = $returnTo ?? current_request_url();
+$detailUrl = 'plant-detail.php?' . http_build_query(['id' => (int) $plant['id'], 'return_to' => safe_return_url($returnTo)]);
 ?>
 <article class="plant-card">
-    <a class="plant-card-image" href="plant-detail.php?id=<?= (int) $plant['id'] ?>">
-        <img src="images/<?= e($plant['image']) ?>" alt="<?= e($plant['name']) ?>" loading="lazy" width="900" height="1200">
+    <a class="plant-card-image" href="<?= e($detailUrl) ?>">
+        <img src="<?= e(image_url($plant['image'])) ?>" alt="<?= e($plant['name']) ?>" loading="lazy" decoding="async" width="900" height="1200">
     </a>
     <form class="favorite-form" method="post" action="actions/favorite-action.php">
         <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
@@ -16,9 +17,9 @@ $returnTo = $returnTo ?? current_request_url();
     </form>
     <div class="plant-card-body">
         <p class="plant-category"><?= e($plant['category']) ?></p>
-        <h3><a href="plant-detail.php?id=<?= (int) $plant['id'] ?>"><?= e($plant['name']) ?></a></h3>
+        <h3><a href="<?= e($detailUrl) ?>"><?= e($plant['name']) ?></a></h3>
         <p><?= e($plant['description']) ?></p>
-        <a class="plant-card-link" href="plant-detail.php?id=<?= (int) $plant['id'] ?>">Xem cách chăm →</a>
+        <a class="plant-card-link" href="<?= e($detailUrl) ?>">Xem cách chăm</a>
     </div>
 </article>
 

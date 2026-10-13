@@ -5,6 +5,13 @@ require_once __DIR__ . '/includes/init.php';
 
 $plantId = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT);
 $plant = $plantId === false ? null : find_plant((int) $plantId);
+$returnTo = safe_return_url($_GET['return_to'] ?? null, 'collection.php');
+$returnPage = basename(parse_url($returnTo, PHP_URL_PATH));
+$backLabel = match ($returnPage) {
+    'favorites.php' => 'Quay lại cây yêu thích',
+    'dashboard.php' => 'Quay lại tổng quan',
+    default => 'Quay lại bộ sưu tập',
+};
 if ($plant === null) {
     http_response_code(404);
 }
@@ -20,13 +27,13 @@ require __DIR__ . '/includes/navbar.php';
         <p class="eyebrow">404 · KHÔNG TÌM THẤY</p>
         <h1>Cây này chưa có trong khu vườn.</h1>
         <p>Đường dẫn bạn mở không trỏ tới một giống cây hợp lệ. Hãy quay lại bộ sưu tập để tiếp tục khám phá.</p>
-        <a class="btn-brand" href="collection.php">Về bộ sưu tập ↗</a>
+        <a class="btn-brand" href="collection.php">Về bộ sưu tập</a>
     </main>
 <?php else: ?>
     <main class="detail-main">
-        <a class="back-link" href="collection.php">← Quay lại bộ sưu tập</a>
+        <a class="back-link" href="<?= e($returnTo) ?>"><?= e($backLabel) ?></a>
         <article class="plant-detail">
-            <div class="detail-image"><img src="images/<?= e($plant['image']) ?>" alt="<?= e($plant['name']) ?>"></div>
+            <div class="detail-image"><img src="<?= e(image_url($plant['image'])) ?>" alt="<?= e($plant['name']) ?>" decoding="async" fetchpriority="high"></div>
             <div class="detail-copy">
                 <p class="plant-category"><?= e($plant['category']) ?></p>
                 <h1><?= e($plant['name']) ?></h1>

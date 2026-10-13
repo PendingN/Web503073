@@ -25,12 +25,12 @@ require __DIR__ . '/includes/plant-illustration.php';
         <p class="eyebrow">404 · BÀI VIẾT KHÔNG TỒN TẠI</p>
         <h1>Trang này đang để dành cho một câu chuyện khác.</h1>
         <p>Có thể bài viết đã được chuyển đi. Bạn vẫn có thể đọc những ghi chú mới nhất trong nhật ký rừng xanh.</p>
-        <a class="btn-brand" href="blog.php">Về trang blog ↗</a>
+        <a class="btn-brand" href="blog.php">Về trang blog</a>
     </main>
 <?php else: ?>
     <main class="blog-post-main">
         <?php if ($flash = take_flash()): ?><p class="status-note" role="status"><?= e($flash) ?></p><?php endif; ?>
-        <a class="back-link" href="blog.php">← Quay lại nhật ký</a>
+        <a class="back-link" href="blog.php"> Quay lại nhật ký</a>
         <header class="blog-post-header">
             <div class="post-meta"><span><?= e($post['tag']) ?></span><span><?= e(date('d/m/Y H:i', strtotime($post['created_at']))) ?> · <?= e($post['author']) ?></span></div>
             <h1><?= e($post['title']) ?></h1>
@@ -40,7 +40,7 @@ require __DIR__ . '/includes/plant-illustration.php';
         <article class="blog-post-body">
             <div class="blog-text"><?= e($post['content']) ?></div>
             <?php require __DIR__ . '/includes/blog-actions.php'; ?>
-            <div class="blog-post-cta"><p>Muốn tìm một người bạn xanh cho không gian của mình?</p><a class="btn-brand" href="collection.php">Khám phá bộ sưu tập ↗</a></div>
+            <div class="blog-post-cta"><p>Muốn tìm một người bạn xanh cho không gian của mình?</p><a class="btn-brand" href="collection.php">Khám phá bộ sưu tập</a></div>
         </article>
         <?php if (can_edit_post($post, $user)): ?>
             <details class="blog-delete">
@@ -86,9 +86,9 @@ require __DIR__ . '/includes/plant-illustration.php';
             <?php if ($comments['comments'] === []): ?><p class="blog-empty">Chưa có bình luận. Hãy chia sẻ ý kiến đầu tiên.</p><?php endif; ?>
             <?php if ($comments['pages'] > 1): ?>
                 <nav class="pagination" aria-label="Phân trang bình luận">
-                    <?php if ($comments['page'] > 1): ?><a href="blog-post.php?<?= e(http_build_query(['slug' => $slug, 'page' => $comments['page'] - 1])) ?>#comments">← Trước</a><?php endif; ?>
+                    <?php if ($comments['page'] > 1): ?><a href="blog-post.php?<?= e(http_build_query(['slug' => $slug, 'page' => $comments['page'] - 1])) ?>#comments"> Trước</a><?php endif; ?>
                     <span>Trang <?= e($comments['page']) ?> / <?= e($comments['pages']) ?></span>
-                    <?php if ($comments['page'] < $comments['pages']): ?><a href="blog-post.php?<?= e(http_build_query(['slug' => $slug, 'page' => $comments['page'] + 1])) ?>#comments">Sau →</a><?php endif; ?>
+                    <?php if ($comments['page'] < $comments['pages']): ?><a href="blog-post.php?<?= e(http_build_query(['slug' => $slug, 'page' => $comments['page'] + 1])) ?>#comments">Sau</a><?php endif; ?>
                 </nav>
             <?php endif; ?>
         </section>

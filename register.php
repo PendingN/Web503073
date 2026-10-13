@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/includes/init.php';
-$returnTo = safe_return_url($_POST['return_to'] ?? $_GET['return_to'] ?? null, 'dashboard.php');
+$returnTo = safe_return_url($_POST['return_to'] ?? $_GET['return_to'] ?? null, 'profile.php');
 if (current_user() !== null) {
     redirect_to($returnTo);
 }
@@ -84,7 +84,7 @@ require __DIR__ . '/includes/navbar.php';
                     <label class="form-label" for="password_confirmation">Nhập lại mật khẩu</label>
                     <input class="form-control" id="password_confirmation" name="password_confirmation" type="password" autocomplete="new-password" minlength="8" maxlength="72" required>
                 </div>
-                <button class="btn-brand" type="submit">Tạo tài khoản ↗</button>
+                <button class="btn-brand" type="submit">Tạo tài khoản</button>
             </form>
             <p class="login-help">Đã có tài khoản? <a href="login.php?return_to=<?= rawurlencode($returnTo) ?>">Đăng nhập</a></p>
         </div>

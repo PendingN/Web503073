@@ -11,9 +11,8 @@ $fullTitle = $pageTitle === '' ? 'Vũ Điệu Rừng Xanh' : $pageTitle . ' | V�
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="<?= e($pageDescription) ?>">
     <title><?= e($fullTitle) ?></title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;900&family=Patrick+Hand&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
+    <?php if ($bodyClass === 'landing-page'): ?><link rel="preload" as="image" href="<?= e(app_url('images/optimized/hero-canopy-enhanced.webp')) ?>" fetchpriority="high"><?php endif; ?>
+    <link rel="stylesheet" href="<?= e(asset_url('css/fonts.css')) ?>">
+    <link rel="stylesheet" href="<?= e(asset_url('css/style.css')) ?>">
 </head>
 <body class="<?= e($bodyClass) ?>">

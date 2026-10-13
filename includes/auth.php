@@ -40,7 +40,7 @@ function require_login(?string $returnTo = null): array
         if (!isset($_SESSION['flash_message'])) {
             set_flash('Vui lòng đăng nhập để tiếp tục.');
         }
-        $target = safe_return_url($returnTo ?? current_request_url(), 'dashboard.php');
+        $target = safe_return_url($returnTo ?? current_request_url(), 'profile.php');
         redirect_to(app_url('login.php') . '?return_to=' . rawurlencode($target));
     }
     return $user;
