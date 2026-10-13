@@ -103,6 +103,7 @@ try {
     putenv('DB_NAME=' . $testName);
     run_cli(['scripts/setup-database.php']);
     check((int) db()->query('SELECT COUNT(*) FROM plants')->fetchColumn() === 40, 'Seed must import all 40 plants.');
+    check(array_column(plants_by_ids([22, 21, 22, 99999]), 'id') === [22, 21], 'Bulk plant lookup must preserve order, remove duplicates and skip missing IDs.');
 
     $adminEnvironment = ['APP_ADMIN_NAME' => 'Test Admin', 'APP_ADMIN_EMAIL' => 'admin@example.test', 'APP_ADMIN_PASSWORD' => 'TestAdmin123!'];
     $previousAdmin = [];
@@ -173,6 +174,13 @@ try {
     $alice = find_user_by_email('alice@example.test');
     check($alice !== null && $alice['role'] === 'user' && $alice['password_hash'] !== 'Garden123!' && password_verify('Garden123!', $alice['password_hash']), 'Registration must normalize email, hash password, and prevent role escalation.');
     check($guest->request('admin.php')['status'] === 403, 'Ordinary user accessed admin.');
+    $profilePage = $guest->request('profile.php');
+    check(!str_contains($profilePage['body'], 'class="dashboard-shell"') && !str_contains($profilePage['body'], 'class="dashboard-sidebar"'), 'Profile must use its own layout.');
+    check(str_contains($profilePage['body'], 'aria-current="page" href="profile.php"'), 'Profile must activate the shared navigation tab.');
+    check(str_contains($guest->request('collection.php')['body'], 'id="site-menu"'), 'Collection must expose the shared site navigation.');
+    $backToCollection = $prefix . '/collection.php?search=' . rawurlencode('Trầu Bà');
+    $detailPage = $guest->request('plant-detail.php?id=21&return_to=' . rawurlencode($backToCollection));
+    check(str_contains($detailPage['body'], 'class="back-link" href="' . htmlspecialchars($backToCollection, ENT_QUOTES, 'UTF-8') . '"'), 'Plant detail must preserve collection search on the back link.');
     $aliceToken = $guest->token('profile.php');
     check($guest->request('actions/user-action.php', ['csrf_token' => $aliceToken, 'user_id' => $admin['id'], 'operation' => 'block'])['status'] === 403, 'Ordinary user accessed user management.');
     check($guest->request('actions/favorite-action.php', ['csrf_token' => $aliceToken, 'plant_id' => 99999])['status'] === 404, 'Unknown favorite was accepted.');
@@ -191,7 +199,14 @@ try {
     $aliceBrowser = new TestBrowser($base);
     check(str_contains($aliceBrowser->login('invalid-email', 'Garden123!')['body'], 'Email hoặc mật khẩu chưa đúng.'), 'Invalid email must show the login error.');
     check($aliceBrowser->login('alice@example.test', 'wrong-password')['status'] === 200, 'Bad password must fail.');
-    check($aliceBrowser->login('alice@example.test', 'Garden123!')['status'] === 303, 'Valid login failed.');
+    $loginResponse = $aliceBrowser->login('alice@example.test', 'Garden123!');
+    check($loginResponse['status'] === 303 && $loginResponse['headers']['location'] === $prefix . '/profile.php', 'Direct login must open the standalone profile.');
+    check($aliceBrowser->request('login.php')['status'] === 200, 'Login form must remain accessible for a signed-in user.');
+    $returnPath = $prefix . '/collection.php?category=' . rawurlencode($category) . '#results';
+    $response = $aliceBrowser->request('login.php', ['csrf_token' => $aliceBrowser->token('login.php'), 'email' => 'alice@example.test', 'password' => 'Garden123!', 'return_to' => $returnPath]);
+    check($response['status'] === 303 && $response['headers']['location'] === $returnPath, 'Login must preserve local filters and anchors.');
+    $response = $aliceBrowser->request('login.php', ['csrf_token' => $aliceBrowser->token('login.php'), 'email' => 'alice@example.test', 'password' => 'Garden123!', 'return_to' => $prefix . '/']);
+    check($response['headers']['location'] === $prefix . '/index.php', 'Site root return URL must resolve to the landing page.');
     check(str_contains($aliceBrowser->request('favorites.php')['body'], 'Cây Lưỡi Hổ'), 'Favorites did not persist across sessions.');
     $oldAliceBrowser = new TestBrowser($base);
     check($oldAliceBrowser->login('alice@example.test', 'Garden123!')['status'] === 303, 'Second session failed.');
@@ -212,7 +227,7 @@ try {
 
     $bobBrowser = new TestBrowser($base);
     $response = $bobBrowser->request('register.php', ['csrf_token' => $bobBrowser->token('register.php'), 'name' => 'Bob Garden', 'email' => 'bob@example.test', 'password' => 'BobGarden123!', 'password_confirmation' => 'BobGarden123!', 'return_to' => 'https://example.invalid']);
-    check($response['status'] === 303 && $response['headers']['location'] === $prefix . '/dashboard.php', 'Registration allowed an external redirect.');
+    check($response['status'] === 303 && $response['headers']['location'] === $prefix . '/profile.php', 'Registration must reject external redirects and open the profile.');
     $bob = find_user_by_email('bob@example.test');
     check(user_favorite_ids((int) $bob['id']) === [], 'Another user inherited favorites.');
     $bobToken = $bobBrowser->token('profile.php');
@@ -245,6 +260,11 @@ try {
     check($blockedLogin->login('bob@example.test', 'BobGarden123!')['status'] === 303, 'Unblocked user cannot log in again.');
 
     require __DIR__ . '/blog.php';
+
+    $update['email'] = 'bob-updated@example.test';
+    check($adminBrowser->request('actions/user-action.php', $update)['status'] === 303, 'Administrator email update failed.');
+    check(find_user((int) $bob['id'])['email'] === $update['email'], 'Administrator email update did not persist.');
+    check($blockedLogin->request('profile.php')['status'] === 303, 'Administrator email change must invalidate the target user sessions.');
 
     $statement = db()->prepare('INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)');
     for ($index = 0; $index < 22; $index++) {

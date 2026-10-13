@@ -53,6 +53,22 @@ function app_url(string $path = ''): string
     return rtrim($directory === '.' ? '' : $directory, '/') . '/' . ltrim($path, '/');
 }
 
+function asset_url(string $path): string
+{
+    $file = __DIR__ . '/../' . $path;
+    return app_url($path) . (is_file($file) ? '?v=' . filemtime($file) : '');
+}
+
+function image_url(string $filename): string
+{
+    $optimized = 'images/optimized/' . pathinfo($filename, PATHINFO_FILENAME) . '.webp';
+    $original = 'images/' . $filename;
+    $optimizedPath = __DIR__ . '/../' . $optimized;
+    $originalPath = __DIR__ . '/../' . $original;
+    return asset_url(is_file($optimizedPath) && is_file($originalPath)
+        && filemtime($optimizedPath) >= filemtime($originalPath) ? $optimized : $original);
+}
+
 function redirect_to(string $location): void
 {
     header('Location: ' . $location, true, 303);
@@ -64,7 +80,7 @@ function abort_request(int $status, string $message): void
     http_response_code($status);
     echo '<!doctype html><html lang="vi"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">';
     echo '<title>Vũ Điệu Rừng Xanh</title><link rel="stylesheet" href="' . e(app_url('css/style.css')) . '">';
-    echo '<main class="not-found"><h1>' . e($message) . '</h1><a class="btn-brand" href="' . e(app_url('index.php')) . '">Về trang chủ ↗</a></main></html>';
+    echo '<main class="not-found"><h1>' . e($message) . '</h1><a class="btn-brand" href="' . e(app_url('index.php')) . '">Về trang chủ</a></main></html>';
     exit;
 }
 
@@ -130,7 +146,7 @@ function safe_return_url(mixed $returnTo, string $fallback = 'collection.php'): 
     }
     $parts = parse_url($returnTo);
     if ($parts === false || isset($parts['scheme']) || isset($parts['host']) || isset($parts['user'])
-        || isset($parts['fragment']) || str_starts_with($returnTo, '//')) {
+        || str_starts_with($returnTo, '//')) {
         return app_url($fallback);
     }
     $path = $parts['path'] ?? '';
@@ -141,11 +157,19 @@ function safe_return_url(mixed $returnTo, string $fallback = 'collection.php'): 
         }
         $path = substr($path, strlen($base));
     }
+    if ($path === '') {
+        $path = 'index.php';
+    }
     $pages = ['index.php', 'dashboard.php', 'collection.php', 'favorites.php', 'profile.php', 'plant-detail.php', 'blog.php', 'blog-post.php', 'admin.php'];
     if (!in_array($path, $pages, true)) {
         return app_url($fallback);
     }
-    return app_url($path) . (isset($parts['query']) ? '?' . $parts['query'] : '');
+    $fragment = $parts['fragment'] ?? '';
+    if ($fragment !== '' && !preg_match('/^[a-zA-Z][a-zA-Z0-9_-]*$/', $fragment)) {
+        return app_url($fallback);
+    }
+    return app_url($path) . (isset($parts['query']) ? '?' . $parts['query'] : '')
+        . ($fragment !== '' ? '#' . $fragment : '');
 }
 
 function current_request_url(): string
@@ -161,7 +185,6 @@ set_exception_handler(static function (Throwable $exception): void {
     abort_request(500, 'Có lỗi xảy ra. Vui lòng thử lại sau.');
 });
 
-$plants = list_plants();
 // Validate the session on every request, including public pages.
 current_user();
 

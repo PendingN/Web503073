@@ -7,7 +7,7 @@ $pageDescription = 'Chia sẻ kinh nghiệm và cảm hứng sống cùng cây x
 $bodyClass = 'blog-page';
 $activePage = 'blog';
 $user = current_user();
-$search = trim(request_string($_GET, 'search'));
+$search = mb_substr(trim(request_string($_GET, 'search')), 0, 200, 'UTF-8');
 $sort = request_string($_GET, 'sort') === 'popular' ? 'popular' : 'new';
 $view = request_string($_GET, 'view');
 $view = in_array($view, ['saved', 'mine'], true) ? $view : 'all';
@@ -16,7 +16,7 @@ if ($view !== 'all') {
 }
 $page = max(1, (int) request_string($_GET, 'page', '1'));
 $result = list_blog_posts($search, $sort, $view, (int) ($user['id'] ?? 0), $page);
-$latestPosts = array_slice(list_blog_posts('', 'new', 'all', (int) ($user['id'] ?? 0), 1)['posts'], 0, 5);
+$latestPosts = latest_blog_posts();
 $editSlug = request_string($_GET, 'edit');
 $editing = null;
 if ($editSlug !== '') {
@@ -55,7 +55,7 @@ require __DIR__ . '/includes/plant-illustration.php';
             <div class="feed-ticker-viewport">
                 <div class="feed-ticker-track">
                     <?php foreach ([$latestPosts, $latestPosts] as $copyIndex => $tickerPosts): ?>
-                        <div class="feed-ticker-group"<?= $copyIndex === 1 ? ' aria-hidden="true"' : '' ?>>
+                        <div class="feed-ticker-group"<?= $copyIndex === 1 ? ' aria-hidden="true" inert' : '' ?>>
                             <?php foreach ($tickerPosts as $tickerPost): ?>
                                 <a class="feed-ticker-card" href="blog-post.php?slug=<?= e(rawurlencode($tickerPost['slug'])) ?>">
                                     <span class="feed-ticker-label"><?= e($tickerPost['tag']) ?></span>
@@ -133,9 +133,9 @@ require __DIR__ . '/includes/plant-illustration.php';
                 <?php if ($result['posts'] === []): ?><p class="blog-empty">Chưa có bài viết phù hợp. Hãy thử từ khóa khác, lưu bài để đọc sau hoặc chia sẻ câu chuyện đầu tiên.</p><?php endif; ?>
             </div>
             <nav class="pagination" aria-label="Phân trang bài viết">
-                <?php if ($result['page'] > 1): ?><a href="blog.php?<?= e(http_build_query($query + ['page' => $result['page'] - 1])) ?>">← Trước</a><?php endif; ?>
+                <?php if ($result['page'] > 1): ?><a href="blog.php?<?= e(http_build_query($query + ['page' => $result['page'] - 1])) ?>"> Trước</a><?php endif; ?>
                 <span>Trang <?= e($result['page']) ?> / <?= e($result['pages']) ?></span>
-                <?php if ($result['page'] < $result['pages']): ?><a href="blog.php?<?= e(http_build_query($query + ['page' => $result['page'] + 1])) ?>">Sau →</a><?php endif; ?>
+                <?php if ($result['page'] < $result['pages']): ?><a href="blog.php?<?= e(http_build_query($query + ['page' => $result['page'] + 1])) ?>">Sau</a><?php endif; ?>
             </nav>
         </section>
     </div>

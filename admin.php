@@ -30,20 +30,20 @@ require __DIR__ . '/includes/header.php';
 ?>
 <div class="admin-shell">
     <aside class="admin-sidebar">
-        <a class="admin-brand" href="index.php"><span>↗</span><strong>VŨ ĐIỆU<br>RỪNG XANH</strong></a>
+        <a class="admin-brand" href="index.php"><strong>VŨ ĐIỆU<br>RỪNG XANH</strong></a>
         <p class="admin-label">KHÔNG GIAN QUẢN TRỊ</p>
         <nav aria-label="Điều hướng quản trị">
             <a href="admin.php#overview"><span>⌂</span>Tổng quan</a>
             <a class="is-active" href="admin.php#users" aria-current="page"><span>♧</span>Người dùng</a>
-            <a href="dashboard.php"><span>↗</span>Xem website</a>
+            <a href="index.php">Xem website</a>
         </nav>
-        <div class="admin-sidebar-foot"><span class="admin-avatar">AD</span><div><strong><?= e($admin['name']) ?></strong><small>Quản trị viên</small></div><a href="profile.php" aria-label="Trang cá nhân">↗</a></div>
+        <div class="admin-sidebar-foot"><span class="admin-avatar">AD</span><div><strong><?= e($admin['name']) ?></strong><small>Quản trị viên</small></div><a href="profile.php" aria-label="Trang cá nhân">Trang cá nhân</a></div>
     </aside>
     <div class="admin-content">
         <header class="admin-topbar">
             <div><p><?= e(date('d/m/Y')) ?></p><h1>Quản lý người dùng</h1></div>
             <div class="admin-actions">
-                <a href="dashboard.php">Xem website ↗</a>
+                <a href="index.php">Xem website</a>
                 <form class="logout-form" method="post" action="actions/logout.php">
                     <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
                     <button type="submit">Đăng xuất</button>
@@ -54,7 +54,7 @@ require __DIR__ . '/includes/header.php';
             <?php if ($flashMessage !== null): ?><div class="status-note" role="status" data-auto-dismiss><?= e($flashMessage) ?></div><?php endif; ?>
             <section class="admin-stats" id="overview" aria-label="Thống kê tài khoản">
                 <article><div class="stat-top"><span>Tổng tài khoản</span><i>◌</i></div><strong><?= (int) $stats['total'] ?></strong><small>Thành viên và quản trị viên</small></article>
-                <article><div class="stat-top"><span>Đang hoạt động</span><i>↗</i></div><strong><?= (int) $stats['active'] ?></strong><small>Có thể đăng nhập</small></article>
+                <article><div class="stat-top"><span>Đang hoạt động</span></div><strong><?= (int) $stats['active'] ?></strong><small>Có thể đăng nhập</small></article>
                 <article><div class="stat-top"><span>Đã khóa</span><i>×</i></div><strong><?= (int) $stats['blocked'] ?></strong><small>Chờ quản trị viên mở khóa</small></article>
                 <article><div class="stat-top"><span>Quản trị viên</span><i>⌂</i></div><strong><?= (int) $stats['admins'] ?></strong><small>Quản lý tài khoản thành viên</small></article>
             </section>
@@ -114,8 +114,8 @@ require __DIR__ . '/includes/header.php';
                 </div>
                 <nav class="pagination" aria-label="Phân trang người dùng">
                     <span>Trang <?= (int) $result['page'] ?> / <?= (int) $result['pages'] ?></span>
-                    <?php if ($result['page'] > 1): ?><a href="admin.php?<?= e(http_build_query(['search' => $search, 'status' => $status, 'page' => $result['page'] - 1])) ?>#users">← Trước</a><?php endif; ?>
-                    <?php if ($result['page'] < $result['pages']): ?><a href="admin.php?<?= e(http_build_query(['search' => $search, 'status' => $status, 'page' => $result['page'] + 1])) ?>#users">Tiếp →</a><?php endif; ?>
+                    <?php if ($result['page'] > 1): ?><a href="admin.php?<?= e(http_build_query(['search' => $search, 'status' => $status, 'page' => $result['page'] - 1])) ?>#users"> Trước</a><?php endif; ?>
+                    <?php if ($result['page'] < $result['pages']): ?><a href="admin.php?<?= e(http_build_query(['search' => $search, 'status' => $status, 'page' => $result['page'] + 1])) ?>#users">Tiếp</a><?php endif; ?>
                 </nav>
             </section>
         </main>

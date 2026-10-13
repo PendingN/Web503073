@@ -3,13 +3,16 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/includes/init.php';
 
-$pageTitle = 'Dashboard';
+$pageTitle = 'Tổng quan bộ sưu tập';
 $bodyClass = 'dashboard-page';
 $dashboardActive = 'overview';
 $flashMessage = take_flash();
 $featuredIds = [22, 21, 23, 27];
-$featuredPlants = array_values(array_filter(array_map('find_plant', $featuredIds)));
+$featuredPlants = plants_by_ids($featuredIds);
+$catalog = plant_catalog_statistics();
+$activePage = 'collection';
 require __DIR__ . '/includes/header.php';
+require __DIR__ . '/includes/navbar.php';
 ?>
 
 <div class="dashboard-shell">
@@ -25,7 +28,7 @@ require __DIR__ . '/includes/header.php';
                     <p class="lead">Một vài phút quan sát hôm nay sẽ giúp những mầm xanh lớn lên khỏe mạnh hơn.</p>
                 </div>
                 <div class="dashboard-actions">
-                    <a class="btn-brand" href="collection.php">Khám phá cây ↗</a>
+                    <a class="btn-brand" href="collection.php">Khám phá cây</a>
                     <a class="btn-outline-brand" href="blog.php">Đọc nhật ký</a>
                 </div>
             </header>
@@ -42,8 +45,8 @@ require __DIR__ . '/includes/header.php';
             </section>
 
             <section class="stats-grid" aria-label="Thống kê bộ sưu tập">
-                <article class="stat-card"><span>Tổng số giống cây</span><strong><?= count($plants) ?></strong></article>
-                <article class="stat-card"><span>Nhóm cây</span><strong><?= count(array_unique(array_column($plants, 'category'))) ?></strong></article>
+                <article class="stat-card"><span>Tổng số giống cây</span><strong><?= $catalog['total'] ?></strong></article>
+                <article class="stat-card"><span>Nhóm cây</span><strong><?= count($catalog['categories']) ?></strong></article>
                 <article class="stat-card"><span>Đã yêu thích</span><strong><?= count(favorite_ids()) ?></strong></article>
                 <article class="stat-card"><span>Bài viết chăm cây</span><strong><?= count_blog_posts() ?></strong></article>
             </section>
@@ -51,7 +54,7 @@ require __DIR__ . '/includes/header.php';
             <section>
                 <div class="section-heading">
                     <div><p class="eyebrow">GỢI Ý CHO BẠN</p><h2>Bốn người bạn xanh</h2></div>
-                    <a href="collection.php">Xem toàn bộ bộ sưu tập ↗</a>
+                    <a href="collection.php">Xem toàn bộ bộ sưu tập</a>
                 </div>
                 <div class="plant-grid">
                     <?php foreach ($featuredPlants as $plant): ?>

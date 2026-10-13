@@ -48,9 +48,16 @@ if ($errors !== []) {
     redirect_to(app_url('admin.php') . '?edit=' . $id);
 }
 try {
-    $statement = $connection->prepare('UPDATE users SET name = ?, email = ? WHERE id = ?');
-    $statement->execute([$name, $email, $id]);
+    $emailChanged = $email !== $user['email'];
+    $version = (int) $user['session_version'] + ($emailChanged ? 1 : 0);
+    $statement = $connection->prepare('UPDATE users SET name = ?, email = ?, session_version = ? WHERE id = ?');
+    $statement->execute([$name, $email, $version, $id]);
     $connection->commit();
+    if ($emailChanged && (int) $id === (int) $admin['id']) {
+        session_regenerate_id(true);
+        $_SESSION['auth_version'] = $version;
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(24));
+    }
     set_flash('Thông tin người dùng đã được cập nhật.');
 } catch (PDOException $exception) {
     $connection->rollBack();

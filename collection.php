@@ -5,16 +5,18 @@ require_once __DIR__ . '/includes/init.php';
 
 $search = mb_substr(trim(request_string($_GET, 'search')), 0, 200, 'UTF-8');
 $category = trim(request_string($_GET, 'category'));
-$categories = array_values(array_unique(array_column($plants, 'category')));
-sort($categories);
+$catalog = plant_catalog_statistics();
+$categories = $catalog['categories'];
 
 $filteredPlants = list_plants($search, $category);
 
 $pageTitle = 'Bộ sưu tập';
 $bodyClass = 'dashboard-page';
 $dashboardActive = 'collection';
+$activePage = 'collection';
 $flashMessage = take_flash();
 require __DIR__ . '/includes/header.php';
+require __DIR__ . '/includes/navbar.php';
 ?>
 
 <div class="dashboard-shell">
@@ -25,7 +27,7 @@ require __DIR__ . '/includes/header.php';
             <?php if ($flashMessage !== null): ?><div class="status-note" data-auto-dismiss><?= e($flashMessage) ?></div><?php endif; ?>
             <header>
                 <div>
-                    <p class="eyebrow"><?= count($plants) ?> GIỐNG CÂY XANH</p>
+                    <p class="eyebrow"><?= $catalog['total'] ?> GIỐNG CÂY XANH</p>
                     <h1>Bộ sưu tập</h1>
                     <p class="lead">Tìm một người bạn xanh phù hợp với ánh sáng, không gian và nhịp sống của bạn.</p>
                 </div>
@@ -47,7 +49,7 @@ require __DIR__ . '/includes/header.php';
                 <?php if ($search !== '' || $category !== ''): ?><a class="btn-outline-brand" href="collection.php">Xóa bộ lọc</a><?php endif; ?>
             </form>
 
-            <div class="section-heading">
+            <div class="section-heading" id="results">
                 <h2><?= count($filteredPlants) ?> kết quả</h2>
                 <span class="sample-label"><?= current_user() ? 'Yêu thích được lưu trong tài khoản của bạn' : 'Đăng nhập để lưu cây yêu thích' ?></span>
             </div>

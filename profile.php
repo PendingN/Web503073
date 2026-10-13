@@ -5,21 +5,18 @@ require_once __DIR__ . '/includes/init.php';
 $user = require_login();
 
 $pageTitle = 'Trang cá nhân';
-$bodyClass = 'dashboard-page';
-$dashboardActive = 'profile';
+$bodyClass = 'profile-page';
+$activePage = 'profile';
 $userEmail = $user['email'];
 $errors = $_SESSION['profile_errors'] ?? [];
 $input = $_SESSION['profile_input'] ?? ['name' => $user['name'], 'email' => $userEmail];
 unset($_SESSION['profile_errors'], $_SESSION['profile_input']);
 $flashMessage = take_flash();
 require __DIR__ . '/includes/header.php';
+require __DIR__ . '/includes/navbar.php';
 ?>
 
-<div class="dashboard-shell">
-    <?php require __DIR__ . '/includes/dashboard-sidebar.php'; ?>
-    <div class="dashboard-main">
-        <?php require __DIR__ . '/includes/dashboard-toolbar.php'; ?>
-        <main class="dashboard-content profile-content">
+        <main class="profile-content profile-page-content">
             <?php if ($flashMessage !== null): ?><div class="status-note" data-auto-dismiss><?= e($flashMessage) ?></div><?php endif; ?>
             <header>
                 <div>
@@ -31,6 +28,10 @@ require __DIR__ . '/includes/header.php';
             <section class="profile-card">
                 <div class="profile-avatar"><?= e(mb_strtoupper(mb_substr($user['name'], 0, 1, 'UTF-8'), 'UTF-8')) ?></div>
                 <div><p class="eyebrow">TÀI KHOẢN HIỆN TẠI</p><h2><?= e($user['name']) ?></h2><p><?= e($userEmail) ?> · <?= $user['role'] === 'admin' ? 'Quản trị viên' : 'Thành viên' ?></p></div>
+                <form class="profile-logout" method="post" action="actions/logout.php">
+                    <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+                    <button class="btn-outline-brand" type="submit">Đăng xuất</button>
+                </form>
             </section>
             <section class="account-panel">
                 <h2>Thông tin tài khoản</h2>
@@ -46,12 +47,10 @@ require __DIR__ . '/includes/header.php';
                 </form>
             </section>
             <section class="profile-summary">
-                <article><strong><?= count(favorite_ids()) ?></strong><span>Cây yêu thích</span><a href="favorites.php">Xem danh sách →</a></article>
-                <article><strong><?= count($plants) ?></strong><span>Giống cây trong vườn</span><a href="collection.php">Khám phá thêm →</a></article>
-                <article><strong><?= count_blog_posts() ?></strong><span>Bài viết chăm cây</span><a href="blog.php">Đọc nhật ký →</a></article>
+                <article><strong><?= count(favorite_ids()) ?></strong><span>Cây yêu thích</span><a href="favorites.php">Xem danh sách</a></article>
+                <article><strong><?= plant_catalog_statistics()['total'] ?></strong><span>Giống cây trong vườn</span><a href="collection.php">Khám phá thêm</a></article>
+                <article><strong><?= count_blog_posts() ?></strong><span>Bài viết chăm cây</span><a href="blog.php">Đọc nhật ký</a></article>
             </section>
         </main>
-    </div>
-</div>
 
-<?php $showSiteFooter = false; require __DIR__ . '/includes/footer.php'; ?>
+<?php require __DIR__ . '/includes/footer.php'; ?>
