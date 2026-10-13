@@ -50,6 +50,11 @@ foreach ([1, 1, -1, 0, 1] as $vote) {
     check(($response['headers']['location'] ?? '') === $prefix . '/blog.php', 'Blog allowed an external redirect.');
     check((int) db()->query('SELECT SUM(value) FROM blog_votes WHERE post_id = ' . (int) $blogPost['id'])->fetchColumn() === $vote, 'Vote switch/removal or duplicate submission failed.');
 }
+foreach ([0, 1, -1, 1] as $vote) {
+    $response = $aliceBrowser->request('actions/blog-action.php', $aliceAction + ['operation' => 'vote', 'value' => $vote], true);
+    $voteData = json_decode($response['body'], true, 512, JSON_THROW_ON_ERROR);
+    check($response['status'] === 200 && $voteData['vote'] === $vote && $voteData['score'] === $vote, 'Inline vote must return the persisted score and vote without redirecting.');
+}
 check($aliceBrowser->request('actions/blog-action.php', $aliceAction + ['operation' => 'vote', 'value' => 2])['status'] === 400, 'Invalid vote accepted.');
 check($aliceBrowser->request('actions/blog-action.php', $aliceAction + ['operation' => 'save', 'saved' => 'bad'])['status'] === 400, 'Invalid save state accepted.');
 foreach (['1', '1', '0', '1'] as $saved) {

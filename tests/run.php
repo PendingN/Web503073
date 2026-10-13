@@ -47,10 +47,11 @@ final class TestBrowser
         curl_setopt_array($this->curl, [CURLOPT_RETURNTRANSFER => true, CURLOPT_COOKIEFILE => '', CURLOPT_TIMEOUT => 10]);
     }
 
-    public function request(string $path, ?array $data = null): array
+    public function request(string $path, ?array $data = null, bool $json = false): array
     {
         $headers = [];
         curl_setopt($this->curl, CURLOPT_URL, $this->base . '/' . $path);
+        curl_setopt($this->curl, CURLOPT_HTTPHEADER, $json ? ['Accept: application/json'] : []);
         curl_setopt($this->curl, CURLOPT_POSTFIELDS, null);
         curl_setopt($this->curl, CURLOPT_HTTPGET, true);
         curl_setopt($this->curl, CURLOPT_HEADERFUNCTION, static function ($curl, string $line) use (&$headers): int {
@@ -190,6 +191,12 @@ try {
     $guest->request('actions/favorite-action.php', ['csrf_token' => $aliceToken, 'plant_id' => 22]);
     check(user_favorite_ids((int) $alice['id']) === [], 'Favorite removal failed.');
     $guest->request('actions/favorite-action.php', ['csrf_token' => $aliceToken, 'plant_id' => 22]);
+    $inlineFavorite = $guest->request('actions/favorite-action.php', ['csrf_token' => $aliceToken, 'plant_id' => 21], true);
+    $inlineData = json_decode($inlineFavorite['body'], true, 512, JSON_THROW_ON_ERROR);
+    check($inlineFavorite['status'] === 200 && $inlineData['favorite'] === true && $inlineData['count'] === 2, 'Inline favorite must return the saved state and sidebar count without redirecting.');
+    $inlineFavorite = $guest->request('actions/favorite-action.php', ['csrf_token' => $aliceToken, 'plant_id' => 21], true);
+    $inlineData = json_decode($inlineFavorite['body'], true, 512, JSON_THROW_ON_ERROR);
+    check($inlineData['favorite'] === false && $inlineData['count'] === 1, 'Inline favorite toggle must remove the favorite.');
     $guest->request('actions/logout.php', ['csrf_token' => $aliceToken]);
     check($guest->request('profile.php')['status'] === 303, 'Logout did not clear authentication.');
     $duplicate = new TestBrowser($base);
