@@ -22,7 +22,7 @@ require __DIR__ . '/includes/navbar.php';
                 <div>
                     <p class="eyebrow">GÓC RIÊNG CỦA BẠN</p>
                     <h1>Trang cá nhân</h1>
-                    <p class="lead">Quản lý thông tin cơ bản và những lựa chọn xanh bạn đã lưu lại.</p>
+                    <p class="lead">Thông tin tài khoản và cây đã lưu.</p>
                 </div>
             </header>
             <section class="profile-card">
