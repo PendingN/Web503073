@@ -42,14 +42,13 @@ require __DIR__ . '/includes/plant-illustration.php';
         <div class="feed-hero-copy">
             <p class="eyebrow">NHẬT KÝ RỪNG XANH</p>
             <h1 id="feed-title">Chuyện cây cỏ,<br><em>kể cùng nhau.</em></h1>
-            <p class="feed-hero-lead">Chia sẻ kinh nghiệm chăm cây, những chiếc lá mới và nhịp sống gần gũi với thiên nhiên.</p>
+            <p class="feed-hero-lead">Chia sẻ mẹo chăm cây và góc xanh của bạn.</p>
         </div>
         <div class="feed-hero-note" aria-labelledby="latest-posts-title">
             <div class="feed-ticker-heading">
                 <span class="feed-hero-note-icon" aria-hidden="true">✦</span>
                 <div>
                     <strong id="latest-posts-title">Bài viết mới nhất</strong>
-                    <span>Những câu chuyện vừa được chia sẻ</span>
                 </div>
             </div>
             <div class="feed-ticker-viewport">
@@ -75,7 +74,7 @@ require __DIR__ . '/includes/plant-illustration.php';
             <section class="feed-composer" id="write-post" aria-label="Viết bài">
                 <?php if ($user !== null): ?>
                     <details<?= $editing !== null || $draft !== null ? ' open' : '' ?>>
-                        <summary><?= $editing !== null ? 'Sửa bài viết' : 'Bạn muốn chia sẻ điều gì với khu vườn?' ?></summary>
+                        <summary><?= $editing !== null ? 'Sửa bài viết' : 'Viết bài mới' ?></summary>
                         <form class="blog-form" action="actions/blog-action.php" method="post">
                             <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
                             <input type="hidden" name="operation" value="<?= $editing !== null ? 'update' : 'create' ?>">
@@ -130,7 +129,7 @@ require __DIR__ . '/includes/plant-illustration.php';
                         </div>
                     </article>
                 <?php endforeach; ?>
-                <?php if ($result['posts'] === []): ?><p class="blog-empty">Chưa có bài viết phù hợp. Hãy thử từ khóa khác, lưu bài để đọc sau hoặc chia sẻ câu chuyện đầu tiên.</p><?php endif; ?>
+                <?php if ($result['posts'] === []): ?><p class="blog-empty">Chưa có bài viết phù hợp.</p><?php endif; ?>
             </div>
             <nav class="pagination" aria-label="Phân trang bài viết">
                 <?php if ($result['page'] > 1): ?><a href="blog.php?<?= e(http_build_query($query + ['page' => $result['page'] - 1])) ?>"> Trước</a><?php endif; ?>

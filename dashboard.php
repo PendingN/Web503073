@@ -25,7 +25,7 @@ require __DIR__ . '/includes/navbar.php';
                 <div>
                     <p class="eyebrow">KHÔNG GIAN CỦA BẠN</p>
                     <h1>Chào ngày mới,<br><em>người làm vườn.</em></h1>
-                    <p class="lead">Một vài phút quan sát hôm nay sẽ giúp những mầm xanh lớn lên khỏe mạnh hơn.</p>
+                    <p class="lead">Khám phá cây và chăm góc xanh mỗi ngày.</p>
                 </div>
                 <div class="dashboard-actions">
                     <a class="btn-brand" href="collection.php">Khám phá cây</a>
@@ -37,7 +37,7 @@ require __DIR__ . '/includes/navbar.php';
                 <div>
                     <p class="eyebrow" style="color:#dfe8d2;">GỢI Ý HÔM NAY</p>
                     <h2>Chăm cây cũng là<br>chăm mình.</h2>
-                    <p>Hãy kiểm tra độ ẩm của đất, lau nhẹ những chiếc lá và dành cho góc xanh của bạn một chút thời gian.</p>
+                    <p>Kiểm tra độ ẩm đất và lau lá hôm nay.</p>
                 </div>
                 <div class="dashboard-hero-art">
                     <?php require __DIR__ . '/includes/plant-illustration.php'; render_plant_illustration('leaf'); ?>
@@ -54,7 +54,7 @@ require __DIR__ . '/includes/navbar.php';
             <section>
                 <div class="section-heading">
                     <div><p class="eyebrow">GỢI Ý CHO BẠN</p><h2>Bốn người bạn xanh</h2></div>
-                    <a href="collection.php">Xem toàn bộ bộ sưu tập</a>
+                    <a href="collection.php">Xem tất cả cây</a>
                 </div>
                 <div class="plant-grid">
                     <?php foreach ($featuredPlants as $plant): ?>

@@ -24,13 +24,13 @@ require __DIR__ . '/includes/navbar.php';
                 <div>
                     <p class="eyebrow">GÓC RIÊNG CỦA BẠN</p>
                     <h1>Cây yêu thích</h1>
-                    <p class="lead">Những lựa chọn bạn muốn quay lại xem hoặc chăm sóc trong thời gian tới.</p>
+                    <p class="lead">Những cây bạn đã lưu.</p>
                 </div>
             </header>
             <?php if ($favoritePlants === []): ?>
                 <div class="empty-state">
-                    <h2>Góc này vẫn đang chờ những chiếc lá đầu tiên.</h2>
-                    <p>Hãy bấm biểu tượng trái tim trên một thẻ cây để lưu lại lựa chọn của bạn.</p>
+                    <h2>Chưa có cây yêu thích</h2>
+                    <p>Bấm tim trên thẻ cây để lưu vào đây.</p>
                     <a class="btn-brand" href="collection.php">Khám phá bộ sưu tập</a>
                 </div>
             <?php else: ?>

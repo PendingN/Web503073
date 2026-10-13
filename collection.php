@@ -22,14 +22,13 @@ require __DIR__ . '/includes/navbar.php';
 <div class="dashboard-shell">
     <?php require __DIR__ . '/includes/dashboard-sidebar.php'; ?>
     <div class="dashboard-main">
-        <?php require __DIR__ . '/includes/dashboard-toolbar.php'; ?>
         <main class="dashboard-content">
             <?php if ($flashMessage !== null): ?><div class="status-note" data-auto-dismiss><?= e($flashMessage) ?></div><?php endif; ?>
             <header>
                 <div>
                     <p class="eyebrow"><?= $catalog['total'] ?> GIỐNG CÂY XANH</p>
                     <h1>Bộ sưu tập</h1>
-                    <p class="lead">Tìm một người bạn xanh phù hợp với ánh sáng, không gian và nhịp sống của bạn.</p>
+                    <p class="lead">Chọn cây phù hợp với không gian của bạn.</p>
                 </div>
             </header>
 
@@ -51,7 +50,7 @@ require __DIR__ . '/includes/navbar.php';
 
             <div class="section-heading" id="results">
                 <h2><?= count($filteredPlants) ?> kết quả</h2>
-                <span class="sample-label"><?= current_user() ? 'Yêu thích được lưu trong tài khoản của bạn' : 'Đăng nhập để lưu cây yêu thích' ?></span>
+                <span class="sample-label"><?= current_user() ? 'Bấm tim để lưu cây' : 'Đăng nhập để lưu cây' ?></span>
             </div>
 
             <?php if ($filteredPlants === []): ?>
