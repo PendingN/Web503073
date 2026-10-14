@@ -279,6 +279,62 @@ try {
     check($adminBrowser->request('actions/user-action.php', $update)['status'] === 303, 'Administrator email update failed.');
     check(find_user((int) $bob['id'])['email'] === $update['email'], 'Administrator email update did not persist.');
     check($blockedLogin->request('profile.php')['status'] === 303, 'Administrator email change must invalidate the target user sessions.');
+    // Plant management, blog moderation and role changes.
+    $bobLive = new TestBrowser($base);
+    check($bobLive->login('bob-updated@example.test', 'BobGarden123!')['status'] === 303, 'Bob login after email change failed.');
+    $bobLiveToken = $bobLive->token('profile.php');
+    $plantFields = ['csrf_token' => $adminToken, 'operation' => 'create', 'name' => 'Cây thử nghiệm', 'category' => 'Cây thử',
+        'description' => 'Mô tả cây thử nghiệm cho bài kiểm tra.', 'care' => 'Tưới nước vừa phải mỗi tuần.'];
+    $adminBrowser->request('actions/plant-action.php', $plantFields, true);
+    check((int) db()->query("SELECT COUNT(*) FROM plants WHERE name = 'Cây thử nghiệm'")->fetchColumn() === 0, 'Plant create accepted without an image.');
+    $plantImage = new CURLFile(dirname(__DIR__) . '/images/anh1.jpg', 'image/jpeg', 'plant.jpg');
+    $adminBrowser->request('actions/plant-action.php', $plantFields + ['image' => $plantImage], true);
+    $newPlant = db()->query("SELECT * FROM plants WHERE name = 'Cây thử nghiệm'")->fetch();
+    check($newPlant !== false && str_starts_with($newPlant['image'], 'plants/') && is_file(dirname(__DIR__) . '/images/' . $newPlant['image']), 'Plant create with image failed.');
+    $plantId = (int) ($newPlant['id'] ?? 0);
+    check($plantId > 0 && $adminBrowser->request('plant-detail.php?id=' . $plantId)['status'] === 200, 'New plant page failed to open.');
+    check(str_contains($adminBrowser->request('admin-plants.php?pq=' . rawurlencode('Cây thử'))['body'], 'Cây thử nghiệm'), 'Admin plant search failed.');
+    $plantEdit = ['csrf_token' => $adminToken, 'operation' => 'update', 'plant_id' => $plantId, 'name' => 'Cây thử đã sửa',
+        'category' => 'Cây thử', 'description' => 'Mô tả đã được cập nhật cho cây.', 'care' => 'Chăm sóc đã được cập nhật.'];
+    $adminBrowser->request('actions/plant-action.php', $plantEdit, true);
+    check(find_plant($plantId)['name'] === 'Cây thử đã sửa' && find_plant($plantId)['image'] === $newPlant['image'], 'Plant update failed or dropped its image.');
+    $adminBrowser->request('actions/plant-action.php', ['category' => 'x'] + $plantEdit, true);
+    check(find_plant($plantId)['category'] === 'Cây thử', 'Plant update accepted an invalid category.');
+    check($adminBrowser->request('admin-plants.php?plant=' . $plantId)['status'] === 200, 'Plant edit form failed.');
+    check($adminBrowser->request('admin-plants.php?plant=99999')['status'] === 404, 'Missing plant must return 404.');
+    check($bobLive->request('actions/plant-action.php', $plantEdit + ['csrf_token' => $bobLiveToken], true)['status'] === 403, 'Ordinary user changed a plant.');
+    $adminBrowser->request('actions/plant-action.php', ['csrf_token' => $adminToken, 'operation' => 'delete', 'plant_id' => $plantId], true);
+    check(find_plant($plantId) === null, 'Plant delete failed.');
+    // PHP caches file stats; clear the cache because the server process deleted the file.
+    clearstatcache();
+    check(!is_file(dirname(__DIR__) . '/images/' . $newPlant['image']), 'Deleted plant left its uploaded image behind.');
+
+    $slug = db()->query('SELECT slug FROM blog_posts WHERE is_hidden = 0 ORDER BY id LIMIT 1')->fetchColumn();
+    check(is_string($slug), 'Fixture blog post missing.');
+    check($bobLive->request('actions/blog-action.php', ['csrf_token' => $bobLiveToken, 'slug' => $slug, 'operation' => 'hide'])['status'] === 403, 'Ordinary user hid a blog post.');
+    $adminBrowser->request('actions/blog-action.php', ['csrf_token' => $adminToken, 'slug' => $slug, 'operation' => 'hide', 'return_to' => 'admin-posts.php']);
+    check((int) db()->query('SELECT is_hidden FROM blog_posts WHERE slug = ' . db()->quote($slug))->fetchColumn() === 1, 'Admin hide failed.');
+    check($guest->request('blog-post.php?slug=' . rawurlencode($slug))['status'] === 404, 'Hidden blog post is visible to guests.');
+    check($bobLive->request('blog-post.php?slug=' . rawurlencode($slug))['status'] === 404, 'Hidden blog post is visible to users.');
+    check($adminBrowser->request('blog-post.php?slug=' . rawurlencode($slug))['status'] === 200, 'Administrator cannot open a hidden blog post.');
+    check($bobLive->request('actions/blog-action.php', ['csrf_token' => $bobLiveToken, 'slug' => $slug, 'operation' => 'vote', 'value' => 1])['status'] === 404, 'Hidden blog post accepted a vote.');
+    check(!str_contains($guest->request('blog.php')['body'], 'blog-post.php?slug=' . rawurlencode($slug) . '"'), 'Hidden blog post is listed publicly.');
+    check(str_contains($adminBrowser->request('admin-posts.php')['body'], 'Đang ẩn'), 'Admin moderation list does not show hidden posts.');
+    $adminBrowser->request('actions/blog-action.php', ['csrf_token' => $adminToken, 'slug' => $slug, 'operation' => 'unhide', 'return_to' => 'admin-posts.php']);
+    check($guest->request('blog-post.php?slug=' . rawurlencode($slug))['status'] === 200, 'Unhidden blog post is still hidden.');
+
+    $bobId = (int) $bob['id'];
+    check($bobLive->request('actions/user-action.php', ['csrf_token' => $bobLiveToken, 'user_id' => $bobId, 'operation' => 'promote'])['status'] === 403, 'Ordinary user promoted an account.');
+    check($adminBrowser->request('actions/user-action.php', ['csrf_token' => $adminToken, 'user_id' => $bobId, 'operation' => 'promote'])['status'] === 303
+        && find_user($bobId)['role'] === 'admin', 'Promote failed.');
+    check($bobLive->request('admin.php')['status'] === 200, 'Promoted user cannot open the admin page.');
+    check($adminBrowser->request('actions/user-action.php', ['csrf_token' => $adminToken, 'user_id' => $admin['id'], 'operation' => 'demote'])['status'] === 403
+        && find_user((int) $admin['id'])['role'] === 'admin', 'Administrator could change their own role.');
+    check($adminBrowser->request('actions/user-action.php', ['csrf_token' => $adminToken, 'user_id' => $bobId, 'operation' => 'demote'])['status'] === 303
+        && find_user($bobId)['role'] === 'user', 'Demote failed.');
+    check($bobLive->request('admin.php')['status'] === 403, 'Demoted user still reaches the admin page.');
+    check(str_contains($adminBrowser->request('admin.php?search=bob')['body'], 'Nâng quyền'), 'Admin role button is missing.');
+
 
     $statement = db()->prepare('INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)');
     for ($index = 0; $index < 22; $index++) {

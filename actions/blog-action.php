@@ -9,7 +9,7 @@ $returnTo = safe_return_url($_POST['return_to'] ?? null, 'blog.php');
 $user = require_login($returnTo);
 $adminEditor = $user['role'] === 'admin' && parse_url($returnTo, PHP_URL_PATH) === app_url('admin-posts.php');
 $operation = request_string($_POST, 'operation');
-if (!in_array($operation, ['create', 'update', 'delete', 'vote', 'save', 'comment', 'delete-comment'], true)) {
+if (!in_array($operation, ['create', 'update', 'delete', 'vote', 'save', 'comment', 'delete-comment', 'hide', 'unhide'], true)) {
     abort_request(400, 'Thao tác không hợp lệ.');
 }
 
@@ -35,6 +35,15 @@ if ($operation !== 'create') {
     if (in_array($operation, ['update', 'delete'], true) && !can_edit_post($post, $user)) {
         $connection->rollBack();
         abort_request(403, 'Bạn không có quyền sửa hoặc xóa bài viết này.');
+    }
+    if (in_array($operation, ['hide', 'unhide'], true) && $user['role'] !== 'admin') {
+        $connection->rollBack();
+        abort_request(403, 'Chỉ quản trị viên mới được ẩn hoặc hiện bài viết.');
+    }
+    // Hidden posts behave like missing posts for everyone except administrators.
+    if ((int) $post['is_hidden'] === 1 && $user['role'] !== 'admin') {
+        $connection->rollBack();
+        abort_request(404, 'Không tìm thấy bài viết.');
     }
 }
 
@@ -86,6 +95,11 @@ if ($operation === 'create' || $operation === 'update') {
     $statement->execute([$post['id']]);
     $returnTo = app_url($adminEditor ? 'admin-posts.php' : 'blog.php');
     $message = 'Đã xóa bài viết.';
+} elseif ($operation === 'hide' || $operation === 'unhide') {
+    $statement = $connection->prepare('UPDATE blog_posts SET is_hidden = ? WHERE id = ?');
+    $statement->execute([$operation === 'hide' ? 1 : 0, $post['id']]);
+    $returnTo = app_url($adminEditor ? 'admin-posts.php' : 'blog.php');
+    $message = $operation === 'hide' ? 'Đã ẩn bài viết khỏi trang công khai.' : 'Đã hiện lại bài viết.';
 } elseif ($operation === 'vote') {
     $value = filter_var($_POST['value'] ?? null, FILTER_VALIDATE_INT);
     if (!in_array($value, [-1, 0, 1], true)) {
@@ -136,7 +150,7 @@ if ($operation === 'create' || $operation === 'update') {
     $message = 'Đã xóa bình luận.';
 }
 $activityEvents = ['create' => 'blog.created', 'update' => 'blog.updated', 'delete' => 'blog.deleted', 'vote' => 'blog.vote',
-    'save' => ($saved ?? '0') === '1' ? 'blog.saved' : 'blog.unsaved', 'comment' => 'comment.created', 'delete-comment' => 'comment.deleted'];
+    'save' => ($saved ?? '0') === '1' ? 'blog.saved' : 'blog.unsaved', 'comment' => 'comment.created', 'delete-comment' => 'comment.deleted', 'hide' => 'blog.hidden', 'unhide' => 'blog.unhidden'];
 $subjectId = $operation === 'delete-comment' ? (int) $authorId : (int) ($post['user_id'] ?? $user['id']);
 $activitySubject = $subjectId === (int) $user['id'] ? $user : ($subjectId > 0 ? find_user($subjectId) : null);
 $description = 'Bài #' . ($createdPostId ?? $post['id']) . ': ' . ($title ?? $post['title']);
