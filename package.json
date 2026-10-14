@@ -1,0 +1,12 @@
+{
+  "name": "web503073-admin",
+  "private": true,
+  "scripts": {
+    "build:css": "tailwindcss -i ./css/admin-tailwind.css -o ./css/admin.css --minify",
+    "watch:css": "tailwindcss -i ./css/admin-tailwind.css -o ./css/admin.css --watch"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "4.1.17",
+    "tailwindcss": "4.1.17"
+  }
+}

@@ -1,7 +1,7 @@
 # Keep repository metadata, runtime state, local configuration, and development
 # files outside the public surface when Apache serves the project root.
 
-<FilesMatch "(?i)^(?:\.gitignore|\.env(?:\..*)?|AGENTS\.md|README(?:\..*)?|.*\.(?:bak|conf|dist|ini|log|old|orig|save|sql|sql\.gz|swp))$">
+<FilesMatch "(?i)^(?:\.gitignore|\.env(?:\..*)?|AGENTS\.md|README(?:\..*)?|package(?:-lock)?\.json|.*\.(?:bak|conf|dist|ini|log|old|orig|save|sql|sql\.gz|swp))$">
     Require all denied
 </FilesMatch>
 
@@ -12,5 +12,5 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteRule (^|/)(?:\.git|\.runtime)(?:/|$) - [F,L,NC]
-    RewriteRule (^|/)(?:config|database|scripts|tests)(?:/|$) - [F,L,NC]
+    RewriteRule (^|/)(?:config|database|scripts|tests|node_modules)(?:/|$) - [F,L,NC]
 </IfModule>

@@ -7,6 +7,7 @@ require_post();
 require_csrf();
 $returnTo = safe_return_url($_POST['return_to'] ?? null, 'blog.php');
 $user = require_login($returnTo);
+$adminEditor = $user['role'] === 'admin' && parse_url($returnTo, PHP_URL_PATH) === app_url('admin-posts.php');
 $operation = request_string($_POST, 'operation');
 if (!in_array($operation, ['create', 'update', 'delete', 'vote', 'save', 'comment', 'delete-comment'], true)) {
     abort_request(400, 'Thao tác không hợp lệ.');
@@ -63,26 +64,27 @@ if ($operation === 'create' || $operation === 'update') {
         $connection->rollBack();
         $_SESSION['blog_draft'] = ['title' => mb_substr($title, 0, 120), 'content' => mb_substr($content, 0, 10000), 'tag' => $tag, 'slug' => $operation === 'update' ? $slug : ''];
         set_flash(implode(' ', $errors) . ' Nếu đã chọn ảnh, vui lòng chọn lại trước khi gửi.');
-        redirect_to(app_url('blog.php') . ($operation === 'update' ? '?edit=' . rawurlencode($slug) : ''));
+        redirect_to(app_url($adminEditor ? 'admin-posts.php' : 'blog.php') . ($operation === 'update' ? '?edit=' . rawurlencode($slug) : ($adminEditor ? '?create=1' : '')));
     }
     $excerpt = mb_substr(preg_replace('/\s+/u', ' ', $content), 0, 220, 'UTF-8');
     if ($operation === 'create') {
         $slug = 'bai-viet-' . bin2hex(random_bytes(12));
         $statement = $connection->prepare('INSERT INTO blog_posts (user_id, slug, title, tag, excerpt, content, image_path) VALUES (?, ?, ?, ?, ?, ?, ?)');
         $statement->execute([$user['id'], $slug, $title, $tag, $excerpt, $content, $newImage]);
+        $createdPostId = (int) $connection->lastInsertId();
     } else {
         $oldImage = $newImage !== null ? $post['image_path'] : null;
         $statement = $connection->prepare('UPDATE blog_posts SET title = ?, tag = ?, excerpt = ?, content = ?, image_path = ? WHERE id = ?');
         $statement->execute([$title, $tag, $excerpt, $content, $newImage ?? $post['image_path'], $post['id']]);
     }
     unset($_SESSION['blog_draft']);
-    $returnTo = app_url('blog-post.php?slug=' . rawurlencode($slug));
+    $returnTo = $adminEditor ? app_url('admin-posts.php?edit=' . rawurlencode($slug)) . '#post-editor' : app_url('blog-post.php?slug=' . rawurlencode($slug));
     $message = $operation === 'create' ? 'Đã đăng bài viết.' : 'Đã cập nhật bài viết.';
 } elseif ($operation === 'delete') {
     $oldImage = $post['image_path'];
     $statement = $connection->prepare('DELETE FROM blog_posts WHERE id = ?');
     $statement->execute([$post['id']]);
-    $returnTo = app_url('blog.php');
+    $returnTo = app_url($adminEditor ? 'admin-posts.php' : 'blog.php');
     $message = 'Đã xóa bài viết.';
 } elseif ($operation === 'vote') {
     $value = filter_var($_POST['value'] ?? null, FILTER_VALIDATE_INT);
@@ -116,6 +118,7 @@ if ($operation === 'create' || $operation === 'update') {
     }
     $statement = $connection->prepare('INSERT INTO blog_comments (user_id, post_id, content) VALUES (?, ?, ?)');
     $statement->execute([$user['id'], $post['id'], $content]);
+    $createdCommentId = (int) $connection->lastInsertId();
     unset($_SESSION['comment_draft']);
     $message = 'Đã gửi bình luận.';
 } else {
@@ -132,6 +135,17 @@ if ($operation === 'create' || $operation === 'update') {
     $returnTo = app_url('blog-post.php?slug=' . rawurlencode($slug)) . '#comments';
     $message = 'Đã xóa bình luận.';
 }
+$activityEvents = ['create' => 'blog.created', 'update' => 'blog.updated', 'delete' => 'blog.deleted', 'vote' => 'blog.vote',
+    'save' => ($saved ?? '0') === '1' ? 'blog.saved' : 'blog.unsaved', 'comment' => 'comment.created', 'delete-comment' => 'comment.deleted'];
+$subjectId = $operation === 'delete-comment' ? (int) $authorId : (int) ($post['user_id'] ?? $user['id']);
+$activitySubject = $subjectId === (int) $user['id'] ? $user : ($subjectId > 0 ? find_user($subjectId) : null);
+$description = 'Bài #' . ($createdPostId ?? $post['id']) . ': ' . ($title ?? $post['title']);
+if ($operation === 'vote') {
+    $description = 'Bình chọn ' . $value . ' · ' . $description;
+} elseif ($operation === 'comment' || $operation === 'delete-comment') {
+    $description = 'Bình luận #' . ($createdCommentId ?? $commentId) . ' · ' . $description;
+}
+record_activity($user, $activityEvents[$operation], $description, $activitySubject);
 $connection->commit();
 $imageCommitted = true;
 delete_blog_image($oldImage);

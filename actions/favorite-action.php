@@ -29,6 +29,7 @@ if (!$removed) {
     $statement = $connection->prepare('INSERT INTO favorites (user_id, plant_id) VALUES (?, ?)');
     $statement->execute([$user['id'], $plantId]);
 }
+record_activity($user, $removed ? 'plant.unsaved' : 'plant.saved', 'Cây #' . $plantId . ': ' . $plant['name'], $user);
 $connection->commit();
 set_flash($removed ? 'Đã xóa ' . $plant['name'] . ' khỏi mục yêu thích.' : 'Đã thêm ' . $plant['name'] . ' vào mục yêu thích.');
 redirect_to($returnTo);

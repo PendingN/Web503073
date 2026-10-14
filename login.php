@@ -5,7 +5,7 @@ require_once __DIR__ . '/includes/init.php';
 
 $loginError = null;
 $email = '';
-$returnTo = safe_return_url($_POST['return_to'] ?? $_GET['return_to'] ?? null, 'profile.php');
+$returnTo = request_string($_POST, 'return_to', request_string($_GET, 'return_to'));
 $flashMessage = take_flash();
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_csrf();
@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         sign_in($user);
         set_flash('Đăng nhập thành công. Chào mừng bạn trở lại!');
-        redirect_to($returnTo);
+        redirect_to(safe_return_url($returnTo !== '' ? $returnTo : null, $user['role'] === 'admin' ? 'admin-dashboard.php' : 'profile.php'));
     }
 }
 

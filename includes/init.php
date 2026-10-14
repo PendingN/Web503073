@@ -32,6 +32,7 @@ header('Cache-Control: no-store');
 require_once __DIR__ . '/database.php';
 require_once __DIR__ . '/repositories.php';
 require_once __DIR__ . '/blog-repository.php';
+require_once __DIR__ . '/activity-repository.php';
 require_once __DIR__ . '/auth.php';
 
 function e(mixed $value): string
@@ -160,7 +161,7 @@ function safe_return_url(mixed $returnTo, string $fallback = 'collection.php'): 
     if ($path === '') {
         $path = 'index.php';
     }
-    $pages = ['index.php', 'dashboard.php', 'collection.php', 'favorites.php', 'profile.php', 'plant-detail.php', 'blog.php', 'blog-post.php', 'admin.php'];
+    $pages = ['index.php', 'dashboard.php', 'collection.php', 'favorites.php', 'profile.php', 'plant-detail.php', 'blog.php', 'blog-post.php', 'admin.php', 'admin-dashboard.php', 'admin-posts.php', 'admin-history.php'];
     if (!in_array($path, $pages, true)) {
         return app_url($fallback);
     }
@@ -186,5 +187,30 @@ set_exception_handler(static function (Throwable $exception): void {
 });
 
 // Validate the session on every request, including public pages.
-current_user();
+$viewer = current_user();
+if ($viewer !== null && ($_SERVER['REQUEST_METHOD'] ?? '') === 'GET') {
+    $viewedPage = basename($_SERVER['SCRIPT_NAME'] ?? '');
+    $activityPages = ['index.php' => 'Trang chủ', 'dashboard.php' => 'Tổng quan bộ sưu tập', 'collection.php' => 'Bộ sưu tập',
+        'favorites.php' => 'Cây yêu thích', 'profile.php' => 'Trang cá nhân', 'plant-detail.php' => 'Chi tiết cây',
+        'blog.php' => 'Blog', 'blog-post.php' => 'Chi tiết bài viết', 'admin.php' => 'Quản lý tài khoản',
+        'admin-dashboard.php' => 'Tổng quan quản trị', 'admin-posts.php' => 'Quản trị bài viết', 'admin-history.php' => 'Lịch sử người dùng'];
+    if (isset($activityPages[$viewedPage])) {
+        $viewDescription = 'Xem ' . $activityPages[$viewedPage];
+        if ($viewedPage === 'plant-detail.php') {
+            $plantId = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+            $viewDescription .= $plantId !== false ? ' #' . $plantId : '';
+        } elseif ($viewedPage === 'blog-post.php') {
+            $viewDescription .= ' · ' . mb_substr(request_string($_GET, 'slug'), 0, 160, 'UTF-8');
+        }
+        register_shutdown_function(static function () use ($viewer, $viewDescription): void {
+            if (http_response_code() === 200) {
+                try {
+                    record_activity($viewer, 'page.view', $viewDescription);
+                } catch (Throwable $exception) {
+                    error_log('Cannot record page activity: ' . $exception->getMessage());
+                }
+            }
+        });
+    }
+}
 

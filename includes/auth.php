@@ -46,9 +46,9 @@ function require_login(?string $returnTo = null): array
     return $user;
 }
 
-function require_admin(): array
+function require_admin(string $returnTo = 'admin.php'): array
 {
-    $user = require_login('admin.php');
+    $user = require_login($returnTo);
     if ($user['role'] !== 'admin') {
         abort_request(403, 'Bạn không có quyền truy cập trang quản trị.');
     }
@@ -57,13 +57,22 @@ function require_admin(): array
 
 function sign_in(array $user): void
 {
+    $connection = db();
+    $connection->beginTransaction();
+    try {
+        $statement = $connection->prepare('UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE id = ?');
+        $statement->execute([$user['id']]);
+        record_activity($user, 'auth.login', 'Đăng nhập thành công');
+        $connection->commit();
+    } catch (Throwable $exception) {
+        $connection->rollBack();
+        throw $exception;
+    }
     session_regenerate_id(true);
     unset($_SESSION['favorites'], $_SESSION['user_email']);
     $_SESSION['user_id'] = (int) $user['id'];
     $_SESSION['auth_version'] = (int) $user['session_version'];
     $_SESSION['csrf_token'] = bin2hex(random_bytes(24));
-    $statement = db()->prepare('UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE id = ?');
-    $statement->execute([$user['id']]);
 }
 
 function account_errors(string $name, string $email): array

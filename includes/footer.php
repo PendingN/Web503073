@@ -8,7 +8,7 @@ $footerTagline = $footerTagline ?? 'Cùng thiên nhiên tạo nên những giá 
         <span><?= e($footerTagline) ?></span>
     </footer>
 <?php endif; ?>
-<script src="<?= e(asset_url('js/main.js')) ?>" defer></script>
+<script src="<?= e(asset_url(($bodyClass ?? '') === 'admin-page' ? 'js/admin.js' : 'js/main.js')) ?>" defer></script>
 </body>
 </html>
 

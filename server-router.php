@@ -15,7 +15,8 @@ $blockedPatterns = [
     '#(?:^|/)\.runtime(?:/|$)#i',
     '#(?:^|/)(?:\.env(?:\.[^/]*)?|\.gitignore|\.htaccess)(?:/|$)#i',
     '#(?:^|/)(?:AGENTS|README)(?:\.[^/]*)?$#i',
-    '#(?:^|/)(?:config|database|scripts|tests)(?:/|$)#i',
+    '#(?:^|/)(?:config|database|scripts|tests|node_modules)(?:/|$)#i',
+    '#(?:^|/)package(?:-lock)?\.json$#i',
     '#\.(?:bak|conf|dist|ini|log|old|orig|save|sql|sql\.gz|swp)$#i',
 ];
 

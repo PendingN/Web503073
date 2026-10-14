@@ -13,7 +13,7 @@ $loginLabel = 'Đăng nhập';
         <a class="nav-link<?= $activePage === 'collection' ? ' active' : '' ?>" <?= $activePage === 'collection' ? 'aria-current="page"' : '' ?> href="collection.php">Bộ sưu tập</a>
         <a class="nav-link<?= $activePage === 'blog' ? ' active' : '' ?>" <?= $activePage === 'blog' ? 'aria-current="page"' : '' ?> href="blog.php">Blog</a>
         <a class="nav-link<?= $activePage === 'profile' ? ' active' : '' ?>" <?= $activePage === 'profile' ? 'aria-current="page"' : '' ?> href="profile.php">Trang cá nhân</a>
-        <?php if (is_admin()): ?><a class="nav-link<?= $activePage === 'admin' ? ' active' : '' ?>" <?= $activePage === 'admin' ? 'aria-current="page"' : '' ?> href="admin.php">Quản trị</a><?php endif; ?>
+        <?php if (is_admin()): ?><a class="nav-link<?= $activePage === 'admin' ? ' active' : '' ?>" <?= $activePage === 'admin' ? 'aria-current="page"' : '' ?> href="admin-dashboard.php">Quản trị</a><?php endif; ?>
     </nav>
     <div class="nav-right">
         <?php if (current_user() === null): ?>

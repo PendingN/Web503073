@@ -76,3 +76,17 @@ CREATE TABLE IF NOT EXISTS blog_comments (
     CONSTRAINT blog_comments_user_fk FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
     CONSTRAINT blog_comments_post_fk FOREIGN KEY (post_id) REFERENCES blog_posts (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS user_activity (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    actor_id INT UNSIGNED NULL,
+    actor_name VARCHAR(100) NOT NULL,
+    subject_id INT UNSIGNED NULL,
+    subject_name VARCHAR(100) NULL,
+    event VARCHAR(40) NOT NULL,
+    description VARCHAR(255) NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY user_activity_created (created_at, id),
+    KEY user_activity_actor (actor_id, created_at),
+    KEY user_activity_subject (subject_id, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
