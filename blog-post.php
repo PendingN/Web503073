@@ -36,7 +36,13 @@ require __DIR__ . '/includes/plant-illustration.php';
             <h1><?= e($post['title']) ?></h1>
             <p><?= e($post['excerpt']) ?></p>
         </header>
-        <div class="blog-post-art post-art-<?= e($post['tone']) ?>"><?php render_plant_illustration($post['illustration']); ?></div>
+        <div class="blog-post-art post-art-<?= e($post['tone']) ?>">
+            <?php if (!empty($post['image_path'])): ?>
+                <img class="blog-cover" src="<?= e($post['image_path']) ?>" alt="<?= e($post['title']) ?>">
+            <?php else: ?>
+                <?php render_plant_illustration($post['illustration']); ?>
+            <?php endif; ?>
+        </div>
         <article class="blog-post-body">
             <div class="blog-text"><?= e($post['content']) ?></div>
             <?php require __DIR__ . '/includes/blog-actions.php'; ?>

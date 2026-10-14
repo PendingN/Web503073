@@ -22,7 +22,6 @@ require __DIR__ . '/includes/navbar.php';
                 <div>
                     <p class="eyebrow">GÓC RIÊNG CỦA BẠN</p>
                     <h1>Trang cá nhân</h1>
-                    <p class="lead">Thông tin tài khoản và cây đã lưu.</p>
                 </div>
             </header>
             <section class="profile-card">
@@ -40,8 +39,8 @@ require __DIR__ . '/includes/navbar.php';
                     <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
                     <div class="form-group"><label class="form-label" for="name">Họ tên</label><input class="form-control" id="name" name="name" value="<?= e($input['name']) ?>" autocomplete="name" minlength="2" maxlength="100" required></div>
                     <div class="form-group"><label class="form-label" for="email">Email</label><input class="form-control" id="email" name="email" type="email" value="<?= e($input['email']) ?>" autocomplete="email" maxlength="254" required></div>
-                    <div class="form-group"><label class="form-label" for="current_password">Mật khẩu hiện tại</label><input class="form-control" id="current_password" name="current_password" type="password" autocomplete="current-password" maxlength="72"><small>Cần nhập khi đổi email hoặc mật khẩu.</small></div>
-                    <div class="form-group"><label class="form-label" for="new_password">Mật khẩu mới</label><input class="form-control" id="new_password" name="new_password" type="password" autocomplete="new-password" minlength="8" maxlength="72"><small>Để trống nếu bạn chỉ cập nhật thông tin.</small></div>
+                    <div class="form-group"><label class="form-label" for="current_password">Mật khẩu hiện tại</label><input class="form-control" id="current_password" name="current_password" type="password" autocomplete="current-password" maxlength="72"></div>
+                    <div class="form-group"><label class="form-label" for="new_password">Mật khẩu mới</label><input class="form-control" id="new_password" name="new_password" type="password" autocomplete="new-password" minlength="8" maxlength="72"></div>
                     <div class="form-group"><label class="form-label" for="password_confirmation">Nhập lại mật khẩu mới</label><input class="form-control" id="password_confirmation" name="password_confirmation" type="password" autocomplete="new-password" minlength="8" maxlength="72"></div>
                     <div><button class="btn-brand" type="submit">Lưu thay đổi</button></div>
                 </form>

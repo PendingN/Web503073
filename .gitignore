@@ -72,3 +72,5 @@ clover.xml
 Thumbs.db
 Desktop.ini
 .archify/
+images/blog/*
+!images/blog/.htaccess

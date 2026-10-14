@@ -21,6 +21,9 @@ try {
             $connection->exec($sql);
         }
     }
+    if (!$connection->query("SHOW COLUMNS FROM blog_posts LIKE 'image_path'")->fetch()) {
+        $connection->exec('ALTER TABLE blog_posts ADD COLUMN image_path VARCHAR(255) NULL AFTER content');
+    }
     require __DIR__ . '/../data/plants.php';
     $connection->beginTransaction();
     $statement = $connection->prepare('INSERT INTO plants (id, name, category, description, care, image)'
