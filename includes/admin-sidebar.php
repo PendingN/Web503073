@@ -5,7 +5,7 @@ $adminNavigation = [
     ['id' => 'users', 'href' => 'admin.php', 'icon' => 'users', 'label' => 'Người dùng'],
     ['id' => 'posts', 'href' => 'admin-posts.php', 'icon' => 'book', 'label' => 'Quản trị bài viết'],
     ['id' => 'history', 'href' => 'admin-history.php', 'icon' => 'calendar', 'label' => 'Lịch sử người dùng'],
-    ['id' => 'plants', 'href' => 'collection.php', 'icon' => 'leaf', 'label' => 'Bộ sưu tập cây'],
+    ['id' => 'plants', 'href' => 'admin-plants.php', 'icon' => 'leaf', 'label' => 'Quản lý cây'],
 ];
 ?>
 <a class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[60] focus:rounded-lg focus:bg-primary-dark focus:p-3 focus:text-white" href="#admin-main">Đến nội dung chính</a>

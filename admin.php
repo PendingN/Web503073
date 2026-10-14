@@ -85,6 +85,15 @@ require __DIR__ . '/includes/header.php';
                                     <td><div class="flex items-center gap-3 whitespace-nowrap">
                                         <a class="admin-panel-link" href="admin.php?edit=<?= (int) $member['id'] ?>#edit-user">Xem / sửa</a>
                                         <a class="admin-panel-link" href="admin-history.php?user_id=<?= (int) $member['id'] ?>">Lịch sử</a>
+                                        <?php if ((int) $member['id'] !== (int) $admin['id']): ?>
+                                            <form method="post" action="actions/user-action.php">
+                                                <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+                                                <input type="hidden" name="user_id" value="<?= (int) $member['id'] ?>">
+                                                <input type="hidden" name="operation" value="<?= $member['role'] === 'admin' ? 'demote' : 'promote' ?>">
+                                                <input type="hidden" name="return_to" value="<?= e(current_request_url()) ?>">
+                                                <button class="rounded-md px-2 py-1.5 text-xs font-medium bg-violet-50 text-violet-700 hover:bg-violet-100" type="submit"><?= $member['role'] === 'admin' ? 'Hạ quyền' : 'Nâng quyền' ?></button>
+                                            </form>
+                                        <?php endif; ?>
                                         <?php if ($member['role'] !== 'admin'): ?>
                                             <form method="post" action="actions/user-action.php">
                                                 <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">

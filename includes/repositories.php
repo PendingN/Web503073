@@ -144,3 +144,39 @@ function admin_activity_statistics(): array
         . ' (SELECT COUNT(*) FROM blog_comments) AS comments')->fetch();
     return ['registrations' => $registrations, 'favorites' => (int) $totals['favorites'], 'comments' => (int) $totals['comments']];
 }
+
+function list_admin_plants(string $search): array
+{
+    $where = ' WHERE 1 = 1';
+    $parameters = [];
+    if ($search !== '') {
+        $where .= " AND (name LIKE ? ESCAPE '!' OR category LIKE ? ESCAPE '!')";
+        $parameters = array_fill(0, 2, search_pattern($search));
+    }
+    $statement = db()->prepare('SELECT id, name, category, image FROM plants' . $where . ' ORDER BY id');
+    $statement->execute($parameters);
+    return $statement->fetchAll();
+}
+
+function plant_categories(): array
+{
+    return db()->query('SELECT DISTINCT category FROM plants ORDER BY category')->fetchAll(PDO::FETCH_COLUMN);
+}
+
+function plant_errors(string $name, string $category, string $description, string $care): array
+{
+    $errors = [];
+    if (mb_strlen($name, 'UTF-8') < 2 || mb_strlen($name, 'UTF-8') > 150) {
+        $errors[] = 'Tên cây cần có từ 2 đến 150 ký tự.';
+    }
+    if (mb_strlen($category, 'UTF-8') < 2 || mb_strlen($category, 'UTF-8') > 100) {
+        $errors[] = 'Nhóm cây cần có từ 2 đến 100 ký tự.';
+    }
+    if (mb_strlen($description, 'UTF-8') < 10 || mb_strlen($description, 'UTF-8') > 2000) {
+        $errors[] = 'Mô tả cần có từ 10 đến 2.000 ký tự.';
+    }
+    if (mb_strlen($care, 'UTF-8') < 10 || mb_strlen($care, 'UTF-8') > 2000) {
+        $errors[] = 'Hướng dẫn chăm sóc cần có từ 10 đến 2.000 ký tự.';
+    }
+    return $errors;
+}
