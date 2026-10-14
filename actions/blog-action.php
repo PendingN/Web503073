@@ -146,8 +146,25 @@ if ($operation === 'vote') {
     $description = 'Bình luận #' . ($createdCommentId ?? $commentId) . ' · ' . $description;
 }
 record_activity($user, $activityEvents[$operation], $description, $activitySubject);
+$reaction = null;
+if (wants_json() && in_array($operation, ['vote', 'save'], true)) {
+    $statement = $connection->prepare('SELECT COUNT(CASE WHEN value = 1 THEN 1 END) AS likes,'
+        . ' COUNT(CASE WHEN value = -1 THEN 1 END) AS dislikes FROM blog_votes WHERE post_id = ?');
+    $statement->execute([$post['id']]);
+    $counts = $statement->fetch();
+    $statement = $connection->prepare('SELECT value FROM blog_votes WHERE post_id = ? AND user_id = ?');
+    $statement->execute([$post['id'], $user['id']]);
+    $myVote = (int) $statement->fetchColumn();
+    $statement = $connection->prepare('SELECT 1 FROM blog_saves WHERE post_id = ? AND user_id = ?');
+    $statement->execute([$post['id'], $user['id']]);
+    $reaction = ['likes' => (int) $counts['likes'], 'dislikes' => (int) $counts['dislikes'],
+        'vote' => $myVote, 'saved' => (bool) $statement->fetchColumn(), 'message' => $message];
+}
 $connection->commit();
 $imageCommitted = true;
 delete_blog_image($oldImage);
+if ($reaction !== null) {
+    json_response($reaction);
+}
 set_flash($message);
 redirect_to($returnTo);

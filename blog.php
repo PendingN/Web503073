@@ -16,7 +16,7 @@ if ($view !== 'all') {
 }
 $page = max(1, (int) request_string($_GET, 'page', '1'));
 $result = list_blog_posts($search, $sort, $view, (int) ($user['id'] ?? 0), $page);
-$latestPosts = latest_blog_posts();
+$tickerPosts = $result['posts'];
 $editSlug = request_string($_GET, 'edit');
 $editing = null;
 if ($editSlug !== '') {
@@ -44,11 +44,11 @@ require __DIR__ . '/includes/plant-illustration.php';
             <h1 id="feed-title">Chuyện cây cỏ,<br><em>kể cùng nhau.</em></h1>
             <p class="feed-hero-lead">Chia sẻ mẹo chăm cây và góc xanh của bạn.</p>
         </div>
-        <?php if ($latestPosts !== []): ?>
-            <div class="feed-ticker-viewport" id="hero-articles" aria-label="Bài viết mới nhất">
+        <?php if ($tickerPosts !== []): ?>
+            <div class="feed-ticker-viewport" id="hero-articles" aria-label="Bài viết trên trang này">
                 <div class="feed-ticker-track">
                     <div class="feed-ticker-group">
-                        <?php foreach ($latestPosts as $tickerPost): ?>
+                        <?php foreach ($tickerPosts as $tickerPost): ?>
                             <?php $tickerImage = ['Chăm cây' => 'anh22', 'Không gian' => 'anh21', 'Cảm hứng' => 'anh14', 'Mẹo hay' => 'anh29', 'Sống xanh' => 'anh27'][$tickerPost['tag']] ?? 'anh23'; ?>
                             <a class="feed-ticker-card" href="blog-post.php?slug=<?= e(rawurlencode($tickerPost['slug'])) ?>">
                                 <img src="<?= e($tickerPost['image_path'] ?? 'images/optimized/' . $tickerImage . '.webp') ?>" alt="" width="260" height="180">

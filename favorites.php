@@ -27,19 +27,16 @@ require __DIR__ . '/includes/navbar.php';
                     <p class="lead">Những cây bạn đã lưu.</p>
                 </div>
             </header>
-            <?php if ($favoritePlants === []): ?>
-                <div class="empty-state">
-                    <h2>Chưa có cây yêu thích</h2>
-                    <p>Bấm tim trên thẻ cây để lưu vào đây.</p>
-                    <a class="btn-brand" href="collection.php">Khám phá bộ sưu tập</a>
-                </div>
-            <?php else: ?>
-                <div class="plant-grid">
-                    <?php foreach ($favoritePlants as $plant): ?>
-                        <?php $returnTo = 'favorites.php'; require __DIR__ . '/includes/plant-card.php'; ?>
-                    <?php endforeach; ?>
-                </div>
-            <?php endif; ?>
+            <div class="empty-state" data-favorites-empty<?= $favoritePlants === [] ? '' : ' hidden' ?>>
+                <h2>Chưa có cây yêu thích</h2>
+                <p>Bấm tim trên thẻ cây để lưu vào đây.</p>
+                <a class="btn-brand" href="collection.php">Khám phá bộ sưu tập</a>
+            </div>
+            <div class="plant-grid" data-favorites-grid>
+                <?php foreach ($favoritePlants as $plant): ?>
+                    <?php $returnTo = 'favorites.php'; require __DIR__ . '/includes/plant-card.php'; ?>
+                <?php endforeach; ?>
+            </div>
         </main>
     </div>
 </div>

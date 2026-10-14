@@ -41,6 +41,10 @@ function require_login(?string $returnTo = null): array
             set_flash('Vui lòng đăng nhập để tiếp tục.');
         }
         $target = safe_return_url($returnTo ?? current_request_url(), 'profile.php');
+        if (wants_json()) {
+            json_response(['message' => 'Vui lòng đăng nhập để tiếp tục.',
+                'login_url' => app_url('login.php') . '?return_to=' . rawurlencode($target)], 401);
+        }
         redirect_to(app_url('login.php') . '?return_to=' . rawurlencode($target));
     }
     return $user;
