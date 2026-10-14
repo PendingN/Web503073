@@ -235,7 +235,9 @@ Các ID không hợp lệ trả <code>404</code>. Request GET tới handler thay
 
 ### Blog: cách dùng và cấu trúc
 
-Sau khi cập nhật mã nguồn, chạy lại bước **3.4** để bổ sung bảng blog trước khi mở website. Cần MySQL đang chạy và tài khoản setup riêng; không dùng tài khoản quản trị website thay cho tài khoản MySQL.
+Sau khi cập nhật mã nguồn, chạy lại bước **3.4** để bổ sung bảng blog và cột `image_path` trước khi mở website. Cần MySQL đang chạy và tài khoản setup riêng; không dùng tài khoản quản trị website thay cho tài khoản MySQL.
+
+Khi viết hoặc sửa bài, người dùng có thể chọn ảnh JPG, PNG hoặc WebP từ máy (tối đa 2 MB, 20 triệu điểm ảnh, mỗi chiều tối đa 8.000 px). Không chọn ảnh mới khi sửa sẽ giữ ảnh cũ. PHP cần extension `fileinfo` và quyền ghi thư mục `images/blog/`; ảnh tải lên không đưa vào Git, cần sao lưu thư mục này cùng database. Ảnh cũ được dọn khi thay ảnh hoặc xóa bài.
 
 - Khách đọc, tìm kiếm và sắp xếp bài. Mỗi trang có 6 bài; trang chi tiết có tối đa 20 bình luận mỗi trang.
 - Thành viên đăng bài, sửa/xóa bài của mình, thích/không thích, lưu/bỏ lưu và bình luận. Bấm lại lựa chọn bình chọn đang bật để bỏ chọn.

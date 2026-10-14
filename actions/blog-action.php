@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../includes/init.php';
+require_once __DIR__ . '/../includes/blog-images.php';
 require_post();
 require_csrf();
 $returnTo = safe_return_url($_POST['return_to'] ?? null, 'blog.php');
@@ -36,30 +37,49 @@ if ($operation !== 'create') {
     }
 }
 
+$newImage = null;
+$oldImage = null;
+// Remove a new upload if a database write fails before commit.
+$imageCommitted = false;
+register_shutdown_function(static function () use (&$newImage, &$imageCommitted): void {
+    if (!$imageCommitted) {
+        delete_blog_image($newImage);
+    }
+});
+
 if ($operation === 'create' || $operation === 'update') {
     $title = trim(request_string($_POST, 'title'));
     $content = trim(request_string($_POST, 'content'));
     $tag = request_string($_POST, 'tag');
     $errors = blog_post_errors($title, $content, $tag);
+    if ($errors === []) {
+        try {
+            $newImage = store_blog_image($_FILES['image'] ?? null);
+        } catch (InvalidArgumentException $exception) {
+            $errors[] = $exception->getMessage();
+        }
+    }
     if ($errors !== []) {
         $connection->rollBack();
         $_SESSION['blog_draft'] = ['title' => mb_substr($title, 0, 120), 'content' => mb_substr($content, 0, 10000), 'tag' => $tag, 'slug' => $operation === 'update' ? $slug : ''];
-        set_flash(implode(' ', $errors));
+        set_flash(implode(' ', $errors) . ' Nếu đã chọn ảnh, vui lòng chọn lại trước khi gửi.');
         redirect_to(app_url('blog.php') . ($operation === 'update' ? '?edit=' . rawurlencode($slug) : ''));
     }
     $excerpt = mb_substr(preg_replace('/\s+/u', ' ', $content), 0, 220, 'UTF-8');
     if ($operation === 'create') {
         $slug = 'bai-viet-' . bin2hex(random_bytes(12));
-        $statement = $connection->prepare('INSERT INTO blog_posts (user_id, slug, title, tag, excerpt, content) VALUES (?, ?, ?, ?, ?, ?)');
-        $statement->execute([$user['id'], $slug, $title, $tag, $excerpt, $content]);
+        $statement = $connection->prepare('INSERT INTO blog_posts (user_id, slug, title, tag, excerpt, content, image_path) VALUES (?, ?, ?, ?, ?, ?, ?)');
+        $statement->execute([$user['id'], $slug, $title, $tag, $excerpt, $content, $newImage]);
     } else {
-        $statement = $connection->prepare('UPDATE blog_posts SET title = ?, tag = ?, excerpt = ?, content = ? WHERE id = ?');
-        $statement->execute([$title, $tag, $excerpt, $content, $post['id']]);
+        $oldImage = $newImage !== null ? $post['image_path'] : null;
+        $statement = $connection->prepare('UPDATE blog_posts SET title = ?, tag = ?, excerpt = ?, content = ?, image_path = ? WHERE id = ?');
+        $statement->execute([$title, $tag, $excerpt, $content, $newImage ?? $post['image_path'], $post['id']]);
     }
     unset($_SESSION['blog_draft']);
     $returnTo = app_url('blog-post.php?slug=' . rawurlencode($slug));
     $message = $operation === 'create' ? 'Đã đăng bài viết.' : 'Đã cập nhật bài viết.';
 } elseif ($operation === 'delete') {
+    $oldImage = $post['image_path'];
     $statement = $connection->prepare('DELETE FROM blog_posts WHERE id = ?');
     $statement->execute([$post['id']]);
     $returnTo = app_url('blog.php');
@@ -113,5 +133,7 @@ if ($operation === 'create' || $operation === 'update') {
     $message = 'Đã xóa bình luận.';
 }
 $connection->commit();
+$imageCommitted = true;
+delete_blog_image($oldImage);
 set_flash($message);
 redirect_to($returnTo);

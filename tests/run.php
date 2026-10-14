@@ -47,7 +47,7 @@ final class TestBrowser
         curl_setopt_array($this->curl, [CURLOPT_RETURNTRANSFER => true, CURLOPT_COOKIEFILE => '', CURLOPT_TIMEOUT => 10]);
     }
 
-    public function request(string $path, ?array $data = null): array
+    public function request(string $path, ?array $data = null, bool $multipart = false): array
     {
         $headers = [];
         curl_setopt($this->curl, CURLOPT_URL, $this->base . '/' . $path);
@@ -62,7 +62,7 @@ final class TestBrowser
         });
         if ($data !== null) {
             curl_setopt($this->curl, CURLOPT_POST, true);
-            curl_setopt($this->curl, CURLOPT_POSTFIELDS, http_build_query($data));
+            curl_setopt($this->curl, CURLOPT_POSTFIELDS, $multipart ? $data : http_build_query($data));
         }
         $body = curl_exec($this->curl);
         if ($body === false) {

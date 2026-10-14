@@ -100,6 +100,25 @@
             });
         }
 
+        var postImage = document.getElementById('post-image');
+        var imagePreview = document.getElementById('post-image-preview');
+        if (postImage && imagePreview) {
+            var originalImage = imagePreview.getAttribute('src');
+            var previewUrl = null;
+            postImage.addEventListener('change', function () {
+                if (previewUrl) URL.revokeObjectURL(previewUrl);
+                var file = postImage.files[0];
+                var validImage = file && ['image/jpeg', 'image/png', 'image/webp'].includes(file.type) && file.size <= 2097152;
+                postImage.setCustomValidity(file && !validImage ? 'Chọn ảnh JPG, PNG hoặc WebP tối đa 2 MB.' : '');
+                previewUrl = validImage ? URL.createObjectURL(file) : null;
+                var source = previewUrl || originalImage;
+                imagePreview.hidden = !source;
+                if (source) imagePreview.src = source;
+                else imagePreview.removeAttribute('src');
+                if (file && !validImage) postImage.reportValidity();
+            });
+        }
+
         document.querySelectorAll('form[method="post"]').forEach(function (form) {
             form.addEventListener('submit', function (event) {
                 if (event.defaultPrevented) return;

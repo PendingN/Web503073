@@ -14,6 +14,7 @@ check($reader->request('blog.php?view=saved')['status'] === 303, 'Saved posts mu
 $readerToken = $reader->token('login.php');
 check($reader->request('actions/blog-action.php', ['csrf_token' => $readerToken, 'operation' => 'create'])['status'] === 303, 'Guests must not publish.');
 $aliceToken = $aliceBrowser->token('blog.php');
+require __DIR__ . '/blog-images.php';
 $draft = ['csrf_token' => $aliceToken, 'operation' => 'create', 'title' => 'Góc cây <script>alert(1)</script>', 'content' => "Kinh nghiệm chăm cây xanh.\n<script>alert(2)</script>", 'tag' => 'Chăm cây', 'user_id' => $admin['id']];
 check($aliceBrowser->request('actions/blog-action.php', array_merge($draft, ['title' => ' ']))['status'] === 303, 'Invalid post must return to the editor.');
 check((int) db()->query('SELECT COUNT(*) FROM blog_posts')->fetchColumn() === 7, 'Invalid post was inserted.');

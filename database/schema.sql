@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS blog_posts (
     tag VARCHAR(50) NOT NULL,
     excerpt VARCHAR(300) NOT NULL,
     content TEXT NOT NULL,
+    image_path VARCHAR(255) NULL,
     illustration VARCHAR(20) NOT NULL DEFAULT 'sprout',
     tone VARCHAR(20) NOT NULL DEFAULT 'mint',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,

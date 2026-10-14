@@ -51,7 +51,7 @@ require __DIR__ . '/includes/plant-illustration.php';
                         <?php foreach ($latestPosts as $tickerPost): ?>
                             <?php $tickerImage = ['Chăm cây' => 'anh22', 'Không gian' => 'anh21', 'Cảm hứng' => 'anh14', 'Mẹo hay' => 'anh29', 'Sống xanh' => 'anh27'][$tickerPost['tag']] ?? 'anh23'; ?>
                             <a class="feed-ticker-card" href="blog-post.php?slug=<?= e(rawurlencode($tickerPost['slug'])) ?>">
-                                <img src="images/optimized/<?= e($tickerImage) ?>.webp" alt="" width="260" height="180">
+                                <img src="<?= e($tickerPost['image_path'] ?? 'images/optimized/' . $tickerImage . '.webp') ?>" alt="" width="260" height="180">
                                 <span class="feed-ticker-label"><?= e($tickerPost['tag']) ?></span>
                                 <strong><?= e($tickerPost['title']) ?></strong>
                                 <time datetime="<?= e(str_replace(' ', 'T', $tickerPost['created_at'])) ?>"><?= e(date('d/m/Y', strtotime($tickerPost['created_at']))) ?></time>
@@ -74,7 +74,7 @@ require __DIR__ . '/includes/plant-illustration.php';
                             <span class="composer-heading"><strong><?= $editing !== null ? 'Sửa bài viết' : 'Viết bài mới' ?></strong><small>Chia sẻ góc xanh của bạn</small></span>
                             <svg class="composer-chevron" aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
                         </summary>
-                        <form class="blog-form" action="actions/blog-action.php" method="post">
+                        <form class="blog-form" action="actions/blog-action.php" method="post" enctype="multipart/form-data">
                             <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
                             <input type="hidden" name="operation" value="<?= $editing !== null ? 'update' : 'create' ?>">
                             <input type="hidden" name="slug" value="<?= e($editSlug) ?>">
@@ -89,6 +89,13 @@ require __DIR__ . '/includes/plant-illustration.php';
                                         <option<?= $form['tag'] === $tag ? ' selected' : '' ?>><?= e($tag) ?></option>
                                     <?php endforeach; ?>
                                 </select>
+                            </div>
+                            <div class="composer-field composer-content">
+                                <label for="post-image">Ảnh bài viết</label>
+                                <input type="hidden" name="MAX_FILE_SIZE" value="2097152">
+                                <input id="post-image" type="file" name="image" accept="image/jpeg,image/png,image/webp" aria-describedby="post-image-hint">
+                                <p id="post-image-hint">JPG, PNG hoặc WebP · tối đa 2 MB. Không chọn ảnh sẽ <?= !empty($editing['image_path']) ? 'giữ ảnh hiện tại' : 'dùng ảnh mặc định' ?>.</p>
+                                <img class="blog-image-preview" id="post-image-preview" alt="Xem trước ảnh bài viết"<?= !empty($editing['image_path']) ? ' src="' . e($editing['image_path']) . '"' : ' hidden' ?>>
                             </div>
                             <div class="composer-field composer-content">
                                 <label for="post-content">Nội dung</label>
@@ -130,7 +137,13 @@ require __DIR__ . '/includes/plant-illustration.php';
                                 <p><?= e($post['excerpt']) ?></p>
                                 <?php require __DIR__ . '/includes/blog-actions.php'; ?>
                             </div>
-                            <a class="feed-post-art feed-art-<?= e($post['tone']) ?>" href="blog-post.php?slug=<?= e(rawurlencode($post['slug'])) ?>" aria-label="Đọc bài: <?= e($post['title']) ?>"><?php render_plant_illustration($post['illustration'], 'feed-plant-illustration'); ?></a>
+                            <a class="feed-post-art feed-art-<?= e($post['tone']) ?>" href="blog-post.php?slug=<?= e(rawurlencode($post['slug'])) ?>" aria-label="Đọc bài: <?= e($post['title']) ?>">
+                                <?php if (!empty($post['image_path'])): ?>
+                                    <img class="blog-cover" src="<?= e($post['image_path']) ?>" alt="<?= e($post['title']) ?>" loading="lazy">
+                                <?php else: ?>
+                                    <?php render_plant_illustration($post['illustration'], 'feed-plant-illustration'); ?>
+                                <?php endif; ?>
+                            </a>
                         </div>
                     </article>
                 <?php endforeach; ?>
