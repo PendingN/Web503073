@@ -30,10 +30,5 @@ if (!$removed) {
     $statement->execute([$user['id'], $plantId]);
 }
 $connection->commit();
-$message = $removed ? 'Đã xóa ' . $plant['name'] . ' khỏi mục yêu thích.' : 'Đã thêm ' . $plant['name'] . ' vào mục yêu thích.';
-if (wants_json()) {
-    json_response(['favorite' => !$removed, 'name' => $plant['name'],
-        'count' => count(user_favorite_ids((int) $user['id'])), 'message' => $message]);
-}
-set_flash($message);
+set_flash($removed ? 'Đã xóa ' . $plant['name'] . ' khỏi mục yêu thích.' : 'Đã thêm ' . $plant['name'] . ' vào mục yêu thích.');
 redirect_to($returnTo);

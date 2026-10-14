@@ -75,18 +75,6 @@ function redirect_to(string $location): void
     exit;
 }
 
-function wants_json(): bool
-{
-    return str_contains($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json');
-}
-
-function json_response(array $data): void
-{
-    header('Content-Type: application/json; charset=utf-8');
-    echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
-    exit;
-}
-
 function abort_request(int $status, string $message): void
 {
     http_response_code($status);

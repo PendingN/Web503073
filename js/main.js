@@ -1,86 +1,55 @@
 (function () {
     'use strict';
 
-    function resetForm(form) {
-        delete form.dataset.submitting;
-        form.removeAttribute('aria-busy');
-        form.querySelectorAll('[aria-disabled="true"]').forEach(function (button) {
-            button.removeAttribute('aria-disabled');
-        });
-    }
-
-    function showActionMessage(message, failed) {
-        var notice = document.getElementById('inline-action-notice');
-        if (!notice) {
-            notice = document.createElement('div');
-            notice.id = 'inline-action-notice';
-            notice.className = 'inline-action-notice';
-            notice.setAttribute('role', 'status');
-            notice.setAttribute('aria-live', 'polite');
-            document.body.appendChild(notice);
-        }
-        window.clearTimeout(notice.dismissTimer);
-        notice.textContent = message;
-        notice.classList.toggle('is-error', failed);
-        notice.hidden = false;
-        notice.dismissTimer = window.setTimeout(function () { notice.hidden = true; }, 5000);
-    }
-
-    async function submitInlineAction(form, submitter) {
-        try {
-            var data = new FormData(form);
-            if (submitter && submitter.name) data.append(submitter.name, submitter.value);
-            var response = await fetch(form.action, {
-                method: 'POST', body: data, credentials: 'same-origin',
-                headers: { Accept: 'application/json' }
-            });
-            if (response.redirected && new URL(response.url).pathname.endsWith('/login.php')) {
-                window.location.assign(response.url);
-                return;
-            }
-            if (!response.ok) {
-                throw new Error(response.status === 403
-                    ? 'Phiên thao tác đã hết hạn. Vui lòng tải lại trang rồi thử lại.'
-                    : 'Chưa thể cập nhật. Vui lòng thử lại sau.');
-            }
-            if (!(response.headers.get('Content-Type') || '').includes('application/json')) {
-                throw new Error('Chưa nhận được kết quả cập nhật. Vui lòng tải lại trang để kiểm tra.');
-            }
-            var result = await response.json();
-            if (form.dataset.inlineAction === 'favorite') {
-                var button = form.querySelector('.favorite-button');
-                button.classList.toggle('is-favorite', result.favorite);
-                button.setAttribute('aria-pressed', String(result.favorite));
-                button.setAttribute('aria-label', (result.favorite ? 'Xóa ' : 'Thêm ') + result.name
-                    + (result.favorite ? ' khỏi' : ' vào') + ' mục yêu thích');
-                button.querySelector('svg').setAttribute('fill', result.favorite ? 'currentColor' : 'none');
-                document.querySelectorAll('.favorite-count').forEach(function (count) {
-                    count.textContent = String(result.count);
-                });
-            } else {
-                var up = form.querySelector('button[name="value"][aria-label="Thích bài viết"]');
-                var down = form.querySelector('button[name="value"][aria-label="Không thích bài viết"]');
-                [[up, 1], [down, -1]].forEach(function (item) {
-                    var selected = result.vote === item[1];
-                    item[0].classList.toggle('is-active', selected);
-                    item[0].setAttribute('aria-pressed', String(selected));
-                    item[0].value = String(selected ? 0 : item[1]);
-                });
-                up.textContent = 'Thích · ' + result.score;
-            }
-            showActionMessage(result.message, false);
-        } catch (error) {
-            showActionMessage(error instanceof TypeError
-                ? 'Kết nối bị gián đoạn. Vui lòng tải lại trang để kiểm tra trạng thái trước khi thử lại.'
-                : error.message, true);
-        } finally {
-            resetForm(form);
-        }
-    }
-
     function init() {
         var counters = document.querySelectorAll('[data-count-to]');
         var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        var feedHero = document.querySelector('.feed-hero');
+        if (feedHero) {
+            var viewport = feedHero.querySelector('.feed-ticker-viewport');
+            var track = feedHero.querySelector('.feed-ticker-track');
+            var group = feedHero.querySelector('.feed-ticker-group');
+            var motionToggle = feedHero.querySelector('.feed-motion-toggle');
+            if (group && group.children.length && motionToggle) {
+                var motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
+                var originals = Array.from(group.children);
+                var paused = false;
+                function hideDuplicate(element) {
+                    element.setAttribute('aria-hidden', 'true');
+                    if (element.matches('a')) element.tabIndex = -1;
+                    element.querySelectorAll('a').forEach(function (link) { link.tabIndex = -1; });
+                    return element;
+                }
+                function buildLoop() {
+                    if (track.children.length > 1) track.lastElementChild.remove();
+                    group.querySelectorAll('[aria-hidden="true"]').forEach(function (card) { card.remove(); });
+                    if (!motionPreference.matches) {
+                        // Fill a whole viewport even when there is only one published article.
+                        while (group.getBoundingClientRect().width < viewport.clientWidth) {
+                            originals.forEach(function (card) { group.appendChild(hideDuplicate(card.cloneNode(true))); });
+                        }
+                        track.appendChild(hideDuplicate(group.cloneNode(true)));
+                        track.style.setProperty('--feed-duration', (group.getBoundingClientRect().width / 22) + 's');
+                    }
+                    feedHero.classList.add('has-marquee');
+                    motionToggle.hidden = motionPreference.matches;
+                }
+                motionToggle.addEventListener('click', function () {
+                    paused = !paused;
+                    feedHero.classList.toggle('is-paused', paused);
+                    motionToggle.setAttribute('aria-pressed', String(paused));
+                    motionToggle.textContent = paused ? 'Chạy tiếp' : 'Tạm dừng';
+                });
+                motionPreference.addEventListener('change', buildLoop);
+                var lastWidth = 0;
+                new ResizeObserver(function () {
+                    if (viewport.clientWidth === lastWidth) return;
+                    lastWidth = viewport.clientWidth;
+                    buildLoop();
+                }).observe(viewport);
+                buildLoop();
+            }
+        }
         if (counters.length && !reduceMotion && 'IntersectionObserver' in window) {
             var counterObserver = new IntersectionObserver(function (entries) {
                 entries.forEach(function (entry) {
@@ -144,15 +113,15 @@
                 form.querySelectorAll('button[type="submit"], button:not([type]), input[type="submit"]').forEach(function (button) {
                     button.setAttribute('aria-disabled', 'true');
                 });
-                if (form.hasAttribute('data-inline-action') && 'fetch' in window) {
-                    event.preventDefault();
-                    submitInlineAction(form, event.submitter);
-                }
             });
         });
         window.addEventListener('pageshow', function () {
             document.querySelectorAll('form[data-submitting]').forEach(function (form) {
-                resetForm(form);
+                delete form.dataset.submitting;
+                form.removeAttribute('aria-busy');
+                form.querySelectorAll('[aria-disabled="true"]').forEach(function (button) {
+                    button.removeAttribute('aria-disabled');
+                });
             });
         });
 

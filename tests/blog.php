@@ -5,8 +5,8 @@ declare(strict_types=1);
 $reader = new TestBrowser($base);
 check((int) db()->query('SELECT COUNT(*) FROM blog_posts')->fetchColumn() === 7, 'Seed must include all seven blog posts.');
 $tickerPage = $reader->request('blog.php')['body'];
-check(substr_count($tickerPage, 'class="feed-ticker-card"') === 10
-    && str_contains($tickerPage, 'Bắt đầu một góc xanh từ đâu?'), 'Latest-post ticker must render the newest titles twice for a continuous loop.');
+check(substr_count($tickerPage, 'class="feed-ticker-card"') === 5
+    && str_contains($tickerPage, 'Bắt đầu một góc xanh từ đâu?'), 'Hero must render the latest article links once; JavaScript adds inaccessible loop copies.');
 check(str_contains($reader->request('blog.php?page=2')['body'], 'Tạo một nhịp sống chậm cùng cây'), 'Last seeded post is missing.');
 check($reader->request('blog-post.php?slug[]=bad')['status'] === 404, 'Array slug must return 404.');
 check($reader->request('blog-post.php?slug=missing')['status'] === 404, 'Missing post must return 404.');
@@ -49,11 +49,6 @@ foreach ([1, 1, -1, 0, 1] as $vote) {
     $response = $aliceBrowser->request('actions/blog-action.php', $aliceAction + ['operation' => 'vote', 'value' => $vote, 'return_to' => '//example.invalid']);
     check(($response['headers']['location'] ?? '') === $prefix . '/blog.php', 'Blog allowed an external redirect.');
     check((int) db()->query('SELECT SUM(value) FROM blog_votes WHERE post_id = ' . (int) $blogPost['id'])->fetchColumn() === $vote, 'Vote switch/removal or duplicate submission failed.');
-}
-foreach ([0, 1, -1, 1] as $vote) {
-    $response = $aliceBrowser->request('actions/blog-action.php', $aliceAction + ['operation' => 'vote', 'value' => $vote], true);
-    $voteData = json_decode($response['body'], true, 512, JSON_THROW_ON_ERROR);
-    check($response['status'] === 200 && $voteData['vote'] === $vote && $voteData['score'] === $vote, 'Inline vote must return the persisted score and vote without redirecting.');
 }
 check($aliceBrowser->request('actions/blog-action.php', $aliceAction + ['operation' => 'vote', 'value' => 2])['status'] === 400, 'Invalid vote accepted.');
 check($aliceBrowser->request('actions/blog-action.php', $aliceAction + ['operation' => 'save', 'saved' => 'bad'])['status'] === 400, 'Invalid save state accepted.');

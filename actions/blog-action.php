@@ -113,9 +113,5 @@ if ($operation === 'create' || $operation === 'update') {
     $message = 'Đã xóa bình luận.';
 }
 $connection->commit();
-if ($operation === 'vote' && wants_json()) {
-    $updated = find_post($slug);
-    json_response(['vote' => (int) $updated['my_vote'], 'score' => (int) $updated['score'], 'message' => $message]);
-}
 set_flash($message);
 redirect_to($returnTo);

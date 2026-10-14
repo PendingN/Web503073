@@ -44,29 +44,24 @@ require __DIR__ . '/includes/plant-illustration.php';
             <h1 id="feed-title">Chuyện cây cỏ,<br><em>kể cùng nhau.</em></h1>
             <p class="feed-hero-lead">Chia sẻ mẹo chăm cây và góc xanh của bạn.</p>
         </div>
-        <div class="feed-hero-note" aria-labelledby="latest-posts-title">
-            <div class="feed-ticker-heading">
-                <span class="feed-hero-note-icon" aria-hidden="true">✦</span>
-                <div>
-                    <strong id="latest-posts-title">Bài viết mới nhất</strong>
-                </div>
-            </div>
-            <div class="feed-ticker-viewport">
+        <?php if ($latestPosts !== []): ?>
+            <div class="feed-ticker-viewport" id="hero-articles" aria-label="Bài viết mới nhất">
                 <div class="feed-ticker-track">
-                    <?php foreach ([$latestPosts, $latestPosts] as $copyIndex => $tickerPosts): ?>
-                        <div class="feed-ticker-group"<?= $copyIndex === 1 ? ' aria-hidden="true" inert' : '' ?>>
-                            <?php foreach ($tickerPosts as $tickerPost): ?>
-                                <a class="feed-ticker-card" href="blog-post.php?slug=<?= e(rawurlencode($tickerPost['slug'])) ?>">
-                                    <span class="feed-ticker-label"><?= e($tickerPost['tag']) ?></span>
-                                    <strong><?= e($tickerPost['title']) ?></strong>
-                                    <time datetime="<?= e(str_replace(' ', 'T', $tickerPost['created_at'])) ?>"><?= e(date('d/m/Y', strtotime($tickerPost['created_at']))) ?></time>
-                                </a>
-                            <?php endforeach; ?>
-                        </div>
-                    <?php endforeach; ?>
+                    <div class="feed-ticker-group">
+                        <?php foreach ($latestPosts as $tickerPost): ?>
+                            <?php $tickerImage = ['Chăm cây' => 'anh22', 'Không gian' => 'anh21', 'Cảm hứng' => 'anh14', 'Mẹo hay' => 'anh29', 'Sống xanh' => 'anh27'][$tickerPost['tag']] ?? 'anh23'; ?>
+                            <a class="feed-ticker-card" href="blog-post.php?slug=<?= e(rawurlencode($tickerPost['slug'])) ?>">
+                                <img src="images/optimized/<?= e($tickerImage) ?>.webp" alt="" width="260" height="180">
+                                <span class="feed-ticker-label"><?= e($tickerPost['tag']) ?></span>
+                                <strong><?= e($tickerPost['title']) ?></strong>
+                                <time datetime="<?= e(str_replace(' ', 'T', $tickerPost['created_at'])) ?>"><?= e(date('d/m/Y', strtotime($tickerPost['created_at']))) ?></time>
+                            </a>
+                        <?php endforeach; ?>
+                    </div>
                 </div>
             </div>
-        </div>
+            <button class="feed-motion-toggle" type="button" aria-controls="hero-articles" aria-pressed="false" hidden>Tạm dừng</button>
+        <?php endif; ?>
     </section>
     <?php if ($flash = take_flash()): ?><p class="status-note" role="status"><?= e($flash) ?></p><?php endif; ?>
     <div class="feed-layout">
@@ -74,27 +69,37 @@ require __DIR__ . '/includes/plant-illustration.php';
             <section class="feed-composer" id="write-post" aria-label="Viết bài">
                 <?php if ($user !== null): ?>
                     <details<?= $editing !== null || $draft !== null ? ' open' : '' ?>>
-                        <summary><?= $editing !== null ? 'Sửa bài viết' : 'Viết bài mới' ?></summary>
+                        <summary class="composer-summary">
+                            <span class="composer-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m16 3 5 5-12 12-6 1 1-6Z"/><path d="m14 5 5 5"/></svg></span>
+                            <span class="composer-heading"><strong><?= $editing !== null ? 'Sửa bài viết' : 'Viết bài mới' ?></strong><small>Chia sẻ góc xanh của bạn</small></span>
+                            <svg class="composer-chevron" aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                        </summary>
                         <form class="blog-form" action="actions/blog-action.php" method="post">
                             <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
                             <input type="hidden" name="operation" value="<?= $editing !== null ? 'update' : 'create' ?>">
                             <input type="hidden" name="slug" value="<?= e($editSlug) ?>">
-                            <label for="post-title">Tiêu đề</label>
-                            <input id="post-title" name="title" minlength="3" maxlength="120" value="<?= e($form['title']) ?>" required>
-                            <label for="post-tag">Chủ đề</label>
-                            <select id="post-tag" name="tag">
-                                <?php foreach (['Chăm cây', 'Không gian', 'Cảm hứng', 'Mẹo hay', 'Sống xanh', 'Bài nổi bật'] as $tag): ?>
-                                    <option<?= $form['tag'] === $tag ? ' selected' : '' ?>><?= e($tag) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                            <label for="post-content">Nội dung</label>
-                            <textarea id="post-content" name="content" rows="7" minlength="10" maxlength="10000" required><?= e($form['content']) ?></textarea>
-                            <p>Bài viết hiển thị công khai. Nội dung từ 10 đến 10.000 ký tự.</p>
+                            <div class="composer-field">
+                                <label for="post-title">Tiêu đề</label>
+                                <input id="post-title" name="title" minlength="3" maxlength="120" value="<?= e($form['title']) ?>" placeholder="Đặt tên cho câu chuyện của bạn" required>
+                            </div>
+                            <div class="composer-field">
+                                <label for="post-tag">Chủ đề</label>
+                                <select id="post-tag" name="tag">
+                                    <?php foreach (['Chăm cây', 'Không gian', 'Cảm hứng', 'Mẹo hay', 'Sống xanh', 'Bài nổi bật'] as $tag): ?>
+                                        <option<?= $form['tag'] === $tag ? ' selected' : '' ?>><?= e($tag) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="composer-field composer-content">
+                                <label for="post-content">Nội dung</label>
+                                <textarea id="post-content" name="content" rows="7" minlength="10" maxlength="10000" placeholder="Một mẹo chăm cây, một chiếc lá mới…" aria-describedby="post-content-hint" required><?= e($form['content']) ?></textarea>
+                                <p id="post-content-hint">Công khai · 10–10.000 ký tự</p>
+                            </div>
                             <div class="blog-form-actions"><a class="btn-quiet" href="blog.php">Hủy</a><button class="btn-brand" type="submit"><?= $editing !== null ? 'Lưu thay đổi' : 'Đăng bài viết' ?></button></div>
                         </form>
                     </details>
                 <?php else: ?>
-                    <a class="btn-brand" href="login.php?return_to=<?= e(rawurlencode(app_url('blog.php'))) ?>">Đăng nhập để viết bài</a>
+                    <div class="composer-signin"><strong>Chia sẻ góc xanh của bạn</strong><a class="btn-brand" href="login.php?return_to=<?= e(rawurlencode(app_url('blog.php'))) ?>">Đăng nhập để viết bài</a></div>
                 <?php endif; ?>
             </section>
             <form class="blog-search" action="blog.php" method="get">
