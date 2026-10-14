@@ -11,26 +11,48 @@ function blog_post_select(int $userId): string
         . ' FROM blog_posts p LEFT JOIN users u ON u.id = p.user_id';
 }
 
+// Hidden posts are visible only to administrators; everyone else gets the same 404 as a missing post.
+function visible_blog_condition(string $alias = 'p'): string
+{
+    return is_admin() ? '' : ' AND ' . $alias . '.is_hidden = 0';
+}
+
 function find_post(string $slug): ?array
 {
-    $statement = db()->prepare(blog_post_select((int) (current_user()['id'] ?? 0)) . ' WHERE p.slug = ?');
+    $statement = db()->prepare(blog_post_select((int) (current_user()['id'] ?? 0)) . ' WHERE p.slug = ?' . visible_blog_condition());
     $statement->execute([$slug]);
     return $statement->fetch() ?: null;
 }
 
 function count_blog_posts(): int
 {
-    return (int) db()->query('SELECT COUNT(*) FROM blog_posts')->fetchColumn();
+    return (int) db()->query('SELECT COUNT(*) FROM blog_posts p WHERE 1 = 1' . visible_blog_condition())->fetchColumn();
 }
 
 function latest_blog_posts(): array
 {
-    return db()->query('SELECT slug, title, tag, image_path, created_at FROM blog_posts ORDER BY created_at DESC, id DESC LIMIT 5')->fetchAll();
+    return db()->query('SELECT p.slug, p.title, p.tag, p.image_path, p.created_at FROM blog_posts p WHERE 1 = 1'
+        . visible_blog_condition() . ' ORDER BY p.created_at DESC, p.id DESC LIMIT 5')->fetchAll();
+}
+
+function list_admin_blog_posts(string $search): array
+{
+    $where = ' WHERE 1 = 1';
+    $parameters = [];
+    if ($search !== '') {
+        $where .= " AND (p.title LIKE ? ESCAPE '!' OR p.tag LIKE ? ESCAPE '!' OR u.name LIKE ? ESCAPE '!')";
+        $parameters = array_fill(0, 3, search_pattern($search));
+    }
+    $statement = db()->prepare('SELECT p.id, p.slug, p.title, p.tag, p.is_hidden, p.created_at, COALESCE(u.name, \'Ban biên tập\') AS author,'
+        . ' (SELECT COUNT(*) FROM blog_comments c WHERE c.post_id = p.id) AS comment_count'
+        . ' FROM blog_posts p LEFT JOIN users u ON u.id = p.user_id' . $where . ' ORDER BY p.created_at DESC, p.id DESC');
+    $statement->execute($parameters);
+    return $statement->fetchAll();
 }
 
 function list_blog_posts(string $search, string $sort, string $view, int $userId, int $page): array
 {
-    $where = ' WHERE 1 = 1';
+    $where = ' WHERE 1 = 1' . visible_blog_condition();
     $parameters = [];
     if ($search !== '') {
         $where .= " AND (p.title LIKE ? ESCAPE '!' OR p.content LIKE ? ESCAPE '!' OR p.tag LIKE ? ESCAPE '!')";

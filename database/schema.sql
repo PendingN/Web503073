@@ -41,6 +41,7 @@ CREATE TABLE IF NOT EXISTS blog_posts (
     excerpt VARCHAR(300) NOT NULL,
     content TEXT NOT NULL,
     image_path VARCHAR(255) NULL,
+    is_hidden TINYINT(1) NOT NULL DEFAULT 0,
     illustration VARCHAR(20) NOT NULL DEFAULT 'sprout',
     tone VARCHAR(20) NOT NULL DEFAULT 'mint',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,

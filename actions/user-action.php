@@ -7,8 +7,8 @@ require_csrf();
 $admin = require_admin();
 $id = filter_var($_POST['user_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
 $operation = request_string($_POST, 'operation');
-$returnTo = safe_return_url($_POST['return_to'] ?? null, 'admin.php');
-if ($id === false || !in_array($operation, ['update', 'block', 'unblock'], true)) {
+$returnTo = safe_return_url($_POST['return_to'] ?? null, 'admin-users.php');
+if ($id === false || !in_array($operation, ['update', 'block', 'unblock', 'promote', 'demote'], true)) {
     abort_request(400, 'Thao tác người dùng không hợp lệ.');
 }
 $connection = db();
@@ -19,6 +19,21 @@ $user = $statement->fetch();
 if (!$user) {
     $connection->rollBack();
     abort_request(404, 'Không tìm thấy tài khoản này.');
+}
+if ($operation === 'promote' || $operation === 'demote') {
+    // Administrators cannot change their own role, so at least one administrator always remains.
+    if ((int) $user['id'] === (int) $admin['id']) {
+        $connection->rollBack();
+        abort_request(403, 'Bạn không thể thay đổi vai trò của chính mình.');
+    }
+    $role = $operation === 'promote' ? 'admin' : 'user';
+    if ($role !== $user['role']) {
+        $statement = $connection->prepare('UPDATE users SET role = ? WHERE id = ?');
+        $statement->execute([$role, $id]);
+    }
+    $connection->commit();
+    set_flash($operation === 'promote' ? 'Đã nâng tài khoản lên quản trị viên.' : 'Đã hạ tài khoản xuống thành viên.');
+    redirect_to($returnTo);
 }
 if ($operation !== 'update') {
     if ($user['role'] === 'admin' || (int) $user['id'] === (int) $admin['id']) {
@@ -45,7 +60,7 @@ if ($errors !== []) {
     $connection->rollBack();
     $_SESSION['admin_errors'] = $errors;
     $_SESSION['admin_input'] = ['id' => (int) $id, 'name' => $name, 'email' => $email];
-    redirect_to(app_url('admin.php') . '?edit=' . $id);
+    redirect_to(app_url('admin-users.php') . '?edit=' . $id);
 }
 try {
     $emailChanged = $email !== $user['email'];
@@ -66,6 +81,6 @@ try {
     }
     $_SESSION['admin_errors'] = ['Email này đã được đăng ký.'];
     $_SESSION['admin_input'] = ['id' => (int) $id, 'name' => $name, 'email' => $email];
-    redirect_to(app_url('admin.php') . '?edit=' . $id);
+    redirect_to(app_url('admin-users.php') . '?edit=' . $id);
 }
 redirect_to($returnTo);

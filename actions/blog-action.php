@@ -8,7 +8,7 @@ require_csrf();
 $returnTo = safe_return_url($_POST['return_to'] ?? null, 'blog.php');
 $user = require_login($returnTo);
 $operation = request_string($_POST, 'operation');
-if (!in_array($operation, ['create', 'update', 'delete', 'vote', 'save', 'comment', 'delete-comment'], true)) {
+if (!in_array($operation, ['create', 'update', 'delete', 'vote', 'save', 'comment', 'delete-comment', 'hide', 'unhide'], true)) {
     abort_request(400, 'Thao tác không hợp lệ.');
 }
 
@@ -34,6 +34,15 @@ if ($operation !== 'create') {
     if (in_array($operation, ['update', 'delete'], true) && !can_edit_post($post, $user)) {
         $connection->rollBack();
         abort_request(403, 'Bạn không có quyền sửa hoặc xóa bài viết này.');
+    }
+    if (in_array($operation, ['hide', 'unhide'], true) && $user['role'] !== 'admin') {
+        $connection->rollBack();
+        abort_request(403, 'Chỉ quản trị viên mới được ẩn hoặc hiện bài viết.');
+    }
+    // Hidden posts behave like missing posts for everyone except administrators.
+    if ((int) $post['is_hidden'] === 1 && $user['role'] !== 'admin') {
+        $connection->rollBack();
+        abort_request(404, 'Không tìm thấy bài viết.');
     }
 }
 
@@ -82,8 +91,15 @@ if ($operation === 'create' || $operation === 'update') {
     $oldImage = $post['image_path'];
     $statement = $connection->prepare('DELETE FROM blog_posts WHERE id = ?');
     $statement->execute([$post['id']]);
-    $returnTo = app_url('blog.php');
+    // Keep an admin on the moderation page; otherwise a deleted post's page would 404.
+    if (!str_starts_with($returnTo, app_url('admin-blog.php'))) {
+        $returnTo = app_url('blog.php');
+    }
     $message = 'Đã xóa bài viết.';
+} elseif ($operation === 'hide' || $operation === 'unhide') {
+    $statement = $connection->prepare('UPDATE blog_posts SET is_hidden = ? WHERE id = ?');
+    $statement->execute([$operation === 'hide' ? 1 : 0, $post['id']]);
+    $message = $operation === 'hide' ? 'Đã ẩn bài viết khỏi trang công khai.' : 'Đã hiện lại bài viết.';
 } elseif ($operation === 'vote') {
     $value = filter_var($_POST['value'] ?? null, FILTER_VALIDATE_INT);
     if (!in_array($value, [-1, 0, 1], true)) {

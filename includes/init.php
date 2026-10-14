@@ -160,7 +160,7 @@ function safe_return_url(mixed $returnTo, string $fallback = 'collection.php'): 
     if ($path === '') {
         $path = 'index.php';
     }
-    $pages = ['index.php', 'dashboard.php', 'collection.php', 'favorites.php', 'profile.php', 'plant-detail.php', 'blog.php', 'blog-post.php', 'admin.php'];
+    $pages = ['index.php', 'dashboard.php', 'collection.php', 'favorites.php', 'profile.php', 'plant-detail.php', 'blog.php', 'blog-post.php', 'admin.php', 'admin-users.php', 'admin-plants.php', 'admin-blog.php'];
     if (!in_array($path, $pages, true)) {
         return app_url($fallback);
     }
