@@ -1,0 +1,1 @@
+<svg class="vote-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 10v11H3a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1h4Zm0 0 5-8a3 3 0 0 1 3 3v5h5a2 2 0 0 1 2 2.4l-1.5 7A2 2 0 0 1 18.5 21H7"/></svg>

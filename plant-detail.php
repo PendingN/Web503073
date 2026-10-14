@@ -40,11 +40,14 @@ require __DIR__ . '/includes/navbar.php';
                 <p class="detail-description"><?= e($plant['description']) ?></p>
                 <div class="care-box"><strong>Gợi ý chăm sóc</strong><?= e($plant['care']) ?></div>
                 <div class="dashboard-actions">
-                    <form class="favorite-form" method="post" action="actions/favorite-action.php" style="position:static;">
+                    <form class="favorite-form" data-reaction="favorite" data-plant-name="<?= e($plant['name']) ?>" method="post" action="actions/favorite-action.php" style="position:static;">
                         <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
                         <input type="hidden" name="plant_id" value="<?= (int) $plant['id'] ?>">
                         <input type="hidden" name="return_to" value="<?= e(current_request_url()) ?>">
-                        <button class="btn-brand" type="submit"><?= is_favorite((int) $plant['id']) ? '♥ Đã yêu thích' : '♡ Thêm vào yêu thích' ?></button>
+                        <button class="btn-outline-brand heart-button" type="submit" aria-pressed="<?= is_favorite((int) $plant['id']) ? 'true' : 'false' ?>">
+                            <?php require __DIR__ . '/includes/heart-icon.php'; ?>
+                            <span data-reaction-label><?= is_favorite((int) $plant['id']) ? 'Đã yêu thích' : 'Thêm vào yêu thích' ?></span>
+                        </button>
                     </form>
                     <a class="btn-outline-brand" href="collection.php?category=<?= rawurlencode($plant['category']) ?>">Xem cây cùng nhóm</a>
                 </div>

@@ -54,7 +54,6 @@ require __DIR__ . '/includes/navbar.php';
     <nav class="about-jump-links" aria-label="Khám phá phần giới thiệu">
         <span>Cùng đi một vòng</span>
         <a href="#our-story">Câu chuyện</a>
-        <a href="#green-world">Thế giới cây xanh</a>
         <a href="#first-steps">Bắt đầu từ đâu?</a>
         <a href="#about-faq">Bạn thường hỏi</a>
     </nav>
@@ -84,27 +83,6 @@ require __DIR__ . '/includes/navbar.php';
             <article><span class="landing-number">02 / LƯU GIỮ</span><h3>Gom lại những điều mình thích</h3><p>Đăng nhập để lưu cây yêu thích và trở lại xem khi cần. Bộ sưu tập riêng giúp bạn tiếp tục khám phá từ những lựa chọn đã khiến mình dừng lại.</p><a class="landing-text-link" href="favorites.php">Bộ sưu tập của tôi</a></article>
             <article><span class="landing-number">03 / SẺ CHIA</span><h3>Để câu chuyện được nối dài</h3><p>Đọc bài viết, lưu bài muốn xem lại hoặc chia sẻ trải nghiệm của bạn. Một câu hỏi hay một bình luận cũng có thể mở đầu cuộc trò chuyện mới.</p><a class="landing-text-link" href="blog.php">Khám phá blog</a></article>
         </div>
-    </section>
-
-    <section class="landing-discover landing-section" id="green-world" aria-labelledby="discover-title">
-        <div class="landing-section-heading">
-            <p class="eyebrow">ĐI THEO SỰ TÒ MÒ CỦA BẠN</p>
-            <h2 id="discover-title">Hôm nay, bạn muốn khám phá điều gì?</h2>
-            <p>Từ những loài cây quen thuộc đến một sắc xanh mới. Chọn một nhóm để bắt đầu hành trình của riêng bạn.</p>
-        </div>
-        <div class="landing-category-grid">
-            <?php foreach ([
-                ['Cây trong nhà', 'Một điểm nhấn xanh cho không gian sống.', 'anh21.jpg'],
-                ['Cây ăn quả', 'Những mùa hoa, mùa quả trong khu vườn.', 'anh1.jpg'],
-                ['Cây bóng mát', 'Những tán lá rộng cho khoảng sân và khu vườn.', 'anh11.jpg'],
-            ] as [$categoryName, $categoryDescription, $categoryImage]): ?>
-                <a class="landing-category" href="collection.php?category=<?= e(rawurlencode($categoryName)) ?>">
-                    <img src="<?= e(image_url($categoryImage)) ?>" alt="<?= e($categoryName) ?>" loading="lazy" decoding="async" width="600" height="720">
-                    <div><h3><?= e($categoryName) ?> </h3><p><?= e($categoryDescription) ?></p></div>
-                </a>
-            <?php endforeach; ?>
-        </div>
-        <a class="btn-outline-brand" href="collection.php">Xem tất cả nhóm cây</a>
     </section>
 
     <section class="landing-start landing-section" id="first-steps" aria-labelledby="start-title">

@@ -76,8 +76,24 @@ function redirect_to(string $location): void
     exit;
 }
 
+function wants_json(): bool
+{
+    return str_contains($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json');
+}
+
+function json_response(array $data, int $status = 200): void
+{
+    http_response_code($status);
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+    exit;
+}
+
 function abort_request(int $status, string $message): void
 {
+    if (wants_json()) {
+        json_response(['message' => $message], $status);
+    }
     http_response_code($status);
     echo '<!doctype html><html lang="vi"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">';
     echo '<title>Vũ Điệu Rừng Xanh</title><link rel="stylesheet" href="' . e(app_url('css/style.css')) . '">';

@@ -5,6 +5,8 @@ function blog_post_select(int $userId): string
 {
     return 'SELECT p.*, COALESCE(u.name, \'Ban biên tập\') AS author,'
         . ' COALESCE((SELECT SUM(v.value) FROM blog_votes v WHERE v.post_id = p.id), 0) AS score,'
+        . ' (SELECT COUNT(*) FROM blog_votes v WHERE v.post_id = p.id AND v.value = 1) AS likes,'
+        . ' (SELECT COUNT(*) FROM blog_votes v WHERE v.post_id = p.id AND v.value = -1) AS dislikes,'
         . ' (SELECT COUNT(*) FROM blog_comments c WHERE c.post_id = p.id) AS comment_count,'
         . ' COALESCE((SELECT v.value FROM blog_votes v WHERE v.post_id = p.id AND v.user_id = ' . $userId . '), 0) AS my_vote,'
         . ' EXISTS(SELECT 1 FROM blog_saves s WHERE s.post_id = p.id AND s.user_id = ' . $userId . ') AS saved'

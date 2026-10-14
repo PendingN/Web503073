@@ -5,8 +5,14 @@ declare(strict_types=1);
 $reader = new TestBrowser($base);
 check((int) db()->query('SELECT COUNT(*) FROM blog_posts')->fetchColumn() === 7, 'Seed must include all seven blog posts.');
 $tickerPage = $reader->request('blog.php')['body'];
-check(substr_count($tickerPage, 'class="feed-ticker-card"') === 5
-    && str_contains($tickerPage, 'Bắt đầu một góc xanh từ đâu?'), 'Hero must render the latest article links once; JavaScript adds inaccessible loop copies.');
+check(substr_count($tickerPage, 'class="feed-ticker-card"') === 6
+    && str_contains($tickerPage, 'Bắt đầu một góc xanh từ đâu?'), 'Hero must render the current page article links once; JavaScript adds inaccessible loop copies.');
+$secondPage = $reader->request('blog.php?page=2')['body'];
+check(substr_count($secondPage, 'class="feed-ticker-card"') === 1, 'Hero must follow pagination.');
+$searchPage = $reader->request('blog.php?search=' . rawurlencode('Tạo một nhịp sống chậm cùng cây'))['body'];
+check(substr_count($searchPage, 'class="feed-ticker-card"') === 1, 'Hero must follow the current search.');
+$emptySearchPage = $reader->request('blog.php?search=no-matching-post-98347')['body'];
+check(!str_contains($emptySearchPage, 'id="hero-articles"'), 'Empty searches must not show unrelated hero articles.');
 check(str_contains($reader->request('blog.php?page=2')['body'], 'Tạo một nhịp sống chậm cùng cây'), 'Last seeded post is missing.');
 check($reader->request('blog-post.php?slug[]=bad')['status'] === 404, 'Array slug must return 404.');
 check($reader->request('blog-post.php?slug=missing')['status'] === 404, 'Missing post must return 404.');
@@ -57,12 +63,34 @@ foreach (['1', '1', '0', '1'] as $saved) {
     $aliceBrowser->request('actions/blog-action.php', $aliceAction + ['operation' => 'save', 'saved' => $saved]);
     check((int) db()->query('SELECT COUNT(*) FROM blog_saves WHERE post_id = ' . (int) $blogPost['id'])->fetchColumn() === (int) $saved, 'Save/remove or duplicate submission failed.');
 }
+foreach ([0, -1, 1] as $vote) {
+    $response = $aliceBrowser->request('actions/blog-action.php', $aliceAction + ['operation' => 'vote', 'value' => $vote], false, true);
+    $state = json_decode($response['body'], true, 512, JSON_THROW_ON_ERROR);
+    check($response['status'] === 200 && !isset($response['headers']['location']) && $state['vote'] === $vote
+        && $state['likes'] === max(0, $vote) && $state['dislikes'] === max(0, -$vote) && $state['saved'] === true,
+        'Async vote must return separate non-negative like/dislike counts, user vote and save state.');
+}
+$blockedLogin->request('actions/blog-action.php', $bobAction + ['operation' => 'vote', 'value' => -1]);
+$storedVotes = array_count_values(db()->query('SELECT value FROM blog_votes WHERE post_id = ' . (int) $blogPost['id'])->fetchAll(PDO::FETCH_COLUMN));
+check(($storedVotes[1] ?? 0) === 1 && ($storedVotes[-1] ?? 0) === 1, 'One user disliking must not subtract another user like.');
+$mixedState = $aliceBrowser->request('actions/blog-action.php', $aliceAction + ['operation' => 'vote', 'value' => 1], false, true);
+$mixedCounts = json_decode($mixedState['body'], true, 512, JSON_THROW_ON_ERROR);
+check($mixedCounts['likes'] === 1 && $mixedCounts['dislikes'] === 1, 'Async mixed reactions must keep separate counts.');
+$blockedLogin->request('actions/blog-action.php', $bobAction + ['operation' => 'vote', 'value' => 0]);
+foreach (['0', '1', '1'] as $saved) {
+    $response = $aliceBrowser->request('actions/blog-action.php', $aliceAction + ['operation' => 'save', 'saved' => $saved], false, true);
+    $state = json_decode($response['body'], true, 512, JSON_THROW_ON_ERROR);
+    check($response['status'] === 200 && $state['saved'] === ($saved === '1') && $state['vote'] === 1, 'Async save must persist without resetting votes.');
+}
+check($aliceBrowser->request('actions/blog-action.php', ['csrf_token' => 'bad', 'slug' => $slug, 'operation' => 'vote', 'value' => 1], false, true)['status'] === 403,
+    'Async vote must require CSRF.');
 check(str_contains($aliceBrowser->request('blog.php?view=saved')['body'], 'Bài đã sửa'), 'Saved-post filter failed.');
+check(substr_count($aliceBrowser->request('blog.php?view=saved')['body'], 'class="feed-ticker-card"') === 1, 'Hero must respect the saved-post filter.');
 check(str_contains($blockedLogin->request('blog.php?view=saved')['body'], '0 kết quả'), 'Saved posts leaked to another user.');
 $relogin = new TestBrowser($base);
 $relogin->login('alice-new@example.test', 'NewGarden123!');
 $savedPage = $relogin->request('blog.php?view=saved')['body'];
-check(str_contains($savedPage, '♥ Đã lưu') && str_contains($savedPage, 'aria-pressed="true"'), 'Votes and saves must survive a new login.');
+check(str_contains($savedPage, '>Đã lưu</span>') && str_contains($savedPage, 'aria-pressed="true"'), 'Votes and saves must survive a new login.');
 $popularPage = $reader->request('blog.php?sort=popular')['body'];
 check(strpos($popularPage, 'Bài đã sửa') < strpos($popularPage, 'Bắt đầu một góc xanh'), 'Popular ordering failed.');
 $comment = '<script>comment</script> Chăm cây vui quá!';

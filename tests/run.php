@@ -48,10 +48,11 @@ final class TestBrowser
         curl_setopt_array($this->curl, [CURLOPT_RETURNTRANSFER => true, CURLOPT_COOKIEFILE => '', CURLOPT_TIMEOUT => 10]);
     }
 
-    public function request(string $path, ?array $data = null, bool $multipart = false): array
+    public function request(string $path, ?array $data = null, bool $multipart = false, bool $json = false): array
     {
         $headers = [];
         curl_setopt($this->curl, CURLOPT_URL, $this->base . '/' . $path);
+        curl_setopt($this->curl, CURLOPT_HTTPHEADER, $json ? ['Accept: application/json'] : []);
         curl_setopt($this->curl, CURLOPT_POSTFIELDS, null);
         curl_setopt($this->curl, CURLOPT_HTTPGET, true);
         curl_setopt($this->curl, CURLOPT_HEADERFUNCTION, static function ($curl, string $line) use (&$headers): int {
@@ -190,8 +191,19 @@ try {
     check(user_favorite_ids((int) $alice['id']) === [22] && user_favorite_ids((int) $admin['id']) === [], 'Favorite ownership failed.');
     $guest->request('actions/favorite-action.php', ['csrf_token' => $aliceToken, 'plant_id' => 22]);
     check(user_favorite_ids((int) $alice['id']) === [], 'Favorite removal failed.');
+    foreach (['1', '1', '0'] as $desiredFavorite) {
+        $response = $guest->request('actions/favorite-action.php', ['csrf_token' => $aliceToken, 'plant_id' => 22, 'favorite' => $desiredFavorite], false, true);
+        $state = json_decode($response['body'], true, 512, JSON_THROW_ON_ERROR);
+        check($response['status'] === 200 && !isset($response['headers']['location']) && $state['favorite'] === ($desiredFavorite === '1')
+            && $state['count'] === (int) $desiredFavorite, 'Async favorites must return persisted state without redirect and tolerate retries.');
+    }
+    check($guest->request('actions/favorite-action.php', ['csrf_token' => 'invalid', 'plant_id' => 22], false, true)['status'] === 403, 'Async favorites must require CSRF.');
+    check($guest->request('actions/favorite-action.php', ['csrf_token' => $aliceToken, 'plant_id' => 22, 'favorite' => 'bad'], false, true)['status'] === 400, 'Invalid async favorite state was accepted.');
     $guest->request('actions/favorite-action.php', ['csrf_token' => $aliceToken, 'plant_id' => 22]);
     $guest->request('actions/logout.php', ['csrf_token' => $aliceToken]);
+    $guestToken = $guest->token('login.php');
+    $expired = $guest->request('actions/favorite-action.php', ['csrf_token' => $guestToken, 'plant_id' => 22], false, true);
+    check($expired['status'] === 401 && isset(json_decode($expired['body'], true)['login_url']), 'Async guest action must return a login destination.');
     check($guest->request('profile.php')['status'] === 303, 'Logout did not clear authentication.');
     $duplicate = new TestBrowser($base);
     $aliceData['csrf_token'] = $duplicate->token('register.php');

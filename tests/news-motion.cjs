@@ -9,12 +9,16 @@ const { chromium } = require('playwright');
 const root = path.resolve(__dirname, '..');
 const output = fs.mkdtempSync(path.join(os.tmpdir(), 'blog-hero-check-'));
 const fixture = `function e($v) { return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
-require 'data/content.php'; $latestPosts = array_slice($posts, 0, (int)$argv[1]);
-foreach ($latestPosts as &$post) { $post['created_at'] = '2026-10-14 10:00:00'; } unset($post);
+require 'data/content.php'; $tickerPosts = array_slice($posts, 0, (int)$argv[1]);
+foreach ($tickerPosts as &$post) { $post['created_at'] = '2026-10-14 10:00:00'; } unset($post);
 $s = file_get_contents('blog.php'); $a = strpos($s, '    <section class="feed-hero"');
 eval('?>' . substr($s, $a, strpos($s, '</section>', $a) + 10 - $a));`;
 const server = http.createServer((req, res) => {
     const url = new URL(req.url, 'http://localhost');
+    if (url.pathname === '/blog-post.php') {
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        return res.end('<h1>Article detail</h1>');
+    }
     if (url.pathname === '/') {
         const hero = execFileSync(process.env.PHP_BINARY || 'C:/xampp/php/php.exe', ['-r', fixture, String(Number(url.searchParams.get('count') ?? 5))], { cwd: root, encoding: 'utf8' });
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
@@ -69,6 +73,7 @@ const server = http.createServer((req, res) => {
         await toggle.click();
         await page.waitForTimeout(150);
         assert.notEqual(await transform(), previous);
+        await page.keyboard.press('Tab');
         await page.locator('.feed-ticker-card').first().focus();
         assert.equal(await track.evaluate(el => getComputedStyle(el).animationName), 'none');
         assert.equal(await page.locator('[aria-hidden="true"] a:not([tabindex="-1"]), a[aria-hidden="true"]:not([tabindex="-1"])').count(), 0);
@@ -80,6 +85,40 @@ const server = http.createServer((req, res) => {
         await page.emulateMedia({ reducedMotion: 'no-preference' });
         await page.waitForFunction(() => !document.querySelector('.feed-motion-toggle').hidden);
         assert.equal(await toggle.isVisible(), true);
+        async function clickArticle(targetPage, fraction, duplicate, touch = false) {
+            await targetPage.goto(base);
+            await targetPage.waitForSelector('.has-marquee');
+            const target = await targetPage.evaluate(({ fraction, duplicate, touch }) => {
+                const animation = document.querySelector('.feed-ticker-track').getAnimations()[0];
+                animation.pause();
+                animation.currentTime = animation.effect.getTiming().duration * fraction;
+                const viewport = document.querySelector('.feed-ticker-viewport').getBoundingClientRect();
+                const card = Array.from(document.querySelectorAll('.feed-ticker-card')).find(link => {
+                    const rect = link.getBoundingClientRect();
+                    const center = rect.left + rect.width / 2;
+                    return !!link.closest('[aria-hidden="true"]') === duplicate
+                        && center > viewport.left + viewport.width * (touch ? 0 : .65)
+                        && center < viewport.right - 8;
+                });
+                if (!card) return null;
+                const rect = card.getBoundingClientRect();
+                return { href: card.href, x: rect.left + rect.width / 2, y: rect.top + 70 };
+            }, { fraction, duplicate, touch });
+            assert.ok(target, 'A visible ticker article must be available for clicking.');
+            await Promise.all([
+                targetPage.waitForURL(target.href),
+                touch ? targetPage.touchscreen.tap(target.x, target.y) : targetPage.mouse.click(target.x, target.y)
+            ]);
+            assert.equal(targetPage.url(), target.href, 'Clicking a moving article must open its own detail URL.');
+        }
+        await clickArticle(page, 0, false);
+        await clickArticle(page, .9, true);
+        const touchContext = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+        const touchPage = await touchContext.newPage();
+        touchPage.on('pageerror', error => errors.push(error.message));
+        await clickArticle(touchPage, 0, false, true);
+        await clickArticle(touchPage, .9, true, true);
+        await touchContext.close();
         for (const count of [0, 1]) {
             await page.goto(base + '?count=' + count);
             if (!count) assert.equal(await toggle.count(), 0);
@@ -89,7 +128,7 @@ const server = http.createServer((req, res) => {
             }
         }
         assert.deepEqual(errors, []);
-        console.log('PASS: five widths, fixed text inside 97% gradient, loop phases, pause/resume, keyboard access, reduced motion, empty/single article.');
+        console.log('PASS: five widths, fixed text inside 97% gradient, loop phases, pause/resume, keyboard access, reduced motion, empty/single article, mouse/touch navigation on original and duplicated cards.');
         console.log('Screenshots: ' + output);
     } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; }).finally(() => server.close());
