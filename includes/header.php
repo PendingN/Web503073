@@ -13,6 +13,6 @@ $fullTitle = $pageTitle === '' ? 'Vũ Điệu Rừng Xanh' : $pageTitle . ' | V�
     <title><?= e($fullTitle) ?></title>
     <?php if ($bodyClass === 'landing-page'): ?><link rel="preload" as="image" href="<?= e(app_url('images/optimized/hero-canopy-enhanced.webp')) ?>" fetchpriority="high"><?php endif; ?>
     <link rel="stylesheet" href="<?= e(asset_url('css/fonts.css')) ?>">
-    <link rel="stylesheet" href="<?= e(asset_url('css/style.css')) ?>">
+    <link rel="stylesheet" href="<?= e(asset_url($bodyClass === 'admin-page' ? 'css/admin.css' : 'css/style.css')) ?>">
 </head>
 <body class="<?= e($bodyClass) ?>">

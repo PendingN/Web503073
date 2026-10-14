@@ -7,6 +7,7 @@ if (PHP_SAPI !== 'cli') {
 }
 require_once __DIR__ . '/../includes/database.php';
 require_once __DIR__ . '/../includes/repositories.php';
+require_once __DIR__ . '/../includes/activity-repository.php';
 
 $checks = 0;
 function check(bool $condition, string $label): void
@@ -131,7 +132,7 @@ try {
     $prefix = $subdirectory ? '/' . rawurlencode(basename(dirname(__DIR__))) : '';
     $documentRoot = $subdirectory ? dirname(dirname(__DIR__)) : dirname(__DIR__);
     $base = 'http://' . $address . $prefix;
-    $webProcess = proc_open([PHP_BINARY, '-S', $address, '-t', $documentRoot], [0 => ['pipe', 'r'], 1 => ['file', $log, 'a'], 2 => ['file', $log, 'a']], $webPipes, dirname(__DIR__));
+    $webProcess = proc_open([PHP_BINARY, '-S', $address, '-t', $documentRoot, 'server-router.php'], [0 => ['pipe', 'r'], 1 => ['file', $log, 'a'], 2 => ['file', $log, 'a']], $webPipes, dirname(__DIR__));
     if (!is_resource($webProcess)) {
         throw new RuntimeException('Cannot start test web server.');
     }
@@ -147,7 +148,7 @@ try {
     foreach (['index.php', 'dashboard.php', 'collection.php', 'plant-detail.php?id=22', 'blog.php', 'blog-post.php?slug=bat-dau-mot-goc-xanh-tu-dau', 'login.php', 'register.php'] as $path) {
         check($guest->request($path)['status'] === 200, 'Public route failed: ' . $path);
     }
-    foreach (['favorites.php', 'profile.php', 'admin.php'] as $path) {
+    foreach (['favorites.php', 'profile.php', 'admin.php', 'admin-dashboard.php'] as $path) {
         $response = $guest->request($path);
         check($response['status'] === 303 && str_starts_with($response['headers']['location'] ?? '', $prefix . '/login.php?return_to='), 'Guest route is not protected: ' . $path);
     }
@@ -235,7 +236,8 @@ try {
     check(find_user((int) $bob['id'])['email'] === 'bob@example.test', 'Profile accepted a duplicate email.');
 
     $adminBrowser = new TestBrowser($base);
-    check($adminBrowser->login('admin@example.test', 'TestAdmin123!')['status'] === 303, 'Admin login failed.');
+    $adminLogin = $adminBrowser->login('admin@example.test', 'TestAdmin123!');
+    check($adminLogin['status'] === 303 && $adminLogin['headers']['location'] === $prefix . '/admin-dashboard.php', 'Direct admin login must open the admin dashboard.');
     $adminToken = $adminBrowser->token('admin.php');
     check(str_contains($adminBrowser->request('admin.php?search=alice-new')['body'], 'Alice Updated'), 'Admin user search failed.');
     $update = ['csrf_token' => $adminToken, 'user_id' => $bob['id'], 'operation' => 'update', 'name' => 'Bob Edited', 'email' => 'bob@example.test', 'role' => 'admin'];
@@ -275,6 +277,13 @@ try {
     db()->exec("UPDATE plants SET name = 'Preserved plant' WHERE id = 1");
     run_cli(['scripts/setup-database.php']);
     check(find_plant(1)['name'] === 'Preserved plant' && find_user((int) $alice['id'])['name'] === 'Alice Updated' && user_favorite_ids((int) $alice['id']) === [22], 'Repeat setup overwrote existing records.');
+
+    require __DIR__ . '/admin-management.php';
+    require __DIR__ . '/admin-dashboard.php';
+
+    $server->exec('DROP TABLE `' . $testName . '`.user_activity');
+    check($adminBrowser->request('admin-history.php')['status'] === 503, 'Missing history migration must show a clear setup state.');
+    check($adminBrowser->login('admin@example.test', 'TestAdmin123!')['status'] === 303, 'Missing history migration must not break existing login.');
 
     // Deliberately remove only a table in this disposable database to test 503 handling.
     $server->exec('DROP TABLE `' . $testName . '`.favorites');

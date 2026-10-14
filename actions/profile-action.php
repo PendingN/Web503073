@@ -44,6 +44,7 @@ try {
     $hash = $password === '' ? $record['password_hash'] : password_hash($password, PASSWORD_DEFAULT);
     $statement = $connection->prepare('UPDATE users SET name = ?, email = ?, password_hash = ?, session_version = ? WHERE id = ?');
     $statement->execute([$name, $email, $hash, $version, $user['id']]);
+    record_activity($user, 'profile.updated', $credentialsChanged ? 'Cập nhật hồ sơ và thông tin đăng nhập' : 'Cập nhật hồ sơ', ['id' => $user['id'], 'name' => $name]);
     $connection->commit();
     if ($credentialsChanged) {
         session_regenerate_id(true);

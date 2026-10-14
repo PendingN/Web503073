@@ -30,6 +30,7 @@ if ($operation !== 'update') {
         // Increasing the version prevents an old session returning after unblock.
         $statement = $connection->prepare('UPDATE users SET status = ?, session_version = session_version + 1 WHERE id = ?');
         $statement->execute([$status, $id]);
+        record_activity($admin, $operation === 'block' ? 'user.blocked' : 'user.unblocked', $operation === 'block' ? 'Khóa tài khoản và hủy các phiên đăng nhập' : 'Mở khóa tài khoản', $user);
     }
     $connection->commit();
     set_flash($operation === 'block' ? 'Đã khóa tài khoản và kết thúc các phiên đăng nhập.' : 'Đã mở khóa tài khoản. Người dùng có thể đăng nhập lại.');
@@ -52,6 +53,7 @@ try {
     $version = (int) $user['session_version'] + ($emailChanged ? 1 : 0);
     $statement = $connection->prepare('UPDATE users SET name = ?, email = ?, session_version = ? WHERE id = ?');
     $statement->execute([$name, $email, $version, $id]);
+    record_activity($admin, 'user.updated', 'Quản trị viên cập nhật thông tin tài khoản', ['id' => $id, 'name' => $name]);
     $connection->commit();
     if ($emailChanged && (int) $id === (int) $admin['id']) {
         session_regenerate_id(true);

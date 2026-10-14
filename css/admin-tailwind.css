@@ -1,0 +1,48 @@
+@import "tailwindcss" source(none);
+
+@source "../admin-dashboard.php";
+@source "../admin.php";
+@source "../admin-posts.php";
+@source "../admin-history.php";
+@source "../includes/admin-sidebar.php";
+@source "../includes/admin-topbar.php";
+@source "../includes/admin-icons.php";
+@source "../js/admin.js";
+
+/* Layout and palette adapted from TailwindAdmin; see licenses/tailwindadmin-mit.txt. */
+@theme {
+    --font-sans: "Be Vietnam Pro", sans-serif;
+    --color-primary: #5d87ff;
+    --color-primary-dark: #385fcd;
+    --color-ink: #2a3547;
+    --color-muted: #52627a;
+    --color-border: #e7edf4;
+    --color-soft: #f6f9fc;
+    --shadow-card: 0 0 2px #919eab1f, 0 12px 24px -4px #919eab14;
+}
+
+@layer base {
+    body { @apply bg-soft font-sans text-ink antialiased; }
+    :focus-visible { outline: 2px solid var(--color-primary); outline-offset: 3px; }
+    button, summary { cursor: pointer; }
+    button:disabled { cursor: default; }
+}
+
+@layer components {
+    .admin-card { @apply rounded-xl border border-border bg-white shadow-card; }
+    .admin-button { @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-primary-dark px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#2c4fb8]; }
+    .admin-button-secondary { @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-border bg-white px-4 py-2.5 text-sm font-medium text-muted transition-colors hover:bg-soft hover:text-primary-dark; }
+    .admin-input { @apply min-h-11 w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm text-ink placeholder:text-muted/70 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20; }
+    .admin-field-label { @apply mb-2 block text-sm font-medium; }
+    .admin-panel-link { @apply inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-primary-dark hover:underline; }
+    .admin-table { @apply w-full text-left text-sm; }
+    .admin-table th { @apply border-b border-border bg-soft px-5 py-3.5 text-xs font-medium whitespace-nowrap text-muted; }
+    .admin-table td { @apply border-b border-border px-5 py-4 align-middle; }
+    .admin-table tbody tr:last-child td { @apply border-b-0; }
+    .admin-table tbody tr { @apply hover:bg-soft/60; }
+    .status-active { @apply inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium whitespace-nowrap text-emerald-700; }
+    .status-blocked { @apply inline-flex rounded-full bg-red-50 px-2.5 py-1 text-xs font-medium whitespace-nowrap text-red-700; }
+    .status-note { @apply rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm leading-relaxed text-emerald-800; }
+    .login-error { @apply rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm leading-relaxed text-red-800; }
+    .login-error ul { @apply list-inside list-disc; }
+}

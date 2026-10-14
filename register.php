@@ -28,11 +28,17 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     if ($errors === []) {
         try {
             // Public registration always creates an ordinary user.
+            db()->beginTransaction();
             $id = create_user($name, $email, $password);
+            record_activity(['id' => $id, 'name' => $name], 'account.created', 'Đăng ký tài khoản thành viên', ['id' => $id, 'name' => $name]);
+            db()->commit();
             sign_in(find_user($id));
             set_flash('Đăng ký thành công. Chào mừng bạn đến với khu vườn!');
             redirect_to($returnTo);
         } catch (PDOException $exception) {
+            if (db()->inTransaction()) {
+                db()->rollBack();
+            }
             if (!duplicate_email_error($exception)) {
                 throw $exception;
             }

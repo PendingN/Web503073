@@ -8,6 +8,7 @@ if (PHP_SAPI !== 'cli') {
 require_once __DIR__ . '/../includes/database.php';
 require_once __DIR__ . '/../includes/repositories.php';
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/activity-repository.php';
 
 function admin_input(string $environmentKey, string $prompt): string
 {
@@ -23,6 +24,7 @@ function admin_input(string $environmentKey, string $prompt): string
     return rtrim($line, "\r\n");
 }
 
+$connection = null;
 try {
     $name = trim(admin_input('APP_ADMIN_NAME', 'Admin name: '));
     $email = strtolower(trim(admin_input('APP_ADMIN_EMAIL', 'Admin email: ')));
@@ -37,9 +39,16 @@ try {
     if (email_in_use($email)) {
         throw new RuntimeException('Email already exists. Use a separate email for the administrator.');
     }
-    create_user($name, $email, $password, 'admin');
+    $connection = db();
+    $connection->beginTransaction();
+    $id = create_user($name, $email, $password, 'admin');
+    record_activity(null, 'account.created', 'Tạo tài khoản quản trị bằng CLI', ['id' => $id, 'name' => $name]);
+    $connection->commit();
     fwrite(STDOUT, 'Administrator created: ' . $email . PHP_EOL);
 } catch (Throwable $exception) {
+    if ($connection instanceof PDO && $connection->inTransaction()) {
+        $connection->rollBack();
+    }
     fwrite(STDERR, 'Cannot create administrator: ' . $exception->getMessage() . PHP_EOL);
     exit(1);
 }

@@ -28,6 +28,31 @@ function latest_blog_posts(): array
     return db()->query('SELECT slug, title, tag, image_path, created_at FROM blog_posts ORDER BY created_at DESC, id DESC LIMIT 5')->fetchAll();
 }
 
+function list_admin_posts(string $search, string $tag, int $page): array
+{
+    $from = ' FROM blog_posts p LEFT JOIN users u ON u.id = p.user_id';
+    $where = ' WHERE 1 = 1';
+    $parameters = [];
+    if ($search !== '') {
+        $where .= " AND (p.title LIKE ? ESCAPE '!' OR u.name LIKE ? ESCAPE '!')";
+        $parameters = [search_pattern($search), search_pattern($search)];
+    }
+    if ($tag !== '') {
+        $where .= ' AND p.tag = ?';
+        $parameters[] = $tag;
+    }
+    $statement = db()->prepare('SELECT COUNT(*)' . $from . $where);
+    $statement->execute($parameters);
+    $total = (int) $statement->fetchColumn();
+    $pages = max(1, (int) ceil($total / 20));
+    $page = min(max(1, $page), $pages);
+    $statement = db()->prepare("SELECT p.id, p.slug, p.title, p.tag, p.created_at, p.image_path, COALESCE(u.name, 'Ban biên tập') AS author,"
+        . ' (SELECT COUNT(*) FROM blog_comments c WHERE c.post_id = p.id) AS comment_count'
+        . $from . $where . ' ORDER BY p.created_at DESC, p.id DESC LIMIT 20 OFFSET ' . (($page - 1) * 20));
+    $statement->execute($parameters);
+    return ['posts' => $statement->fetchAll(), 'total' => $total, 'page' => $page, 'pages' => $pages];
+}
+
 function list_blog_posts(string $search, string $sort, string $view, int $userId, int $page): array
 {
     $where = ' WHERE 1 = 1';

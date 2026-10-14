@@ -16,13 +16,15 @@ This is a server-rendered PHP 8.0+ and MySQL site. Pages such as `index.php` and
   Get-ChildItem -Recurse -Filter *.php | ForEach-Object { C:\xampp\php\php.exe -l $_.FullName }
   ```
 
-There is no build, package manager, or configured formatter.
+The public site uses plain CSS. Admin pages use Tailwind CSS 4: run `npm ci` then `npm run build:css` after changing admin markup or `css/admin-tailwind.css`. Commit the generated `css/admin.css` so PHP hosting can serve it without Node.js. Use `npm run watch:css` during UI work. There is no configured formatter.
 
 ## Coding Style
 
 Use four spaces, `declare(strict_types=1);` in PHP entry points, procedural PHP, and vanilla JavaScript. Keep shared markup in `includes/` and request handlers in `actions/`. Use lowercase kebab case filenames, such as `favorite-action.php`. Match surrounding CSS formatting. Escape HTML values with `e()` from `includes/init.php`. For state-changing forms, use POST and the existing CSRF helpers; validate input before processing it.
 
 ## Testing
+
+For admin UI changes, run `npm run build:css` and `node tests/admin-ui.cjs`. The Node check covers menu interactions and compiled assets; it does not verify browser layout.
 
 Run syntax checks and `C:\xampp\php\php.exe tests/run.php` after backend changes. The standalone PHP runner creates a disposable database and web server, checks account, catalog, favorite, profile, and admin flows through HTTP, and removes test resources. Set `DB_SETUP_USER` and `DB_SETUP_PASSWORD` to a non-root CLI database account before running it; MySQL must be running and PHP curl must be enabled. No coverage target is configured. Check affected layouts and normal, empty, and invalid states manually in a browser.
 

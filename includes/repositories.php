@@ -127,3 +127,20 @@ function user_statistics(): array
     return db()->query("SELECT COUNT(*) AS total, COALESCE(SUM(status = 'active'), 0) AS active,"
         . " COALESCE(SUM(status = 'blocked'), 0) AS blocked, COALESCE(SUM(role = 'admin'), 0) AS admins FROM users")->fetch();
 }
+
+function admin_activity_statistics(): array
+{
+    $today = new DateTimeImmutable('today');
+    $start = $today->modify('-6 days');
+    $statement = db()->prepare('SELECT DATE(created_at) AS day, COUNT(*) AS total FROM users'
+        . ' WHERE created_at >= ? AND created_at < ? GROUP BY DATE(created_at)');
+    $statement->execute([$start->format('Y-m-d'), $today->modify('+1 day')->format('Y-m-d')]);
+    $counts = array_column($statement->fetchAll(), 'total', 'day');
+    $registrations = [];
+    for ($day = $start; $day <= $today; $day = $day->modify('+1 day')) {
+        $registrations[] = ['date' => $day->format('Y-m-d'), 'total' => (int) ($counts[$day->format('Y-m-d')] ?? 0)];
+    }
+    $totals = db()->query('SELECT (SELECT COUNT(*) FROM favorites) AS favorites,'
+        . ' (SELECT COUNT(*) FROM blog_comments) AS comments')->fetch();
+    return ['registrations' => $registrations, 'favorites' => (int) $totals['favorites'], 'comments' => (int) $totals['comments']];
+}
