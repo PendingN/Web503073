@@ -82,7 +82,7 @@ for (const selector of ['.admin-card', '.admin-input', '.status-active', '.statu
     assert.ok(css.includes(selector), 'Compiled admin CSS is missing ' + selector);
 }
 const sprite = fs.readFileSync(path.join(root, 'images/admin/icons.svg'), 'utf8');
-for (const file of ['admin.php', 'admin-dashboard.php', 'admin-posts.php', 'admin-history.php', 'includes/admin-sidebar.php', 'includes/admin-topbar.php']) {
+for (const file of ['admin.php', 'admin-dashboard.php', 'admin-posts.php', 'includes/admin-sidebar.php', 'includes/admin-topbar.php']) {
     const markup = fs.readFileSync(path.join(root, file), 'utf8');
     for (const match of markup.matchAll(/(?:admin_icon\(|'icon' => )'([a-z-]+)'/g)) {
         assert.ok(sprite.includes('id="' + match[1] + '"'), 'Missing admin icon: ' + match[1]);

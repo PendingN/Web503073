@@ -31,7 +31,7 @@ require __DIR__ . '/includes/header.php';
         <?php require __DIR__ . '/includes/admin-topbar.php'; ?>
         <main id="admin-main" class="mx-auto w-full max-w-[1480px] space-y-6 px-4 py-6 sm:px-6 xl:px-8">
             <?php if ($flashMessage !== null): ?><div class="status-note" role="status" data-auto-dismiss><?= e($flashMessage) ?></div><?php endif; ?>
-            <div class="flex flex-wrap items-center justify-between gap-4"><div><h2 class="text-xl font-semibold">Nhật ký của cộng đồng</h2><p class="mt-2 text-xs text-muted">Xem, tìm kiếm, tạo, sửa và xóa bài viết của toàn bộ người dùng.</p></div><a class="admin-button" href="admin-posts.php?create=1#post-editor">Viết bài mới <?php admin_icon('arrow', 'size-4'); ?></a></div>
+            <div class="flex flex-wrap items-center justify-between gap-4"><div><h2 class="text-xl font-semibold">Nhật ký của cộng đồng</h2></div><a class="admin-button" href="admin-posts.php?create=1#post-editor">Viết bài mới <?php admin_icon('arrow', 'size-4'); ?></a></div>
             <?php if ($showEditor): ?>
                 <section class="admin-card scroll-mt-28 p-5 sm:p-6" id="post-editor" aria-labelledby="post-editor-title">
                     <div class="mb-6 flex items-center justify-between gap-3"><h2 class="text-lg font-semibold" id="post-editor-title"><?= $editing !== null ? 'Sửa bài viết' : 'Viết bài mới' ?></h2><a class="admin-button-secondary" href="admin-posts.php">Đóng <?php admin_icon('close', 'size-4'); ?></a></div>

@@ -177,7 +177,7 @@ function safe_return_url(mixed $returnTo, string $fallback = 'collection.php'): 
     if ($path === '') {
         $path = 'index.php';
     }
-    $pages = ['index.php', 'dashboard.php', 'collection.php', 'favorites.php', 'profile.php', 'plant-detail.php', 'blog.php', 'blog-post.php', 'admin.php', 'admin-dashboard.php', 'admin-posts.php', 'admin-history.php', 'admin-plants.php'];
+    $pages = ['index.php', 'dashboard.php', 'collection.php', 'favorites.php', 'profile.php', 'plant-detail.php', 'blog.php', 'blog-post.php', 'admin.php', 'admin-dashboard.php', 'admin-posts.php', 'admin-plants.php'];
     if (!in_array($path, $pages, true)) {
         return app_url($fallback);
     }
@@ -209,7 +209,7 @@ if ($viewer !== null && ($_SERVER['REQUEST_METHOD'] ?? '') === 'GET') {
     $activityPages = ['index.php' => 'Trang chủ', 'dashboard.php' => 'Tổng quan bộ sưu tập', 'collection.php' => 'Bộ sưu tập',
         'favorites.php' => 'Cây yêu thích', 'profile.php' => 'Trang cá nhân', 'plant-detail.php' => 'Chi tiết cây',
         'blog.php' => 'Blog', 'blog-post.php' => 'Chi tiết bài viết', 'admin.php' => 'Quản lý tài khoản',
-        'admin-dashboard.php' => 'Tổng quan quản trị', 'admin-posts.php' => 'Quản trị bài viết', 'admin-history.php' => 'Lịch sử người dùng', 'admin-plants.php' => 'Quản lý cây'];
+        'admin-dashboard.php' => 'Tổng quan quản trị', 'admin-posts.php' => 'Quản trị bài viết', 'admin-plants.php' => 'Quản lý cây'];
     if (isset($activityPages[$viewedPage])) {
         $viewDescription = 'Xem ' . $activityPages[$viewedPage];
         if ($viewedPage === 'plant-detail.php') {

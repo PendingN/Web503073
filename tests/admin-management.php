@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 // Uses only the disposable database created by tests/run.php.
 $managementGuest = new TestBrowser($base);
-foreach (['admin-posts.php', 'admin-history.php'] as $path) {
+foreach (['admin-posts.php'] as $path) {
     check($managementGuest->request($path)['status'] === 303, 'Guests must not access ' . $path);
     check($aliceBrowser->request($path)['status'] === 403, 'Ordinary users must not access ' . $path);
     check($adminBrowser->request($path)['status'] === 200, 'Admins must access ' . $path);
@@ -52,16 +52,6 @@ $statement->execute([$oldHistoryId]);
 check(list_user_activity('3days', (int) $bob['id'], $marker, 'plant.saved', 1)['total'] === 1, 'History must default to the last 72 hours and include affected accounts.');
 check(list_user_activity('all', (int) $bob['id'], $marker, 'plant.saved', 1)['total'] === 2, 'All history must include older stored records.');
 check(list_user_activity('all', (int) $alice['id'], $marker, 'plant.saved', 1)['total'] === 0, 'Account history must not include unrelated actors or subjects.');
-$body = $adminBrowser->request('admin-history.php?search=' . rawurlencode($marker))['body'];
-check(str_contains($body, '&lt;script&gt;admin&lt;/script&gt;') && !str_contains($body, '<script>admin</script>'), 'History must escape actor snapshots.');
-check(str_contains($body, '&lt;script&gt;now&lt;/script&gt;') && !str_contains($body, $marker . ' old'), 'History must escape descriptions and filter older events.');
-check(str_contains($adminBrowser->request('admin-history.php?period=all&search=' . rawurlencode($marker))['body'], $marker . ' old'), 'All-period UI must include older records.');
-check(str_contains($adminBrowser->request('admin-history.php?search=%25')['body'], 'Chưa có hoạt động phù hợp'), 'History LIKE wildcards must be literal.');
-check($adminBrowser->request('admin-history.php?user_id[]=1')['status'] === 400, 'Invalid history account IDs must be rejected.');
-for ($index = 0; $index < 26; $index++) {
-    record_activity($snapshot, 'plant.saved', $marker . ' paging ' . $index);
-}
-check(str_contains($adminBrowser->request('admin-history.php?search=' . rawurlencode($marker) . '&event=plant.saved&page=999')['body'], 'Trang 2 / 2'), 'History pagination must clamp out-of-range pages.');
 $historyJson = json_encode(db()->query('SELECT event, description FROM user_activity')->fetchAll());
 check(!str_contains($historyJson, 'TestAdmin123!') && !str_contains($historyJson, 'Garden123!'), 'Activity records must not contain passwords.');
 foreach (['auth.login', 'auth.logout', 'profile.updated', 'user.updated', 'user.blocked', 'user.unblocked', 'blog.created', 'blog.updated', 'blog.deleted', 'plant.saved', 'page.view'] as $event) {

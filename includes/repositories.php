@@ -21,7 +21,7 @@ function list_plants(string $search = '', string $category = ''): array
         $sql .= ' AND category = :category';
         $parameters['category'] = $category;
     }
-    $statement = db()->prepare($sql . ' ORDER BY id');
+    $statement = db()->prepare($sql . ' ORDER BY category, id');
     $statement->execute($parameters);
     return $statement->fetchAll();
 }
@@ -153,7 +153,7 @@ function list_admin_plants(string $search): array
         $where .= " AND (name LIKE ? ESCAPE '!' OR category LIKE ? ESCAPE '!')";
         $parameters = array_fill(0, 2, search_pattern($search));
     }
-    $statement = db()->prepare('SELECT id, name, category, image FROM plants' . $where . ' ORDER BY id');
+    $statement = db()->prepare('SELECT id, name, category, image FROM plants' . $where . ' ORDER BY category, id');
     $statement->execute($parameters);
     return $statement->fetchAll();
 }

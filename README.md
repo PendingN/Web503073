@@ -222,7 +222,6 @@ C:/xampp/php/php.exe -S 127.0.0.1:8090 -t .
 | <code>profile.php</code> | Sửa thông tin và password | Cần đăng nhập |
 | <code>admin-dashboard.php</code> | Tổng quan tài khoản, cây, bài viết, lượt yêu thích và đăng ký trong 7 ngày | Chỉ admin |
 | <code>admin-posts.php</code> | Tìm/lọc, tạo, sửa và xóa bài viết của toàn bộ người dùng | Chỉ admin |
-| <code>admin-history.php</code> | Lịch sử 72 giờ gần nhất hoặc toàn bộ, lọc theo tài khoản và thao tác | Chỉ admin |
 | <code>admin.php</code> | Thống kê, tìm kiếm, phân trang và quản lý user | Chỉ admin |
 | <code>blog.php</code> | Tìm kiếm, sắp xếp, phân trang và viết/sửa bài | Đọc công khai; viết cần đăng nhập |
 | <code>blog.php?view=mine</code> / <code>?view=saved</code> | Bài của tôi / Bài đã lưu | Cần đăng nhập |
@@ -240,7 +239,6 @@ Các ID không hợp lệ trả <code>404</code>. Request GET tới handler thay
 
 Trong khu vực quản trị, **Quản trị bài viết** quản lý mọi bài viết qua các handler và kiểm tra CSRF hiện có. Xóa bài sẽ xóa kèm bình luận, lượt bình chọn và lượt lưu; ảnh tải lên được dọn theo cơ chế hiện có.
 
-**Lịch sử người dùng** mặc định hiển thị 72 giờ gần nhất của tất cả tài khoản. Chọn **Toàn bộ** để xem mọi bản ghi đã lưu, hoặc dùng liên kết **Lịch sử** trên một tài khoản để lọc người thực hiện/tài khoản liên quan. Có tìm kiếm, lọc thao tác và phân trang 25 dòng. Nhật ký ghi đăng nhập/đăng xuất, xem trang thành công, sửa hồ sơ, thay đổi tài khoản, bài viết, bình luận, bình chọn, lưu bài và yêu thích cây. Không ghi mật khẩu, nội dung bình luận hoặc truy vấn URL. Setup nhập mốc tạo tài khoản cũ từ `users.created_at` và đánh dấu nguồn dữ liệu có sẵn; các thao tác khác trước khi bật chức năng không thể khôi phục. Bộ lọc 3 ngày không xóa dữ liệu cũ. Khi chưa cập nhật bảng lịch sử, các chức năng cũ vẫn hoạt động, nhưng chưa ghi nhật ký.
 
 Chạy lại `scripts/setup-database.php` bằng tài khoản MySQL setup riêng để thêm bảng `user_activity` trước khi dùng mã mới.
 

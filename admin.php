@@ -48,7 +48,7 @@ require __DIR__ . '/includes/header.php';
             <?php if ($editUser !== null): ?>
                 <section class="admin-card scroll-mt-28 p-5 sm:p-6" id="edit-user" aria-labelledby="edit-user-title">
                     <div class="flex items-start justify-between gap-4"><div><p class="mb-2 text-[10px] font-semibold tracking-wider text-primary-dark">TÀI KHOẢN #<?= (int) $editUser['id'] ?></p><h2 class="text-lg font-semibold" id="edit-user-title">Thông tin người dùng</h2></div><a class="admin-button-secondary" href="admin.php#users"><?php admin_icon('close', 'size-4'); ?>Đóng</a></div>
-                    <p class="my-5 text-xs leading-loose text-muted"><?= $editUser['role'] === 'admin' ? 'Quản trị viên' : 'Thành viên' ?> · <?= $editUser['status'] === 'active' ? 'Đang hoạt động' : 'Đã khóa' ?> · Tham gia <?= e(date('d/m/Y', strtotime($editUser['created_at']))) ?> · <?= count(user_favorite_ids((int) $editUser['id'])) ?> cây yêu thích · <a class="admin-panel-link" href="admin-history.php?user_id=<?= (int) $editUser['id'] ?>">Lịch sử 3 ngày</a></p>
+                    <p class="my-5 text-xs leading-loose text-muted"><?= $editUser['role'] === 'admin' ? 'Quản trị viên' : 'Thành viên' ?> · <?= $editUser['status'] === 'active' ? 'Đang hoạt động' : 'Đã khóa' ?> · Tham gia <?= e(date('d/m/Y', strtotime($editUser['created_at']))) ?> · <?= count(user_favorite_ids((int) $editUser['id'])) ?> cây yêu thích</p>
                     <?php if ($errors !== []): ?><div class="login-error mb-5" role="alert"><ul><?php foreach ($errors as $error): ?><li><?= e($error) ?></li><?php endforeach; ?></ul></div><?php endif; ?>
                     <form class="grid gap-5 md:grid-cols-2" method="post" action="actions/user-action.php">
                         <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
@@ -84,7 +84,6 @@ require __DIR__ . '/includes/header.php';
                                     <td class="text-xs whitespace-nowrap text-muted"><?= e(date('d/m/Y', strtotime($member['created_at']))) ?></td>
                                     <td><div class="flex items-center gap-3 whitespace-nowrap">
                                         <a class="admin-panel-link" href="admin.php?edit=<?= (int) $member['id'] ?>#edit-user">Xem / sửa</a>
-                                        <a class="admin-panel-link" href="admin-history.php?user_id=<?= (int) $member['id'] ?>">Lịch sử</a>
                                         <?php if ((int) $member['id'] !== (int) $admin['id']): ?>
                                             <form method="post" action="actions/user-action.php">
                                                 <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">

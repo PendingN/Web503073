@@ -301,7 +301,7 @@ $plants = [
     [
         'id' => 38,
         'name' => 'Cây Dưa Hấu',
-        'category' => 'Cây nông nghiệp',
+        'category' => 'Cây ăn quả',
         'description' => 'Cây bò mặt đất cho quả to mọng nước, vị ngọt mát giải nhiệt.',
         'care' => 'Bấm ngọn tuyển quả đẹp, giảm tưới nước giai đoạn dưa sắp thu hoạch.',
         'image' => 'anh38.jpg',
