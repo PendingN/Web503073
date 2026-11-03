@@ -2,6 +2,7 @@
 $pageTitle = $pageTitle ?? '';
 $pageDescription = $pageDescription ?? 'Cùng thiên nhiên tạo nên những giá trị xanh bền vững.';
 $bodyClass = $bodyClass ?? '';
+$pageStyles = $pageStyles ?? [];
 $fullTitle = $pageTitle === '' ? 'Vũ Điệu Rừng Xanh' : $pageTitle . ' | Vũ Điệu Rừng Xanh';
 ?>
 <!doctype html>
@@ -14,5 +15,7 @@ $fullTitle = $pageTitle === '' ? 'Vũ Điệu Rừng Xanh' : $pageTitle . ' | V�
     <?php if ($bodyClass === 'landing-page'): ?><link rel="preload" as="image" href="<?= e(app_url('images/optimized/hero-canopy-enhanced.webp')) ?>" fetchpriority="high"><?php endif; ?>
     <link rel="stylesheet" href="<?= e(asset_url('css/fonts.css')) ?>">
     <link rel="stylesheet" href="<?= e(asset_url($bodyClass === 'admin-page' ? 'css/admin.css' : 'css/style.css')) ?>">
+    <?php foreach ($pageStyles as $pageStyle): ?><link rel="stylesheet" href="<?= e(asset_url($pageStyle)) ?>">
+    <?php endforeach; ?>
 </head>
 <body class="<?= e($bodyClass) ?>">

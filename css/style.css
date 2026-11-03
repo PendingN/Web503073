@@ -204,6 +204,8 @@ input:focus-visible { outline-offset: 2px; }
 .detail-copy .detail-description { color: var(--brand-muted); font-size: 15px; line-height: 1.9; }
 .care-box { margin: 28px 0; padding: 20px; border-left: 3px solid var(--brand); border-radius: 0 16px 16px 0; background: var(--brand-soft); color: #465b30; line-height: 1.8; }
 .care-box strong { display: block; margin-bottom: 6px; color: #314724; font-size: 12px; }
+.care-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.care-list b { color: #314724; font-weight: 700; }
 .not-found { max-width: 760px; margin: auto; padding: 100px 24px; text-align: center; }
 .not-found h1 { color: #314724; font-size: clamp(34px,5vw,64px); }
 .not-found p { color: var(--brand-muted); line-height: 1.8; }

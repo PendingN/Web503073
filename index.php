@@ -44,8 +44,8 @@ require __DIR__ . '/includes/navbar.php';
         <div class="about-showcase-visual">
             <div class="about-stat-card">
                 <p class="about-stat-label">Đa dạng để khám phá</p>
-                <strong class="about-stat-value" aria-label="Hơn 40 giống cây"><span data-count-to="40" aria-hidden="true">40</span><span aria-hidden="true">+</span></strong>
-                <p class="about-stat-description">Giống cây trong bộ sưu tập, từ cây trong nhà đến cây ăn quả và những tán cây xanh mát. Mỗi loài cây mở ra một câu chuyện để bạn tìm hiểu.</p>
+                <strong class="about-stat-value" aria-label="<?= (int) $catalog['total'] ?> giống cây trong nhà"><span data-count-to="<?= (int) $catalog['total'] ?>" aria-hidden="true"><?= (int) $catalog['total'] ?></span></strong>
+                <p class="about-stat-description">Giống cây trong nhà trong bộ sưu tập, giúp góc sống và góc làm việc thêm xanh mát. Mỗi loài cây mở ra một câu chuyện để bạn tìm hiểu.</p>
             </div>
             <img class="about-showcase-photo" src="<?= e(image_url('anh21.jpg')) ?>" alt="Những tán lá xanh xẻ thùy của cây Trầu Bà Thanh Xuân" width="900" height="600" loading="lazy" decoding="async">
         </div>

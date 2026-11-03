@@ -10,6 +10,8 @@ $bodyClass = 'dashboard-page';
 $dashboardActive = 'favorites';
 $activePage = 'collection';
 $flashMessage = take_flash();
+$pageStyles = ['css/shoe-orbit.css', 'css/favorite-orbit.css'];
+$pageScripts = ['js/favorite-orbit.js', 'js/shoe-orbit.js'];
 require __DIR__ . '/includes/header.php';
 require __DIR__ . '/includes/navbar.php';
 ?>
@@ -27,6 +29,10 @@ require __DIR__ . '/includes/navbar.php';
                     <p class="lead">Những cây bạn đã lưu.</p>
                 </div>
             </header>
+            <?php require __DIR__ . '/includes/favorite-orbit.php'; ?>
+            <div class="section-heading favorite-grid-heading"<?= $favoritePlants === [] ? ' hidden' : '' ?> data-favorites-heading>
+                <div><p class="eyebrow">QUẢN LÝ</p><h2>Danh sách đã lưu</h2></div>
+            </div>
             <div class="empty-state" data-favorites-empty<?= $favoritePlants === [] ? '' : ' hidden' ?>>
                 <h2>Chưa có cây yêu thích</h2>
                 <p>Bấm tim trên thẻ cây để lưu vào đây.</p>
