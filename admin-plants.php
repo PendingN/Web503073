@@ -39,7 +39,8 @@ require __DIR__ . '/includes/header.php';
         <?php require __DIR__ . '/includes/admin-topbar.php'; ?>
         <main id="admin-main" class="mx-auto w-full max-w-[1480px] space-y-6 px-4 py-6 sm:px-6 xl:px-8">
             <?php if ($flashMessage !== null): ?><div class="status-note" role="status" data-auto-dismiss><?= e($flashMessage) ?></div><?php endif; ?>
-            <div class="flex flex-wrap items-center justify-between gap-4"><div><h2 class="text-xl font-semibold">Bộ sưu tập cây</h2><p class="mt-2 text-xs text-muted">Thêm, sửa và xóa các cây hiển thị trên trang bộ sưu tập.</p></div><a class="admin-button" href="admin-plants.php?plant=new#plant-form">+ Thêm cây</a></div>
+            <div class="flex flex-wrap items-center justify-between gap-4"><div><h2 class="text-xl font-semibold">Bộ sưu tập cây</h2>
+        </div><a class="admin-button" href="admin-plants.php?plant=new#plant-form">+ Thêm cây</a></div>
 
             <?php if ($plantForm !== null): ?>
                 <section class="admin-card scroll-mt-28 p-5 sm:p-6" id="plant-form" aria-labelledby="plant-form-title">

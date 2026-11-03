@@ -155,7 +155,7 @@ Lệnh này:
 
 - tạo database <code>web503073</code> nếu chưa có;
 - tạo bảng tài khoản, cây, yêu thích và bốn bảng blog từ <code>database/schema.sql</code>;
-- nhập 40 cây từ <code>data/plants.php</code> và 7 bài blog từ <code>data/content.php</code>;
+- nhập 9 cây trong nhà và 19 cây để bàn từ <code>data/plants.php</code> và 7 bài blog từ <code>data/content.php</code>;
 - giữ lại tài khoản, cây, lượt yêu thích và nội dung bài viết đã tồn tại khi chạy lại. Bài mẫu đã xóa sẽ được thêm lại nếu chạy setup lần nữa.
 
 Nếu thiếu <code>DB_SETUP_USER</code> hoặc <code>DB_SETUP_PASSWORD</code>, lệnh sẽ dừng và không dùng <code>root</code> thay thế.

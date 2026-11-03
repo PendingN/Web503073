@@ -38,7 +38,7 @@ require __DIR__ . '/includes/navbar.php';
                 <p class="plant-category"><?= e($plant['category']) ?></p>
                 <h1><?= e($plant['name']) ?></h1>
                 <p class="detail-description"><?= e($plant['description']) ?></p>
-                <div class="care-box"><strong>Gợi ý chăm sóc</strong><?= e($plant['care']) ?></div>
+                <div class="care-box"><strong>Gợi ý chăm sóc</strong><ul class="care-list"><?php foreach (preg_split('/\R+/u', trim($plant['care'])) as $careLine): ?><?php $careParts = explode(':', $careLine, 2); ?><li><?php if (count($careParts) === 2): ?><b><?= e(trim($careParts[0])) ?>:</b> <?= e(trim($careParts[1])) ?><?php else: ?><?= e($careLine) ?><?php endif; ?></li><?php endforeach; ?></ul></div>
                 <div class="dashboard-actions">
                     <form class="favorite-form" data-reaction="favorite" data-plant-name="<?= e($plant['name']) ?>" method="post" action="actions/favorite-action.php" style="position:static;">
                         <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
@@ -49,7 +49,6 @@ require __DIR__ . '/includes/navbar.php';
                             <span data-reaction-label><?= is_favorite((int) $plant['id']) ? 'Đã yêu thích' : 'Thêm vào yêu thích' ?></span>
                         </button>
                     </form>
-                    <a class="btn-outline-brand" href="collection.php?category=<?= rawurlencode($plant['category']) ?>">Xem cây cùng nhóm</a>
                 </div>
             </div>
         </article>

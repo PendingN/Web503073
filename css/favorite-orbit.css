@@ -1,0 +1,39 @@
+/* Trang Yêu thích: màu, chữ và cỡ ảnh cho vòng xoay (css/shoe-orbit.css). */
+.favorite-orbit, .favorite-orbit-modal {
+  --so-bg: #f6f8f2; --so-txt: #314724; --so-acc: var(--brand, #718f49);
+  --so-c-name: #314724; --so-c-price: #314724; --so-c-meta: #4f5f42; --so-c-track: #4f6b33;
+  --so-ov-c: #000; --so-ov: 0;
+  --so-pt: 44px; --so-pb: 34px; --so-px: 44px; --so-ptm: 26px; --so-pbm: 22px; --so-pxm: 18px;
+  --so-tw: 320px; --so-ww: 300px;
+  --so-size: 250px; --so-size-m: 150px;
+  --so-fs-name: 44px; --so-fs-name-m: 26px; --so-fs-price: 16px; --so-fs-meta: 12px; --so-name-case: none;
+  --so-m-bg: #fff; --so-m-tx: #314724; --so-m-bbg: #314724; --so-m-btx: #fff;
+  --so-fs-mname: 48px; --so-morph: 850ms;
+  --font-heading--family: var(--brand-font, 'Be Vietnam Pro', sans-serif);
+  --font-body--family: var(--brand-font, 'Be Vietnam Pro', sans-serif);
+  font-family: var(--brand-font, 'Be Vietnam Pro', sans-serif);
+}
+.favorite-orbit { margin-bottom: 28px; border: 1px solid var(--brand-border, #dfe5d7); border-radius: 28px; }
+.favorite-orbit[hidden], .favorite-orbit .so-buy[hidden] { display: none; }
+
+/* Ảnh cây là ảnh chụp (không nền trong): bo góc và đổ bóng thay cho blend. */
+.favorite-orbit .so-shoe { transform-origin: 50% 50%; }
+.favorite-orbit .so-img { aspect-ratio: 3 / 4; height: auto; object-fit: cover; border-radius: 22px; box-shadow: 0 22px 40px rgba(31,48,20,.18); background: #e7eddf; }
+.favorite-orbit .so-name { font-weight: 700; font-stretch: normal; line-height: 1.05; letter-spacing: -.02em; }
+.favorite-orbit .so-meta { letter-spacing: 1.4px; }
+.favorite-orbit .so-stage { cursor: default; }
+.favorite-orbit .so-shoe:not(.so-active) { cursor: pointer; }
+
+.favorite-orbit-modal .so-m-name { font-weight: 700; font-stretch: normal; text-transform: none; line-height: 1.05; }
+.favorite-orbit-modal .so-m-price, .favorite-orbit-modal .so-m-opts, .favorite-orbit-modal .so-m-status { display: none; }
+.favorite-orbit-modal .so-m-slide img { max-height: 100%; border-radius: 26px; box-shadow: 0 26px 60px rgba(31,48,20,.2); }
+.favorite-orbit-modal .so-m-desc { font-size: 15px; line-height: 1.8; opacity: .85; }
+.favorite-orbit-modal .so-m-link { margin-top: 6px; color: var(--brand-hover, #607d3c); }
+
+.favorite-grid-heading { margin-top: 0; }
+.favorite-grid-heading[hidden] { display: none; }
+
+@media (max-width: 749.98px) {
+  .favorite-orbit { border-radius: 20px; }
+  .favorite-orbit .so-img { border-radius: 16px; }
+}

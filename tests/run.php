@@ -104,7 +104,7 @@ try {
     $server = create_database_connection(load_database_config(true), false);
     putenv('DB_NAME=' . $testName);
     run_cli(['scripts/setup-database.php']);
-    check((int) db()->query('SELECT COUNT(*) FROM plants')->fetchColumn() === 40, 'Seed must import all 40 plants.');
+    check((int) db()->query('SELECT COUNT(*) FROM plants')->fetchColumn() === 28, 'Seed must import all 28 plants.');
     check(array_column(plants_by_ids([22, 21, 22, 99999]), 'id') === [22, 21], 'Bulk plant lookup must preserve order, remove duplicates and skip missing IDs.');
 
     $adminEnvironment = ['APP_ADMIN_NAME' => 'Test Admin', 'APP_ADMIN_EMAIL' => 'admin@example.test', 'APP_ADMIN_PASSWORD' => 'TestAdmin123!'];
@@ -158,7 +158,7 @@ try {
     check(str_contains($guest->request('collection.php?search=tr%E1%BA%A7u')['body'], 'Trầu'), 'Vietnamese plant search failed.');
     check(str_contains($guest->request('collection.php?search=%25')['body'], '0 kết quả'), 'LIKE wildcards must be treated literally.');
     check(str_contains($guest->request('collection.php?search=' . rawurlencode("' OR 1=1 --"))['body'], '0 kết quả'), 'SQL search input is not literal.');
-    $category = 'Cây ăn quả';
+    $category = 'Cây trong nhà';
     $expected = count(list_plants('', $category));
     check(str_contains($guest->request('collection.php?category=' . rawurlencode($category))['body'], $expected . ' kết quả'), 'Category filter failed.');
     foreach (['favorite-action.php', 'profile-action.php', 'user-action.php', 'blog-action.php', 'logout.php'] as $handler) {
@@ -287,7 +287,7 @@ try {
         'description' => 'Mô tả cây thử nghiệm cho bài kiểm tra.', 'care' => 'Tưới nước vừa phải mỗi tuần.'];
     $adminBrowser->request('actions/plant-action.php', $plantFields, true);
     check((int) db()->query("SELECT COUNT(*) FROM plants WHERE name = 'Cây thử nghiệm'")->fetchColumn() === 0, 'Plant create accepted without an image.');
-    $plantImage = new CURLFile(dirname(__DIR__) . '/images/anh1.jpg', 'image/jpeg', 'plant.jpg');
+    $plantImage = new CURLFile(dirname(__DIR__) . '/images/anh21.jpg', 'image/jpeg', 'plant.jpg');
     $adminBrowser->request('actions/plant-action.php', $plantFields + ['image' => $plantImage], true);
     $newPlant = db()->query("SELECT * FROM plants WHERE name = 'Cây thử nghiệm'")->fetch();
     check($newPlant !== false && str_starts_with($newPlant['image'], 'plants/') && is_file(dirname(__DIR__) . '/images/' . $newPlant['image']), 'Plant create with image failed.');
@@ -342,9 +342,9 @@ try {
     }
     check(str_contains($adminBrowser->request('admin.php?page=2')['body'], 'Trang 2 / 2'), 'User pagination failed.');
     check(str_contains($adminBrowser->request('admin.php?page=99999')['body'], 'Trang 2 / 2'), 'Pagination must clamp out-of-range pages.');
-    db()->exec("UPDATE plants SET name = 'Preserved plant' WHERE id = 1");
+    db()->exec("UPDATE plants SET name = 'Preserved plant' WHERE id = 21");
     run_cli(['scripts/setup-database.php']);
-    check(find_plant(1)['name'] === 'Preserved plant' && find_user((int) $alice['id'])['name'] === 'Alice Updated' && user_favorite_ids((int) $alice['id']) === [22], 'Repeat setup overwrote existing records.');
+    check(find_plant(21)['name'] === 'Preserved plant' && find_user((int) $alice['id'])['name'] === 'Alice Updated' && user_favorite_ids((int) $alice['id']) === [22], 'Repeat setup overwrote existing records.');
 
     require __DIR__ . '/admin-management.php';
     require __DIR__ . '/admin-dashboard.php';
