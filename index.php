@@ -4,115 +4,143 @@ declare(strict_types=1);
 require_once __DIR__ . '/includes/init.php';
 $catalog = plant_catalog_statistics();
 
+// Editorial starting points; the catalog remains the source for full care notes.
+$roomPlants = [
+    ['name' => 'Bàng Singapore', 'image' => 'anh26.jpg', 'light' => 'bright', 'position' => 'floor', 'note' => 'Một dáng cây cao, một điểm nhấn cho phòng khách.'],
+    ['name' => 'Trầu Bà Thanh Xuân', 'image' => 'anh21.jpg', 'light' => 'bright indirect', 'position' => 'floor', 'note' => 'Tán lá xòe rộng, làm mềm những góc thẳng trong nhà.'],
+    ['name' => 'Lưỡi Hổ', 'image' => 'anh22.jpg', 'light' => 'bright indirect low', 'position' => 'floor shelf', 'note' => 'Gọn gàng, thẳng dáng, hợp cả góc sàn lẫn bàn nhỏ.'],
+    ['name' => 'Kim Tiền', 'image' => 'anh23.jpg', 'light' => 'indirect low', 'position' => 'floor shelf', 'note' => 'Những nhánh lá xanh bóng cho góc làm việc dịu lại.'],
+];
+$indoorUrl = 'collection.php?category=' . rawurlencode('Cây trong nhà');
 $pageTitle = '';
-$pageDescription = 'Một không gian nhỏ để tìm cây, học cách chăm cây và sống chậm hơn cùng thiên nhiên.';
+$pageDescription = 'Một góc nhà, một chút xanh. Khám phá cây trong nhà và tìm chiếc lá phù hợp với ánh sáng, không gian sống của bạn.';
 $bodyClass = 'landing-page';
 $activePage = 'home';
+$footerTagline = 'Một góc nhà. Một chút xanh.';
 require __DIR__ . '/includes/header.php';
-require __DIR__ . '/includes/navbar.php';
 ?>
 
-<main id="top">
-    <section class="hero-section">
-        <div class="torn-paper" aria-hidden="true"></div>
-        <div class="hero-overlay" aria-hidden="true"></div>
-        <div class="title-container">
-            <h1 class="main-title">VŨ ĐIỆU<br>RỪNG XANH</h1>
-            <p class="hero-description">Cùng thiên nhiên tạo nên những giá trị xanh bền vững.</p>
-            <a class="btn-brand hero-cta" href="collection.php">Khám phá bộ sưu tập</a>
-            <a class="hero-about-link" href="#about">Câu chuyện của chúng mình</a>
+<a class="landing-skip-link" href="#main-content">Đến nội dung chính</a>
+<?php require __DIR__ . '/includes/navbar.php'; ?>
+<main id="main-content">
+    <section class="room-hero" aria-labelledby="room-title">
+        <div class="room-copy">
+            <h1 id="room-title">Một góc nhà.<br><em>Một chút xanh.</em></h1>
+            <p>Thêm một chiếc lá, thêm một lý do để yêu không gian mình sống. Tìm người bạn xanh hợp với góc nhà của bạn.</p>
+            <a class="room-button" href="#find-plant">Tìm cây cho góc nhà <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg></a>
+            <a class="room-story-link" href="#first-steps">Chưa từng trồng cây? Bắt đầu ở đây</a>
         </div>
-    </section>
 
-    <section class="landing-about about-showcase" id="about" aria-labelledby="about-title">
-        <div class="about-showcase-copy">
-            <p class="eyebrow">BẮT ĐẦU TỪ MỘT GÓC NHỎ</p>
-            <h2 id="about-title">Một thế giới cây xanh.<br>Một hành trình sống gần thiên nhiên hơn.</h2>
-            <p>Vũ Điệu Rừng Xanh là nơi bạn có thể tìm thấy những giống cây phù hợp với không gian sống, đọc những ghi chú chăm cây đơn giản và lưu lại các lựa chọn yêu thích của mình.</p>
-            <p>Bạn không cần có một khu vườn lớn để bắt đầu. Một bậu cửa sổ, một góc bàn hay khoảng sân nhỏ cũng có thể là nơi mở ra một thói quen mới: quan sát, chăm chút và dành thêm thời gian cho thiên nhiên.</p>
-            <ul class="about-showcase-features">
-                <li>Tra cứu đặc điểm từng loài cây</li>
-                <li>Ghi chú chăm sóc dễ tìm đọc</li>
-                <li>Lưu bộ sưu tập yêu thích</li>
-                <li>Chia sẻ câu chuyện cùng cộng đồng</li>
-            </ul>
-            <div class="about-showcase-actions">
-                <a class="btn-brand" href="collection.php">Khám phá bộ sưu tập</a>
-                <a class="landing-text-link" href="#our-story">Câu chuyện của chúng mình</a>
+        <div class="room-scene" id="room-scene" aria-label="Khám phá cây trong một góc phòng">
+            <div class="room-stage">
+                <img class="room-image" src="<?= e(image_url('indoor-room.png')) ?>" alt="Góc phòng sáng với ghế vải, bàn gỗ và ba chậu Bàng Singapore, Trầu Bà Thanh Xuân, Lưỡi Hổ bên cửa sổ" width="1586" height="992" fetchpriority="high" decoding="async">
+
+                <details class="room-spot room-spot--fig" name="room-plants">
+                    <summary aria-label="Tìm hiểu cây Bàng Singapore"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary>
+                    <div class="room-plant-note">
+                        <h2>Bàng Singapore</h2>
+                        <p>Lá to, dáng cao. Một điểm nhấn tự nhiên cho góc phòng nhiều ánh sáng.</p>
+                        <span>Gần cửa sổ · Tưới khi mặt đất khô</span>
+                        <a href="<?= e($indoorUrl . '&search=' . rawurlencode('Bàng Singapore')) ?>">Tìm hiểu cây này <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg></a>
+                    </div>
+                </details>
+                <details class="room-spot room-spot--philodendron" name="room-plants">
+                    <summary aria-label="Tìm hiểu cây Trầu Bà Thanh Xuân"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary>
+                    <div class="room-plant-note">
+                        <h2>Trầu Bà Thanh Xuân</h2>
+                        <p>Những đường xẻ lá đầy cá tính, làm góc đọc sách thêm mềm mại và sống động.</p>
+                        <span>Ánh sáng gián tiếp · Tránh nắng gắt</span>
+                        <a href="<?= e($indoorUrl . '&search=' . rawurlencode('Trầu Bà Thanh Xuân')) ?>">Tìm hiểu cây này <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg></a>
+                    </div>
+                </details>
+                <details class="room-spot room-spot--snake" name="room-plants">
+                    <summary aria-label="Tìm hiểu cây Lưỡi Hổ"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary>
+                    <div class="room-plant-note">
+                        <h2>Lưỡi Hổ</h2>
+                        <p>Vài chiếc lá thẳng, một chậu cây gọn. Dành cho góc nhỏ và nhịp sống bận rộn.</p>
+                        <span>Chịu ít sáng · Để đất khô giữa các lần tưới</span>
+                        <a href="<?= e($indoorUrl . '&search=' . rawurlencode('Lưỡi Hổ')) ?>">Tìm hiểu cây này <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg></a>
+                    </div>
+                </details>
             </div>
+            <p class="room-hint"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Chạm vào dấu cộng để gặp từng chiếc lá</p>
         </div>
-        <div class="about-showcase-visual">
-            <div class="about-stat-card">
-                <p class="about-stat-label">Đa dạng để khám phá</p>
-                <strong class="about-stat-value" aria-label="Hơn 40 giống cây"><span data-count-to="40" aria-hidden="true">40</span><span aria-hidden="true">+</span></strong>
-                <p class="about-stat-description">Giống cây trong bộ sưu tập, từ cây trong nhà đến cây ăn quả và những tán cây xanh mát. Mỗi loài cây mở ra một câu chuyện để bạn tìm hiểu.</p>
-            </div>
-            <img class="about-showcase-photo" src="<?= e(image_url('anh21.jpg')) ?>" alt="Những tán lá xanh xẻ thùy của cây Trầu Bà Thanh Xuân" width="900" height="600" loading="lazy" decoding="async">
+        <a class="room-scroll" href="#find-plant"><span>Góc xanh của bạn bắt đầu ở đây</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v15m-6-6 6 6 6-6"/></svg></a>
+    </section>
+
+    <section class="plant-finder landing-content" id="find-plant" aria-labelledby="finder-title">
+        <div class="finder-heading">
+            <h2 id="finder-title">Không gian của bạn.<br><em>Chiếc lá của bạn.</em></h2>
+            <p>Góc phòng ngập nắng hay chiếc bàn nhỏ?<br>Bắt đầu từ ánh sáng và nơi bạn muốn đặt cây.</p>
+        </div>
+        <form class="finder-form" data-plant-finder hidden>
+            <label for="room-light">Ánh sáng ở góc nhà bạn
+                <select id="room-light" name="light">
+                    <option value="all">Chọn ánh sáng</option>
+                    <option value="bright">Nhiều ánh sáng tự nhiên</option>
+                    <option value="indirect">Ánh sáng gián tiếp, dịu nhẹ</option>
+                    <option value="low">Ít ánh sáng tự nhiên</option>
+                </select>
+            </label>
+            <label for="room-position">Bạn muốn đặt cây ở đâu?
+                <select id="room-position" name="position">
+                    <option value="all">Chọn vị trí</option>
+                    <option value="floor">Trên sàn, ở một góc phòng</option>
+                    <option value="shelf">Trên bàn hoặc kệ nhỏ</option>
+                </select>
+            </label>
+            <button class="room-button" type="submit">Gợi ý cây cho tôi <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg></button>
+        </form>
+        <div class="finder-caption">
+            <p data-finder-status role="status">Bốn gợi ý để bắt đầu một góc xanh.</p>
+            <a class="room-text-link" href="<?= e($indoorUrl) ?>">Xem cây trong nhà <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg></a>
+        </div>
+        <div class="plant-picks" data-plant-picks>
+            <?php foreach ($roomPlants as $roomPlant): ?>
+            <article class="plant-pick" data-light="<?= e($roomPlant['light']) ?>" data-position="<?= e($roomPlant['position']) ?>">
+                <a href="<?= e($indoorUrl . '&search=' . rawurlencode($roomPlant['name'])) ?>">
+                    <div class="plant-pick-image"><img src="<?= e(image_url($roomPlant['image'])) ?>" alt="Cây <?= e($roomPlant['name']) ?>" width="600" height="700" loading="lazy" decoding="async"></div>
+                    <h3><?= e($roomPlant['name']) ?><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 18 12-12M6 6h12v12"/></svg></h3>
+                </a>
+                <p><?= e($roomPlant['note']) ?></p>
+            </article>
+            <?php endforeach; ?>
+        </div>
+        <p class="finder-empty" data-finder-empty hidden>Chưa có gợi ý cho góc này. Thử đổi ánh sáng, vị trí hoặc <a href="<?= e($indoorUrl) ?>">xem tất cả cây trong nhà</a>.</p>
+        <p class="finder-footnote">Cây vẫn cần ánh sáng tự nhiên, kể cả những loài chịu ít sáng. Đọc thêm hướng dẫn chăm sóc để chọn cây phù hợp.</p>
+    </section>
+
+    <section class="room-beginnings" id="first-steps" aria-labelledby="beginnings-title">
+        <div class="beginnings-photo">
+            <img src="<?= e(image_url('indoor-room.png')) ?>" alt="Những tán lá xanh bên chiếc ghế đọc sách và cửa sổ sáng" width="1586" height="992" loading="lazy" decoding="async">
+        </div>
+        <div class="beginnings-copy">
+            <h2 id="beginnings-title">Chăm một chiếc lá.<br><em>Yêu thêm góc nhà.</em></h2>
+            <p>Bạn không cần giỏi trồng cây để bắt đầu. Một chút quan sát mỗi ngày đã là một khởi đầu tốt.</p>
+            <ol class="room-care-steps">
+                <li><h3>Để ý một vệt nắng</h3><p>Quan sát góc nhà vào những thời điểm khác nhau. Ánh sáng giúp bạn thu hẹp lựa chọn đầu tiên.</p></li>
+                <li><h3>Chọn cây, rồi chọn chậu</h3><p>Đọc về dáng cây và cách chăm. Chọn chậu thoát nước tốt, vừa với cây và hài hòa với đồ đạc sẵn có.</p></li>
+                <li><h3>Chạm vào đất trước khi tưới</h3><p>Mỗi loài có nhu cầu khác nhau. Kiểm tra độ ẩm và đọc ghi chú chăm sóc thay vì tưới theo thói quen.</p></li>
+            </ol>
+            <a class="room-text-link" href="blog.php">Đọc thêm những câu chuyện chăm cây <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg></a>
         </div>
     </section>
 
-    <nav class="about-jump-links" aria-label="Khám phá phần giới thiệu">
-        <span>Cùng đi một vòng</span>
-        <a href="#our-story">Câu chuyện</a>
-        <a href="#first-steps">Bắt đầu từ đâu?</a>
-        <a href="#about-faq">Bạn thường hỏi</a>
-    </nav>
-
-    <section class="landing-story landing-section" id="our-story" aria-labelledby="story-title">
-        <figure class="landing-story-image">
-            <img src="<?= e(image_url('forest.jpg')) ?>" alt="Rừng thông xanh bên hồ nước khi ánh nắng cuối ngày xuyên qua tán cây" width="1920" height="1080" loading="lazy" decoding="async">
-            <figcaption>Chậm lại một chút, để nhìn thấy nhiều hơn.</figcaption>
-        </figure>
-        <div class="landing-story-copy">
-            <p class="eyebrow">CÂU CHUYỆN CỦA CHÚNG MÌNH</p>
-            <h2 id="story-title">Một góc xanh.<br>Nhiều điều để khám phá.</h2>
-            <p>Giữa những ngày bận rộn, đôi khi chúng ta đi ngang một chiếc lá mới mà không kịp nhận ra. Vũ Điệu Rừng Xanh bắt đầu từ mong muốn tạo nên một nơi để những điều nhỏ như thế được chú ý hơn.</p>
-            <p>Ở đây, mỗi loài cây có một trang riêng để bạn tìm hiểu đặc điểm và cách chăm sóc. Bạn có thể đi từ một cái tên quen thuộc đến một giống cây chưa từng biết, rồi gom những lựa chọn mình thích thành một bộ sưu tập riêng.</p>
-            <p>Và khi có một câu chuyện muốn kể, blog là nơi bạn chia sẻ hành trình của mình: từ lần đầu chọn cây đến niềm vui khi thấy chồi non xuất hiện.</p>
-            <a class="landing-text-link" href="blog.php">Ghé đọc những câu chuyện xanh </a>
+    <section class="room-questions landing-content" aria-labelledby="questions-title">
+        <div><h2 id="questions-title">Trước khi mang<br><em>một chút xanh về nhà.</em></h2><p>Một vài điều bạn có thể đang băn khoăn.</p></div>
+        <div class="room-answers">
+            <details><summary>Tôi chưa từng trồng cây, bắt đầu được không?</summary><p>Được chứ. Chọn điều kiện ánh sáng và vị trí ở phần gợi ý phía trên, rồi mở một loài cây để đọc đặc điểm và cách chăm. Hãy bắt đầu với một chậu nhỏ, vừa với không gian và thời gian của bạn.</p></details>
+            <details><summary>Phòng ít sáng có trồng cây được không?</summary><p>Một số cây như Lưỡi Hổ hay Kim Tiền có thể chịu ánh sáng yếu hơn. Tuy vậy, cây vẫn cần ánh sáng để phát triển. Nếu phòng không có ánh sáng tự nhiên, bạn cần tìm hiểu thêm về đèn trồng cây.</p></details>
+            <details><summary>Tôi có thể mua cây ở đây không?</summary><p>Vũ Điệu Rừng Xanh là nơi tra cứu cây và chia sẻ kinh nghiệm. Website hiện chưa hỗ trợ mua bán, đặt hàng hay giao cây.</p></details>
+            <details><summary>Làm sao để lưu lại những cây mình thích?</summary><p><a href="register.php">Tạo tài khoản</a> hoặc <a href="login.php">đăng nhập</a>, sau đó bấm trái tim trên cây bạn muốn giữ lại. Bạn có thể xem lại trong <a href="favorites.php">bộ sưu tập yêu thích</a> và chia sẻ câu chuyện ở Blog.</p></details>
         </div>
     </section>
 
-    <section class="landing-values landing-section" aria-labelledby="values-title">
-        <div class="landing-section-heading">
-            <p class="eyebrow">KHÔNG CHỈ LÀ TÌM MỘT LOÀI CÂY</p>
-            <h2 id="values-title">Một nơi để tìm hiểu, lưu giữ và sẻ chia.</h2>
-        </div>
-        <div class="landing-value-grid">
-            <article><span class="landing-number">01 / TÌM HIỂU</span><h3>Biết thêm về từng chiếc lá</h3><p>Tra cứu tên cây, đọc mô tả và ghi chú chăm sóc trong cùng một nơi. Tìm theo từ khóa hoặc nhóm cây để khám phá theo sự tò mò của bạn.</p><a class="landing-text-link" href="collection.php">Tra cứu cây</a></article>
-            <article><span class="landing-number">02 / LƯU GIỮ</span><h3>Gom lại những điều mình thích</h3><p>Đăng nhập để lưu cây yêu thích và trở lại xem khi cần. Bộ sưu tập riêng giúp bạn tiếp tục khám phá từ những lựa chọn đã khiến mình dừng lại.</p><a class="landing-text-link" href="favorites.php">Bộ sưu tập của tôi</a></article>
-            <article><span class="landing-number">03 / SẺ CHIA</span><h3>Để câu chuyện được nối dài</h3><p>Đọc bài viết, lưu bài muốn xem lại hoặc chia sẻ trải nghiệm của bạn. Một câu hỏi hay một bình luận cũng có thể mở đầu cuộc trò chuyện mới.</p><a class="landing-text-link" href="blog.php">Khám phá blog</a></article>
-        </div>
-    </section>
-
-    <section class="landing-start landing-section" id="first-steps" aria-labelledby="start-title">
-        <div>
-            <p class="eyebrow">DÀNH CHO LẦN GHÉ THĂM ĐẦU TIÊN</p>
-            <h2 id="start-title">Bắt đầu nhỏ.<br>Khám phá theo nhịp của bạn.</h2>
-            <p>Không cần biết hết về cây ngay hôm nay. Hãy bắt đầu bằng một điều bạn muốn tìm hiểu và để những khám phá tiếp theo đến thật tự nhiên.</p>
-            <a class="btn-brand" href="collection.php">Tìm người bạn xanh đầu tiên</a>
-        </div>
-        <ol class="landing-steps">
-            <li><h3>Nhìn lại góc nhỏ của bạn</h3><p>Bạn muốn đặt cây ở đâu? Ghi lại ánh sáng, diện tích và thời gian có thể dành cho việc chăm cây để có điểm bắt đầu khi tìm hiểu.</p></li>
-            <li><h3>Dành thời gian đọc về một loài cây</h3><p>Mở bộ sưu tập, chọn một cây khiến bạn chú ý và đọc phần đặc điểm, chăm sóc. Bạn luôn có thể quay lại tìm thêm những lựa chọn khác.</p></li>
-            <li><h3>Lưu lại và tiếp tục câu chuyện</h3><p>Tạo tài khoản để giữ cây yêu thích. Ghé blog để đọc thêm, đặt câu hỏi qua bình luận hoặc viết về trải nghiệm của chính bạn.</p></li>
-        </ol>
-    </section>
-
-    <section class="landing-faq landing-section" id="about-faq" aria-labelledby="faq-title">
-        <div class="landing-section-heading"><p class="eyebrow">BẠN THƯỜNG HỎI</p><h2 id="faq-title">Một vài điều trước khi bắt đầu.</h2></div>
-        <details open><summary>Tôi chưa biết gì về cây, có thể bắt đầu ở đây không?</summary><p>Có chứ. Bạn có thể duyệt bộ sưu tập mà không cần tài khoản, tìm một cái tên quen thuộc rồi đọc mô tả và ghi chú chăm sóc trên trang chi tiết. Hãy xem đây là điểm khởi đầu để tìm hiểu thêm về từng loài cây.</p></details>
-        <details><summary>Tôi có cần đăng ký để xem nội dung không?</summary><p>Bạn có thể xem cây và đọc blog ngay khi ghé thăm. Tài khoản giúp bạn lưu cây yêu thích, lưu bài viết, đăng bài và tham gia bình luận. <a href="register.php">Tạo tài khoản tại đây</a></p></details>
-        <details><summary>Website có bán cây hoặc nhận đặt hàng không?</summary><p>Hiện tại, Vũ Điệu Rừng Xanh là website tra cứu cây và chia sẻ nội dung. Website chưa hỗ trợ mua bán, đặt hàng hay giao cây.</p></details>
-        <details><summary>Tôi có thể chia sẻ câu chuyện trồng cây của mình ở đâu?</summary><p>Sau khi đăng nhập, bạn có thể viết bài trong mục Blog, chia sẻ trải nghiệm và trao đổi qua bình luận. Những quan sát nhỏ trong hành trình chăm cây cũng là một câu chuyện đáng kể.</p></details>
-    </section>
-
-    <section class="landing-invitation landing-section" aria-labelledby="invitation-title">
-        <p class="eyebrow">HÀNH TRÌNH XANH CỦA BẠN</p>
-        <h2 id="invitation-title">Chiếc lá tiếp theo trong câu chuyện<br>của bạn sẽ là gì?</h2>
-        <p>Chọn một loài cây để tìm hiểu hôm nay, hoặc ghé blog và tìm một câu chuyện khiến bạn muốn đọc thêm.</p>
-        <div><a class="btn-brand" href="collection.php">Khám phá cây xanh</a><a class="btn-outline-brand" href="blog.php">Đọc blog cộng đồng</a></div>
-        <a class="landing-back-top" href="#top">Về đầu trang</a>
+    <section class="room-invitation" aria-labelledby="invitation-title">
+        <svg class="invitation-leaf" viewBox="0 0 64 80" fill="none" aria-hidden="true"><path d="M14 70C14 40 47 35 49 9c17 28 4 51-17 48M14 70c-8-18-9-34 3-46 2 17 17 19 15 33M14 70c10-20 22-27 31-41"/></svg>
+        <h2 id="invitation-title">Nhà vẫn là nhà.<br><em>Chỉ là xanh hơn một chút.</em></h2>
+        <a class="room-button" href="<?= e($indoorUrl) ?>">Tìm chiếc lá đầu tiên <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg></a>
+        <a class="invitation-catalog" href="collection.php">Còn <?= (int) $catalog['total'] ?> loài cây để bạn khám phá trong bộ sưu tập</a>
     </section>
 </main>
 

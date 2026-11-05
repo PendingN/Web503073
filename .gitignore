@@ -72,5 +72,7 @@ clover.xml
 Thumbs.db
 Desktop.ini
 .archify/
+.impeccable/hook.cache.json
+.impeccable/questions/
 images/blog/*
 !images/blog/.htaccess

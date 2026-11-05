@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/includes/init.php';
+require_once __DIR__ . '/includes/blog-images.php';
 
 $pageTitle = 'Blog';
 $pageDescription = 'Chia sẻ kinh nghiệm và cảm hứng sống cùng cây xanh.';
@@ -34,13 +35,14 @@ unset($_SESSION['blog_draft']);
 $form = is_array($draft) && $draft['slug'] === $editSlug ? $draft : ($editing ?? ['title' => '', 'content' => '', 'tag' => 'Chăm cây']);
 $query = ['search' => $search, 'sort' => $sort, 'view' => $view];
 require __DIR__ . '/includes/header.php';
+?>
+<a class="blog-skip-link" href="#blog-content">Đến bài viết</a>
+<?php
 require __DIR__ . '/includes/navbar.php';
-require __DIR__ . '/includes/plant-illustration.php';
 ?>
 <main class="blog-feed-main">
     <section class="feed-hero" aria-labelledby="feed-title">
         <div class="feed-hero-copy">
-            <p class="eyebrow">NHẬT KÝ RỪNG XANH</p>
             <h1 id="feed-title">Chuyện cây cỏ,<br><em>kể cùng nhau.</em></h1>
             <p class="feed-hero-lead">Chia sẻ mẹo chăm cây và góc xanh của bạn.</p>
         </div>
@@ -49,9 +51,8 @@ require __DIR__ . '/includes/plant-illustration.php';
                 <div class="feed-ticker-track">
                     <div class="feed-ticker-group">
                         <?php foreach ($tickerPosts as $tickerPost): ?>
-                            <?php $tickerImage = ['Chăm cây' => 'anh22', 'Không gian' => 'anh21', 'Cảm hứng' => 'anh14', 'Mẹo hay' => 'anh29', 'Sống xanh' => 'anh27'][$tickerPost['tag']] ?? 'anh23'; ?>
                             <a class="feed-ticker-card" href="blog-post.php?slug=<?= e(rawurlencode($tickerPost['slug'])) ?>">
-                                <img src="<?= e($tickerPost['image_path'] ?? 'images/optimized/' . $tickerImage . '.webp') ?>" alt="" width="260" height="180">
+                                <img src="<?= e(blog_cover_url($tickerPost)) ?>" alt="" width="260" height="180">
                                 <span class="feed-ticker-label"><?= e($tickerPost['tag']) ?></span>
                                 <strong><?= e($tickerPost['title']) ?></strong>
                                 <time datetime="<?= e(str_replace(' ', 'T', $tickerPost['created_at'])) ?>"><?= e(date('d/m/Y', strtotime($tickerPost['created_at']))) ?></time>
@@ -109,20 +110,24 @@ require __DIR__ . '/includes/plant-illustration.php';
                     <div class="composer-signin"><strong>Chia sẻ góc xanh của bạn</strong><a class="btn-brand" href="login.php?return_to=<?= e(rawurlencode(app_url('blog.php'))) ?>">Đăng nhập để viết bài</a></div>
                 <?php endif; ?>
             </section>
-            <form class="blog-search" action="blog.php" method="get">
-                <label for="blog-search">Tìm bài viết</label>
-                <input id="blog-search" name="search" value="<?= e($search) ?>" placeholder="Tiêu đề, nội dung hoặc chủ đề">
-                <label for="blog-sort">Sắp xếp</label>
-                <select id="blog-sort" name="sort"><option value="new"<?= $sort === 'new' ? ' selected' : '' ?>>Mới nhất</option><option value="popular"<?= $sort === 'popular' ? ' selected' : '' ?>>Được yêu thích</option></select>
+            <form class="blog-search" action="blog.php#blog-content" method="get" role="search">
+                <div class="blog-search-field">
+                    <label for="blog-search">Tìm bài viết</label>
+                    <input id="blog-search" type="search" name="search" value="<?= e($search) ?>" placeholder="Tiêu đề, nội dung hoặc chủ đề">
+                </div>
+                <div class="blog-sort-field">
+                    <label for="blog-sort">Sắp xếp</label>
+                    <select id="blog-sort" name="sort"><option value="new"<?= $sort === 'new' ? ' selected' : '' ?>>Mới nhất</option><option value="popular"<?= $sort === 'popular' ? ' selected' : '' ?>>Được yêu thích</option></select>
+                </div>
                 <input type="hidden" name="view" value="<?= e($view) ?>">
                 <button class="btn-brand" type="submit">Tìm kiếm</button>
             </form>
-            <nav class="blog-tabs" aria-label="Lọc bài viết">
+            <nav class="blog-tabs" id="blog-content" tabindex="-1" aria-label="Lọc bài viết">
                 <?php foreach (['all' => 'Tất cả', 'mine' => 'Bài của tôi', 'saved' => 'Đã lưu'] as $key => $label): ?>
-                    <a href="blog.php?<?= e(http_build_query(array_merge($query, ['view' => $key]))) ?>"<?= $view === $key ? ' aria-current="page"' : '' ?>><?= e($label) ?></a>
+                    <a href="blog.php?<?= e(http_build_query(array_merge($query, ['view' => $key]))) ?>#blog-content"<?= $view === $key ? ' aria-current="page"' : '' ?>><?= e($label) ?></a>
                 <?php endforeach; ?>
             </nav>
-            <div class="feed-toolbar"><h2>Bài viết</h2><p><?= e($result['total']) ?> kết quả</p></div>
+            <div class="feed-toolbar"><h2><?= e(['all' => 'Bài viết', 'mine' => 'Bài của tôi', 'saved' => 'Đã lưu'][$view]) ?></h2><p><?= e($result['total']) ?> kết quả</p></div>
             <div class="feed-list">
                 <?php foreach ($result['posts'] as $post): ?>
                     <article class="feed-post">
@@ -130,31 +135,48 @@ require __DIR__ . '/includes/plant-illustration.php';
                             <span class="feed-avatar feed-avatar-<?= e($post['tone']) ?>" aria-hidden="true"><?= e(mb_substr($post['author'], 0, 1)) ?></span>
                             <div><p><strong><?= e($post['author']) ?></strong></p><time datetime="<?= e(str_replace(' ', 'T', $post['created_at'])) ?>"><?= e(date('d/m/Y H:i', strtotime($post['created_at']))) ?></time></div>
                         </div></header>
-                        <div class="feed-post-content">
-                            <div class="feed-post-copy">
-                                <span class="feed-topic"><?= e($post['tag']) ?></span>
-                                <h3><a href="blog-post.php?slug=<?= e(rawurlencode($post['slug'])) ?>"><?= e($post['title']) ?></a></h3>
-                                <p><?= e($post['excerpt']) ?></p>
-                                <?php require __DIR__ . '/includes/blog-actions.php'; ?>
-                            </div>
-                            <a class="feed-post-art feed-art-<?= e($post['tone']) ?>" href="blog-post.php?slug=<?= e(rawurlencode($post['slug'])) ?>" aria-label="Đọc bài: <?= e($post['title']) ?>">
-                                <?php if (!empty($post['image_path'])): ?>
-                                    <img class="blog-cover" src="<?= e($post['image_path']) ?>" alt="<?= e($post['title']) ?>" loading="lazy">
-                                <?php else: ?>
-                                    <?php render_plant_illustration($post['illustration'], 'feed-plant-illustration'); ?>
-                                <?php endif; ?>
-                            </a>
+                        <div class="feed-post-copy">
+                            <span class="feed-topic"><?= e($post['tag']) ?></span>
+                            <h3><a href="blog-post.php?slug=<?= e(rawurlencode($post['slug'])) ?>"><?= e($post['title']) ?></a></h3>
+                            <p><?= e($post['excerpt']) ?></p>
                         </div>
+                        <a class="feed-post-art" href="blog-post.php?slug=<?= e(rawurlencode($post['slug'])) ?>" aria-label="Đọc bài: <?= e($post['title']) ?>">
+                            <img class="blog-cover" src="<?= e(blog_cover_url($post)) ?>" alt="" loading="lazy" width="200" height="150">
+                        </a>
+                        <?php require __DIR__ . '/includes/blog-actions.php'; ?>
                     </article>
                 <?php endforeach; ?>
-                <?php if ($result['posts'] === []): ?><p class="blog-empty">Chưa có bài viết phù hợp.</p><?php endif; ?>
+                <?php if ($result['posts'] === []): ?>
+                    <div class="blog-empty">
+                        <h3>Chưa có bài viết phù hợp.</h3>
+                        <p><?= $search !== '' ? 'Thử một từ khóa khác hoặc xem lại tất cả bài viết.' : 'Bạn có thể khám phá những câu chuyện khác trong nhật ký.' ?></p>
+                        <a class="btn-quiet" href="blog.php#blog-content">Xem tất cả bài viết</a>
+                    </div>
+                <?php endif; ?>
             </div>
             <nav class="pagination" aria-label="Phân trang bài viết">
-                <?php if ($result['page'] > 1): ?><a href="blog.php?<?= e(http_build_query($query + ['page' => $result['page'] - 1])) ?>"> Trước</a><?php endif; ?>
+                <?php if ($result['page'] > 1): ?><a href="blog.php?<?= e(http_build_query($query + ['page' => $result['page'] - 1])) ?>#blog-content">Trước</a><?php endif; ?>
                 <span>Trang <?= e($result['page']) ?> / <?= e($result['pages']) ?></span>
-                <?php if ($result['page'] < $result['pages']): ?><a href="blog.php?<?= e(http_build_query($query + ['page' => $result['page'] + 1])) ?>">Sau</a><?php endif; ?>
+                <?php if ($result['page'] < $result['pages']): ?><a href="blog.php?<?= e(http_build_query($query + ['page' => $result['page'] + 1])) ?>#blog-content">Sau</a><?php endif; ?>
             </nav>
         </section>
+        <aside class="feed-sidebar" aria-label="Khám phá cộng đồng">
+            <section class="feed-community">
+                <h2>Cùng nhau chăm một góc xanh</h2>
+                <p>Chia sẻ mẹo chăm cây và góc xanh của bạn.</p>
+                <nav class="feed-topics" aria-label="Khám phá chủ đề">
+                    <h3>Khám phá chủ đề</h3>
+                    <?php foreach (['Chăm cây', 'Không gian', 'Cảm hứng', 'Mẹo hay', 'Sống xanh'] as $topic): ?>
+                        <a href="blog.php?<?= e(http_build_query(['search' => $topic, 'sort' => $sort])) ?>#blog-content"><?= e($topic) ?><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></a>
+                    <?php endforeach; ?>
+                </nav>
+                <div class="feed-explore">
+                    <h3>Tìm cây cho không gian của bạn</h3>
+                    <a href="index.php#find-plant">Chọn cây theo góc phòng</a>
+                    <a href="collection.php?category=<?= e(rawurlencode('Cây trong nhà')) ?>">Khám phá cây trong nhà</a>
+                </div>
+            </section>
+        </aside>
     </div>
 </main>
 <?php require __DIR__ . '/includes/footer.php'; ?>

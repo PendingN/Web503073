@@ -21,9 +21,9 @@
             <a class="feed-action vote-button" data-vote="1" href="login.php?return_to=<?= e(rawurlencode(app_url($postUrl))) ?>" aria-label="Đăng nhập để thích bài viết"><?php require __DIR__ . '/vote-icon.php'; ?><span><?= e($post['likes']) ?></span></a>
             <a class="feed-action vote-button" data-vote="-1" href="login.php?return_to=<?= e(rawurlencode(app_url($postUrl))) ?>" aria-label="Đăng nhập để không thích bài viết"><?php require __DIR__ . '/vote-icon.php'; ?><span><?= e($post['dislikes']) ?></span></a>
         </div>
-        <a class="feed-action" href="login.php?return_to=<?= e(rawurlencode(app_url($postUrl))) ?>">Đăng nhập để lưu</a>
+        <a class="feed-action heart-button" href="login.php?return_to=<?= e(rawurlencode(app_url($postUrl))) ?>" aria-label="Đăng nhập để lưu bài viết"><?php require __DIR__ . '/heart-icon.php'; ?><span>Lưu</span></a>
     <?php endif; ?>
-    <a class="feed-action" href="<?= e($postUrl) ?>#comments"><?= e($post['comment_count']) ?> bình luận</a>
+    <a class="feed-action" href="<?= e($postUrl) ?>#comments"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 10 10 0 0 1-4-.8L3 21l1.8-5.5a10 10 0 0 1-.8-4A8.5 8.5 0 0 1 12.5 3a8.5 8.5 0 0 1 8.5 8.5Z"/></svg><span><?= e($post['comment_count']) ?> bình luận</span></a>
     <?php if (can_edit_post($post, $user)): ?>
         <a class="feed-read-link" href="blog.php?edit=<?= e(rawurlencode($post['slug'])) ?>#write-post">Sửa bài</a>
     <?php endif; ?>

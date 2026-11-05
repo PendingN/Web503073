@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/includes/init.php';
+require_once __DIR__ . '/includes/blog-images.php';
 
 $slug = trim(request_string($_GET, 'slug'));
 $post = find_post($slug);
@@ -16,32 +17,29 @@ $pageTitle = $post === null ? 'Không tìm thấy bài viết' : $post['title'];
 $bodyClass = 'blog-post-page';
 $activePage = 'blog';
 require __DIR__ . '/includes/header.php';
+?>
+<a class="blog-skip-link" href="#article-content">Đến bài viết</a>
+<?php
 require __DIR__ . '/includes/navbar.php';
-require __DIR__ . '/includes/plant-illustration.php';
 ?>
 
 <?php if ($post === null): ?>
-    <main class="not-found">
-        <p class="eyebrow">404 · BÀI VIẾT KHÔNG TỒN TẠI</p>
+    <main class="not-found" id="article-content" tabindex="-1">
         <h1>Trang này đang để dành cho một câu chuyện khác.</h1>
         <p>Có thể bài viết đã được chuyển đi. Bạn vẫn có thể đọc những ghi chú mới nhất trong nhật ký rừng xanh.</p>
         <a class="btn-brand" href="blog.php">Về trang blog</a>
     </main>
 <?php else: ?>
-    <main class="blog-post-main">
+    <main class="blog-post-main" id="article-content" tabindex="-1">
         <?php if ($flash = take_flash()): ?><p class="status-note" role="status"><?= e($flash) ?></p><?php endif; ?>
         <a class="back-link" href="blog.php"> Quay lại nhật ký</a>
         <header class="blog-post-header">
-            <div class="post-meta"><span><?= e($post['tag']) ?></span><span><?= e(date('d/m/Y H:i', strtotime($post['created_at']))) ?> · <?= e($post['author']) ?></span></div>
+            <div class="post-meta"><span><?= e($post['tag']) ?></span><span><time datetime="<?= e(str_replace(' ', 'T', $post['created_at'])) ?>"><?= e(date('d/m/Y H:i', strtotime($post['created_at']))) ?></time> · <?= e($post['author']) ?></span></div>
             <h1><?= e($post['title']) ?></h1>
             <p><?= e($post['excerpt']) ?></p>
         </header>
-        <div class="blog-post-art post-art-<?= e($post['tone']) ?>">
-            <?php if (!empty($post['image_path'])): ?>
-                <img class="blog-cover" src="<?= e($post['image_path']) ?>" alt="<?= e($post['title']) ?>">
-            <?php else: ?>
-                <?php render_plant_illustration($post['illustration']); ?>
-            <?php endif; ?>
+        <div class="blog-post-art">
+            <img class="blog-cover" src="<?= e(blog_cover_url($post)) ?>" alt="<?= !empty($post['image_path']) ? e($post['title']) : '' ?>" width="1000" height="560">
         </div>
         <article class="blog-post-body">
             <div class="blog-text"><?= e($post['content']) ?></div>

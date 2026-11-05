@@ -10,6 +10,7 @@ const root = path.resolve(__dirname, '..');
 const output = fs.mkdtempSync(path.join(os.tmpdir(), 'blog-hero-check-'));
 const fixture = `function e($v) { return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
 require 'data/content.php'; $tickerPosts = array_slice($posts, 0, (int)$argv[1]);
+require 'includes/blog-images.php';
 foreach ($tickerPosts as &$post) { $post['created_at'] = '2026-10-14 10:00:00'; } unset($post);
 $s = file_get_contents('blog.php'); $a = strpos($s, '    <section class="feed-hero"');
 eval('?>' . substr($s, $a, strpos($s, '</section>', $a) + 10 - $a));`;
@@ -22,7 +23,7 @@ const server = http.createServer((req, res) => {
     if (url.pathname === '/') {
         const hero = execFileSync(process.env.PHP_BINARY || 'C:/xampp/php/php.exe', ['-r', fixture, String(Number(url.searchParams.get('count') ?? 5))], { cwd: root, encoding: 'utf8' });
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
-        return res.end(`<!doctype html><html lang="vi"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/css/fonts.css"><link rel="stylesheet" href="/css/style.css"><body class="blog-page"><main class="blog-feed-main">${hero}</main><script src="/js/main.js"></script></body></html>`);
+        return res.end(`<!doctype html><html lang="vi"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/css/fonts.css"><link rel="stylesheet" href="/css/style.css"><link rel="stylesheet" href="/css/blog.css"><body class="blog-page"><main class="blog-feed-main">${hero}</main><script src="/js/main.js"></script></body></html>`);
     }
     const file = path.resolve(root, '.' + url.pathname);
     if (!file.startsWith(root + path.sep) || !fs.existsSync(file) || !fs.statSync(file).isFile()) return res.writeHead(404).end();
@@ -45,11 +46,11 @@ const server = http.createServer((req, res) => {
             const geometry = await page.evaluate(() => {
                 const rect = s => document.querySelector(s).getBoundingClientRect();
                 const hero = rect('.feed-hero'), copy = rect('.feed-hero-copy'), viewport = rect('.feed-ticker-viewport');
-                return { right: copy.right - hero.left, width: hero.width, bottom: copy.bottom, top: viewport.top, group: rect('.feed-ticker-group').width, viewport: viewport.width, overflow: document.documentElement.scrollWidth > innerWidth };
+                return { right: copy.right, left: viewport.left, bottom: copy.bottom, top: viewport.top, group: rect('.feed-ticker-group').width, viewport: viewport.width, overflow: document.documentElement.scrollWidth > innerWidth };
             });
             assert.equal(geometry.overflow, false);
             assert.ok(geometry.group >= geometry.viewport);
-            if (width > 760) assert.ok(geometry.right <= geometry.width * .6, `Text escapes gradient at ${width}: ${JSON.stringify(geometry)}`);
+            if (width > 760) assert.ok(geometry.right <= geometry.left, `Text overlaps articles at ${width}: ${JSON.stringify(geometry)}`);
             else assert.ok(geometry.top >= geometry.bottom);
             const before = await page.locator('.feed-hero-copy').boundingBox();
             for (const fraction of [0, .25, .5, .75, .9999, 1]) {
@@ -97,7 +98,7 @@ const server = http.createServer((req, res) => {
                     const rect = link.getBoundingClientRect();
                     const center = rect.left + rect.width / 2;
                     return !!link.closest('[aria-hidden="true"]') === duplicate
-                        && center > viewport.left + viewport.width * (touch ? 0 : .65)
+                        && center > viewport.left + 8
                         && center < viewport.right - 8;
                 });
                 if (!card) return null;
@@ -128,7 +129,7 @@ const server = http.createServer((req, res) => {
             }
         }
         assert.deepEqual(errors, []);
-        console.log('PASS: five widths, fixed text inside 97% gradient, loop phases, pause/resume, keyboard access, reduced motion, empty/single article, mouse/touch navigation on original and duplicated cards.');
+        console.log('PASS: five widths, separate text and article regions, loop phases, pause/resume, keyboard access, reduced motion, empty/single article, mouse/touch navigation on original and duplicated cards.');
         console.log('Screenshots: ' + output);
     } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; }).finally(() => server.close());
