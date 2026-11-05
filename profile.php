@@ -35,15 +35,10 @@ require __DIR__ . '/includes/navbar.php';
             <section class="account-panel">
                 <h2>Thông tin tài khoản</h2>
                 <?php if ($errors !== []): ?><div class="login-error" role="alert"><ul><?php foreach ($errors as $error): ?><li><?= e($error) ?></li><?php endforeach; ?></ul></div><?php endif; ?>
-                <form class="account-form" method="post" action="actions/profile-action.php">
-                    <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
-                    <div class="form-group"><label class="form-label" for="name">Họ tên</label><input class="form-control" id="name" name="name" value="<?= e($input['name']) ?>" autocomplete="name" minlength="2" maxlength="100" required></div>
-                    <div class="form-group"><label class="form-label" for="email">Email</label><input class="form-control" id="email" name="email" type="email" value="<?= e($input['email']) ?>" autocomplete="email" maxlength="254" required></div>
-                    <div class="form-group"><label class="form-label" for="current_password">Mật khẩu hiện tại</label><input class="form-control" id="current_password" name="current_password" type="password" autocomplete="current-password" maxlength="72"></div>
-                    <div class="form-group"><label class="form-label" for="new_password">Mật khẩu mới</label><input class="form-control" id="new_password" name="new_password" type="password" autocomplete="new-password" minlength="8" maxlength="72"></div>
-                    <div class="form-group"><label class="form-label" for="password_confirmation">Nhập lại mật khẩu mới</label><input class="form-control" id="password_confirmation" name="password_confirmation" type="password" autocomplete="new-password" minlength="8" maxlength="72"></div>
-                    <div><button class="btn-brand" type="submit">Lưu thay đổi</button></div>
-                </form>
+                <div class="account-form">
+                    <div class="form-group"><label class="form-label" for="name">Họ tên</label><input class="form-control" id="name" name="name" value="<?= e($input['name']) ?>" readonly></div>
+                    <div class="form-group"><label class="form-label" for="email">Email</label><input class="form-control" id="email" name="email" type="email" value="<?= e($input['email']) ?>" readonly></div>
+                </div>
             </section>
             <section class="profile-summary">
                 <article><strong><?= count(favorite_ids()) ?></strong><span>Cây yêu thích</span><a href="favorites.php">Xem danh sách</a></article>

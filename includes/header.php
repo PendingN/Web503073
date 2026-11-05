@@ -2,6 +2,7 @@
 $pageTitle = $pageTitle ?? '';
 $pageDescription = $pageDescription ?? 'Cùng thiên nhiên tạo nên những giá trị xanh bền vững.';
 $bodyClass = $bodyClass ?? '';
+$pageStyles = $pageStyles ?? [];
 $fullTitle = $pageTitle === '' ? 'Vũ Điệu Rừng Xanh' : $pageTitle . ' | Vũ Điệu Rừng Xanh';
 ?>
 <!doctype html>
@@ -16,5 +17,7 @@ $fullTitle = $pageTitle === '' ? 'Vũ Điệu Rừng Xanh' : $pageTitle . ' | V�
     <link rel="stylesheet" href="<?= e(asset_url($bodyClass === 'admin-page' ? 'css/admin.css' : 'css/style.css')) ?>">
     <?php if ($bodyClass === 'landing-page'): ?><link rel="stylesheet" href="<?= e(asset_url('css/landing.css')) ?>"><?php endif; ?>
     <?php if (in_array($bodyClass, ['blog-page', 'blog-post-page'], true)): ?><link rel="stylesheet" href="<?= e(asset_url('css/blog.css')) ?>"><?php endif; ?>
+    <?php foreach ($pageStyles as $pageStyle): ?><link rel="stylesheet" href="<?= e(asset_url($pageStyle)) ?>">
+    <?php endforeach; ?>
 </head>
 <body class="<?= e($bodyClass) ?>">
