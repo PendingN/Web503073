@@ -8,21 +8,21 @@ foreach (['admin-posts.php'] as $path) {
     check($aliceBrowser->request($path)['status'] === 403, 'Ordinary users must not access ' . $path);
     check($adminBrowser->request($path)['status'] === 200, 'Admins must access ' . $path);
 }
-$adminToken = $adminBrowser->token('admin-posts.php?create=1');
+$adminToken = $adminBrowser->token('blog-editor.php?from=admin');
 $postDraft = ['csrf_token' => $adminToken, 'operation' => 'create', 'title' => 'Admin <script>alert(7)</script>',
     'content' => 'Nội dung bài viết thử nghiệm quản trị.', 'tag' => 'Chăm cây', 'return_to' => $prefix . '/admin-posts.php'];
 $beforeCount = (int) db()->query('SELECT COUNT(*) FROM blog_posts')->fetchColumn();
 $response = $adminBrowser->request('actions/blog-action.php', array_merge($postDraft, ['title' => ' ']));
-check($response['status'] === 303 && $response['headers']['location'] === $prefix . '/admin-posts.php?create=1', 'Invalid admin draft must return to the admin editor.');
+check($response['status'] === 303 && $response['headers']['location'] === $prefix . '/blog-editor.php', 'Invalid admin draft must return to the admin editor.');
 check((int) db()->query('SELECT COUNT(*) FROM blog_posts')->fetchColumn() === $beforeCount, 'Invalid admin draft must not create a post.');
-check(str_contains($adminBrowser->request('admin-posts.php?create=1')['body'], $postDraft['content']), 'Invalid admin draft must preserve its content.');
+check(str_contains($adminBrowser->request('blog-editor.php?from=admin')['body'], $postDraft['content']), 'Invalid admin draft must preserve its content.');
 $response = $adminBrowser->request('actions/blog-action.php', $postDraft);
 $adminPost = db()->query('SELECT * FROM blog_posts ORDER BY id DESC LIMIT 1')->fetch();
 check($response['status'] === 303 && $response['headers']['location'] === $prefix . '/admin-posts.php?edit=' . $adminPost['slug'] . '#post-editor', 'Admin create must stay in the admin editor.');
 check(str_contains($adminBrowser->request('admin-posts.php')['body'], '&lt;script&gt;alert(7)&lt;/script&gt;'), 'Admin post listing must escape titles.');
 check(str_contains($adminBrowser->request('admin-posts.php?search=%25')['body'], 'Không tìm thấy bài viết phù hợp.'), 'Admin search must treat SQL wildcards literally.');
-check($adminBrowser->request('admin-posts.php?edit=missing-post')['status'] === 404, 'Unknown admin post must return 404.');
-$memberDraft = array_merge($postDraft, ['csrf_token' => $aliceBrowser->token('blog.php'), 'title' => 'Bài của thành viên', 'return_to' => $prefix . '/blog.php']);
+check($adminBrowser->request('blog-editor.php?from=admin&edit=missing-post')['status'] === 404, 'Unknown admin post must return 404.');
+$memberDraft = array_merge($postDraft, ['csrf_token' => $aliceBrowser->token('blog-editor.php'), 'title' => 'Bài của thành viên', 'return_to' => $prefix . '/blog.php']);
 $aliceBrowser->request('actions/blog-action.php', $memberDraft);
 $memberPost = db()->query('SELECT * FROM blog_posts ORDER BY id DESC LIMIT 1')->fetch();
 $adminUpdate = array_merge($postDraft, ['operation' => 'update', 'slug' => $memberPost['slug'], 'title' => 'Quản trị đã sửa bài thành viên']);

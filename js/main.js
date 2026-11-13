@@ -280,6 +280,17 @@
             window.setTimeout(function () { note.remove(); }, 5000);
         });
 
+        var sortSelect = document.getElementById('blog-sort');
+        if (sortSelect && sortSelect.form) {
+            sortSelect.addEventListener('change', function () {
+                if (typeof sortSelect.form.requestSubmit === 'function') {
+                    sortSelect.form.requestSubmit();
+                } else {
+                    sortSelect.form.submit();
+                }
+            });
+        }
+
     }
 
     if (document.readyState === 'loading') {

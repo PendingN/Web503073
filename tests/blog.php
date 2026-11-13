@@ -19,12 +19,13 @@ check($reader->request('blog-post.php?slug=missing')['status'] === 404, 'Missing
 check($reader->request('blog.php?view=saved')['status'] === 303, 'Saved posts must require login.');
 $readerToken = $reader->token('login.php');
 check($reader->request('actions/blog-action.php', ['csrf_token' => $readerToken, 'operation' => 'create'])['status'] === 303, 'Guests must not publish.');
-$aliceToken = $aliceBrowser->token('blog.php');
+$aliceToken = $aliceBrowser->token('blog-editor.php');
 require __DIR__ . '/blog-images.php';
+require __DIR__ . '/blog-editor.php';
 $draft = ['csrf_token' => $aliceToken, 'operation' => 'create', 'title' => 'Góc cây <script>alert(1)</script>', 'content' => "Kinh nghiệm chăm cây xanh.\n<script>alert(2)</script>", 'tag' => 'Chăm cây', 'user_id' => $admin['id']];
 check($aliceBrowser->request('actions/blog-action.php', array_merge($draft, ['title' => ' ']))['status'] === 303, 'Invalid post must return to the editor.');
 check((int) db()->query('SELECT COUNT(*) FROM blog_posts')->fetchColumn() === 7, 'Invalid post was inserted.');
-check(str_contains($aliceBrowser->request('blog.php')['body'], 'Kinh nghiệm chăm cây xanh.'), 'Invalid draft content was lost.');
+check(str_contains($aliceBrowser->request('blog-editor.php')['body'], 'Kinh nghiệm chăm cây xanh.'), 'Invalid draft content was lost.');
 foreach ([['tag' => 'invalid'], ['title' => ['bad']], ['content' => str_repeat('x', 10001)], ['title' => str_repeat('x', 121)]] as $invalidFields) {
     $aliceBrowser->request('actions/blog-action.php', array_merge($draft, $invalidFields));
     check((int) db()->query('SELECT COUNT(*) FROM blog_posts')->fetchColumn() === 7, 'Invalid blog input was accepted.');
@@ -43,12 +44,12 @@ foreach (['%', '_', "' OR 1=1 --"] as $query) {
     check(str_contains($reader->request('blog.php?search=' . rawurlencode($query))['body'], '0 kết quả'), 'Blog search must treat input literally.');
 }
 check(str_contains($reader->request('dashboard.php')['body'], '<strong>8</strong>'), 'Dashboard blog count must use the database.');
-$bobToken = $blockedLogin->token('blog.php');
+$bobToken = $blockedLogin->token('blog-editor.php');
 $bobAction = ['csrf_token' => $bobToken, 'slug' => $slug];
 foreach (['update', 'delete'] as $operation) {
     check($blockedLogin->request('actions/blog-action.php', $bobAction + ['operation' => $operation])['status'] === 403, 'Another user changed the post.');
 }
-check($blockedLogin->request('blog.php?edit=' . $slug)['status'] === 403, 'Another user accessed the edit form.');
+check($blockedLogin->request('blog-editor.php?edit=' . $slug)['status'] === 403, 'Another user accessed the edit form.');
 $aliceAction = ['csrf_token' => $aliceToken, 'slug' => $slug];
 $aliceBrowser->request('actions/blog-action.php', $aliceAction + ['operation' => 'update', 'title' => 'Bài đã sửa', 'content' => 'Nội dung mới được lưu lâu dài.', 'tag' => 'Sống xanh']);
 check(str_contains($reader->request($detail)['body'], 'Nội dung mới được lưu lâu dài.'), 'Edited post did not persist.');

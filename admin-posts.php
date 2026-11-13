@@ -9,15 +9,9 @@ $tag = request_string($_GET, 'tag');
 $tag = in_array($tag, $tags, true) ? $tag : '';
 $page = filter_var($_GET['page'] ?? 1, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 1;
 $result = list_admin_posts($search, $tag, $page);
-$editSlug = request_string($_GET, 'edit');
-$editing = $editSlug !== '' ? find_post($editSlug) : null;
-if (isset($_GET['edit']) && $editing === null) {
-    abort_request(404, 'Không tìm thấy bài viết.');
+if (isset($_GET['edit']) || request_string($_GET, 'create') === '1') {
+    redirect_to(app_url('blog-editor.php?from=admin' . (isset($_GET['edit']) ? '&edit=' . rawurlencode(request_string($_GET, 'edit')) : '')));
 }
-$showEditor = $editing !== null || request_string($_GET, 'create') === '1';
-$draft = $_SESSION['blog_draft'] ?? null;
-unset($_SESSION['blog_draft']);
-$form = is_array($draft) && $draft['slug'] === $editSlug ? $draft : ($editing ?? ['title' => '', 'content' => '', 'tag' => 'Chăm cây']);
 $pageTitle = 'Quản trị bài viết';
 $bodyClass = 'admin-page';
 $adminActive = 'posts';
@@ -32,24 +26,6 @@ require __DIR__ . '/includes/header.php';
         <main id="admin-main" class="mx-auto w-full max-w-[1480px] space-y-6 px-4 py-6 sm:px-6 xl:px-8">
             <?php if ($flashMessage !== null): ?><div class="status-note" role="status" data-auto-dismiss><?= e($flashMessage) ?></div><?php endif; ?>
             <div class="flex flex-wrap items-center justify-between gap-4"><div><h2 class="text-xl font-semibold">Nhật ký của cộng đồng</h2></div><a class="admin-button" href="admin-posts.php?create=1#post-editor">Viết bài mới <?php admin_icon('arrow', 'size-4'); ?></a></div>
-            <?php if ($showEditor): ?>
-                <section class="admin-card scroll-mt-28 p-5 sm:p-6" id="post-editor" aria-labelledby="post-editor-title">
-                    <div class="mb-6 flex items-center justify-between gap-3"><h2 class="text-lg font-semibold" id="post-editor-title"><?= $editing !== null ? 'Sửa bài viết' : 'Viết bài mới' ?></h2><a class="admin-button-secondary" href="admin-posts.php">Đóng <?php admin_icon('close', 'size-4'); ?></a></div>
-                    <form class="space-y-5" method="post" action="actions/blog-action.php" enctype="multipart/form-data">
-                        <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
-                        <input type="hidden" name="operation" value="<?= $editing !== null ? 'update' : 'create' ?>">
-                        <input type="hidden" name="slug" value="<?= e($editSlug) ?>">
-                        <input type="hidden" name="return_to" value="<?= e(current_request_url()) ?>">
-                        <div class="grid gap-5 md:grid-cols-[minmax(0,1fr)_220px]">
-                            <div><label class="admin-field-label" for="post-title">Tiêu đề</label><input class="admin-input" id="post-title" name="title" value="<?= e($form['title']) ?>" minlength="3" maxlength="120" required></div>
-                            <div><label class="admin-field-label" for="post-tag">Chủ đề</label><select class="admin-input" id="post-tag" name="tag"><?php foreach ($tags as $option): ?><option value="<?= e($option) ?>"<?= $form['tag'] === $option ? ' selected' : '' ?>><?= e($option) ?></option><?php endforeach; ?></select></div>
-                        </div>
-                        <div><label class="admin-field-label" for="post-image">Ảnh bài viết</label><input type="hidden" name="MAX_FILE_SIZE" value="2097152"><input class="admin-input" id="post-image" type="file" name="image" accept="image/jpeg,image/png,image/webp" aria-describedby="post-image-hint"><p class="mt-2 text-xs text-muted" id="post-image-hint">JPG, PNG, WebP tối đa 2 MB. Không chọn ảnh mới sẽ giữ ảnh hiện tại.</p><?php if (!empty($editing['image_path'])): ?><img class="mt-3 max-h-48 rounded-lg object-contain" src="<?= e($editing['image_path']) ?>" alt="Ảnh bài viết hiện tại"><?php endif; ?></div>
-                        <div><label class="admin-field-label" for="post-content">Nội dung</label><textarea class="admin-input min-h-56 leading-relaxed" id="post-content" name="content" minlength="10" maxlength="10000" rows="9" required><?= e($form['content']) ?></textarea></div>
-                        <button class="admin-button" type="submit"><?= $editing !== null ? 'Lưu thay đổi' : 'Đăng bài viết' ?></button>
-                    </form>
-                </section>
-            <?php endif; ?>
             <section class="admin-card min-w-0 overflow-hidden" aria-labelledby="posts-title">
                 <div class="border-b border-border p-5 sm:p-6">
                     <div class="mb-5 flex items-center justify-between gap-3"><h2 class="text-base font-semibold" id="posts-title">Toàn bộ bài viết</h2><span class="rounded-full bg-primary/10 px-3 py-1.5 text-xs text-primary-dark"><?= (int) $result['total'] ?> bài viết</span></div>
