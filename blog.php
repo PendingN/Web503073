@@ -17,22 +17,19 @@ if ($view !== 'all') {
 }
 $page = max(1, (int) request_string($_GET, 'page', '1'));
 $result = list_blog_posts($search, $sort, $view, (int) ($user['id'] ?? 0), $page);
-$tickerPosts = ($view === 'all' && $search === '' && $page === 1) ? $result['posts'] : [];
-$editSlug = request_string($_GET, 'edit');
-$editing = null;
-if ($editSlug !== '') {
-    $user = require_login();
-    $editing = find_post($editSlug);
-    if ($editing === null) {
-        abort_request(404, 'Không tìm thấy bài viết.');
-    }
-    if (!can_edit_post($editing, $user)) {
-        abort_request(403, 'Bạn không có quyền sửa bài viết này.');
+$tickerPosts = [];
+if ($view === 'all' && $search === '' && $page === 1) {
+    $tickerPosts = $sort === 'new'
+        ? list_blog_posts('', 'popular', 'all', (int) ($user['id'] ?? 0), 1)['posts']
+        : array_reverse($result['posts']);
+    if (count($tickerPosts) > 1 && array_column($tickerPosts, 'slug') === array_column($result['posts'], 'slug')) {
+        $tickerPosts = array_reverse($tickerPosts);
     }
 }
-$draft = $_SESSION['blog_draft'] ?? null;
-unset($_SESSION['blog_draft']);
-$form = is_array($draft) && $draft['slug'] === $editSlug ? $draft : ($editing ?? ['title' => '', 'content' => '', 'tag' => 'Chăm cây']);
+$editSlug = request_string($_GET, 'edit');
+if ($editSlug !== '') {
+    redirect_to(app_url('blog-editor.php?edit=' . rawurlencode($editSlug)));
+}
 $query = ['search' => $search, 'sort' => $sort, 'view' => $view];
 require __DIR__ . '/includes/header.php';
 ?>
@@ -68,47 +65,7 @@ require __DIR__ . '/includes/navbar.php';
     <div class="feed-layout">
         <section class="feed-column" aria-label="Bảng tin bài viết">
             <section class="feed-composer" id="write-post" aria-label="Viết bài">
-                <?php if ($user !== null): ?>
-                    <details<?= $editing !== null || $draft !== null ? ' open' : '' ?>>
-                        <summary class="composer-summary">
-                            <span class="composer-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m16 3 5 5-12 12-6 1 1-6Z"/><path d="m14 5 5 5"/></svg></span>
-                            <span class="composer-heading"><strong><?= $editing !== null ? 'Sửa bài viết' : 'Viết bài mới' ?></strong><small>Chủ đề, ảnh và nội dung</small></span>
-                            <svg class="composer-chevron" aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-                        </summary>
-                        <form class="blog-form" action="actions/blog-action.php" method="post" enctype="multipart/form-data">
-                            <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
-                            <input type="hidden" name="operation" value="<?= $editing !== null ? 'update' : 'create' ?>">
-                            <input type="hidden" name="slug" value="<?= e($editSlug) ?>">
-                            <div class="composer-field">
-                                <label for="post-title">Tiêu đề</label>
-                                <input id="post-title" name="title" minlength="3" maxlength="120" value="<?= e($form['title']) ?>" placeholder="Đặt tên cho câu chuyện của bạn" required>
-                            </div>
-                            <div class="composer-field">
-                                <label for="post-tag">Chủ đề</label>
-                                <select id="post-tag" name="tag">
-                                    <?php foreach (['Chăm cây', 'Không gian', 'Cảm hứng', 'Mẹo hay', 'Sống xanh', 'Bài nổi bật'] as $tag): ?>
-                                        <option<?= $form['tag'] === $tag ? ' selected' : '' ?>><?= e($tag) ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            <div class="composer-field composer-content">
-                                <label for="post-image">Ảnh bài viết</label>
-                                <input type="hidden" name="MAX_FILE_SIZE" value="2097152">
-                                <input id="post-image" type="file" name="image" accept="image/jpeg,image/png,image/webp" aria-describedby="post-image-hint">
-                                <p id="post-image-hint">JPG, PNG hoặc WebP · tối đa 2 MB. Không chọn ảnh sẽ <?= !empty($editing['image_path']) ? 'giữ ảnh hiện tại' : 'dùng ảnh mặc định' ?>.</p>
-                                <img class="blog-image-preview" id="post-image-preview" alt="Xem trước ảnh bài viết"<?= !empty($editing['image_path']) ? ' src="' . e($editing['image_path']) . '"' : ' hidden' ?>>
-                            </div>
-                            <div class="composer-field composer-content">
-                                <label for="post-content">Nội dung</label>
-                                <textarea id="post-content" name="content" rows="7" minlength="10" maxlength="10000" placeholder="Một mẹo chăm cây, một chiếc lá mới…" aria-describedby="post-content-hint" required><?= e($form['content']) ?></textarea>
-                                <p id="post-content-hint">Công khai · 10–10.000 ký tự</p>
-                            </div>
-                            <div class="blog-form-actions"><a class="btn-quiet" href="blog.php">Hủy</a><button class="btn-brand" type="submit"><?= $editing !== null ? 'Lưu thay đổi' : 'Đăng bài viết' ?></button></div>
-                        </form>
-                    </details>
-                <?php else: ?>
-                    <div class="composer-signin"><strong>Muốn đăng bài?</strong><a class="btn-brand" href="login.php?return_to=<?= e(rawurlencode(app_url('blog.php'))) ?>">Đăng nhập để viết bài</a></div>
-                <?php endif; ?>
+                <a class="composer-summary" href="blog-editor.php"><span class="composer-heading"><strong>Viết bài mới</strong><small>Kể câu chuyện của bạn bằng chữ và hình ảnh</small></span><span aria-hidden="true">→</span></a>
             </section>
             <form class="blog-search" action="blog.php#blog-content" method="get" role="search">
                 <div class="blog-search-field">
@@ -127,13 +84,14 @@ require __DIR__ . '/includes/navbar.php';
                     <a href="blog.php?<?= e(http_build_query(array_merge($query, ['view' => $key]))) ?>#blog-content"<?= $view === $key ? ' aria-current="page"' : '' ?>><?= e($label) ?></a>
                 <?php endforeach; ?>
             </nav>
-            <div class="feed-toolbar"><h2><?= e(['all' => 'Bài viết', 'mine' => 'Bài của tôi', 'saved' => 'Đã lưu'][$view]) ?></h2><p><?= e($result['total']) ?> kết quả</p></div>
+            <div class="feed-toolbar"><h2><?= e(['all' => 'Bài viết', 'mine' => 'Bài của tôi', 'saved' => 'Đã lưu'][$view]) ?></h2><p><?= e($result['total']) ?> kết quả</p><?php if ($search !== ''): ?><a class="btn-quiet" href="blog.php?<?= e(http_build_query(['sort' => $sort, 'view' => $view])) ?>#blog-content">Xóa bộ lọc</a><?php endif; ?></div>
             <div class="feed-list">
                 <?php foreach ($result['posts'] as $post): ?>
+                    <?php $createdAt = strtotime($post['created_at']); ?>
                     <article class="feed-post">
                         <header class="feed-post-head"><div class="feed-author">
                             <span class="feed-avatar feed-avatar-<?= e($post['tone']) ?>" aria-hidden="true"><?= e(mb_substr($post['author'], 0, 1)) ?></span>
-                            <div><p><strong><?= e($post['author']) ?></strong></p><time datetime="<?= e(str_replace(' ', 'T', $post['created_at'])) ?>"><?= e(date('d/m/Y H:i', strtotime($post['created_at']))) ?></time></div>
+                            <div><p><strong><?= e($post['author']) ?></strong></p><time datetime="<?= e(str_replace(' ', 'T', $post['created_at'])) ?>"><?= e(date(date('H:i', $createdAt) === '00:00' ? 'd/m/Y' : 'd/m/Y H:i', $createdAt)) ?></time></div>
                         </div></header>
                         <div class="feed-post-copy">
                             <span class="feed-topic"><?= e($post['tag']) ?></span>
@@ -156,7 +114,7 @@ require __DIR__ . '/includes/navbar.php';
                             <p>Chọn nút lưu trên một bài viết để đọc lại sau.</p>
                         <?php elseif ($view === 'mine'): ?>
                             <h3>Bạn chưa đăng bài viết nào.</h3>
-                            <p>Mở mục “Viết bài mới” phía trên để đăng bài đầu tiên.</p>
+                            <p>Chọn “Viết bài mới” phía trên để đăng bài đầu tiên.</p>
                         <?php else: ?>
                             <h3>Chưa có bài viết nào.</h3>
                             <p>Hãy là người đầu tiên chia sẻ một câu chuyện.</p>
@@ -175,8 +133,8 @@ require __DIR__ . '/includes/navbar.php';
             <section class="feed-community">
                 <nav class="feed-topics" aria-label="Khám phá chủ đề">
                     <h3>Khám phá chủ đề</h3>
-                    <?php foreach (['Chăm cây', 'Không gian', 'Cảm hứng', 'Mẹo hay', 'Sống xanh'] as $topic): ?>
-                        <a href="blog.php?<?= e(http_build_query(['search' => $topic, 'sort' => $sort])) ?>#blog-content"><?= e($topic) ?><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></a>
+                    <?php foreach (['Bài nổi bật', 'Chăm cây', 'Không gian', 'Cảm hứng', 'Mẹo hay', 'Sống xanh'] as $topic): ?>
+                        <a href="blog.php?<?= e(http_build_query(['search' => $topic, 'sort' => $sort])) ?>#blog-content"<?= $search === $topic ? ' aria-current="page"' : '' ?>><?= e($topic) ?><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></a>
                     <?php endforeach; ?>
                 </nav>
                 <div class="feed-explore">

@@ -41,7 +41,7 @@ require __DIR__ . '/includes/header.php';
                             </div>
                         <?php endforeach; ?>
                     </div>
-                    <p class="mt-5 flex items-center gap-2 text-xs text-muted"><span class="size-2 rounded-full bg-primary" aria-hidden="true"></span><?= $registrationTotal === 0 ? 'Chưa có tài khoản mới trong 7 ngày qua.' : 'Dữ liệu đăng ký thực tế của website' ?></p>
+                    <p class="mt-5 flex items-center gap-2 text-xs text-muted"><span class="size-2 rounded-full bg-primary" aria-hidden="true"></span><?= $registrationTotal === 0 ? 'Chưa có tài khoản mới trong 7 ngày qua.' : 'Dữ liệu đăng ký' ?></p>
                 </section>
                 <section class="admin-card p-5 sm:p-6" aria-labelledby="recent-posts-title">
                     <div class="flex flex-wrap items-center justify-between gap-3"><h2 class="text-base font-semibold" id="recent-posts-title">Bài viết mới nhất</h2><a class="admin-panel-link" href="admin-posts.php">Quản trị bài viết <?php admin_icon('arrow', 'size-4'); ?></a></div>
@@ -55,7 +55,7 @@ require __DIR__ . '/includes/header.php';
             </div>
             <div class="grid gap-6">
                 <section class="admin-card min-w-0 overflow-hidden" aria-labelledby="recent-users-title">
-                    <div class="flex flex-wrap items-center justify-between gap-3 p-5 sm:p-6"><div><h2 class="text-base font-semibold" id="recent-users-title">Tài khoản mới nhất</h2><p class="mt-1.5 text-xs text-muted">5 tài khoản vừa tham gia khu vườn</p></div><a class="admin-panel-link" href="admin.php">Xem tất cả <?php admin_icon('arrow', 'size-4'); ?></a></div>
+                    <div class="flex flex-wrap items-center justify-between gap-3 p-5 sm:p-6"><div><h2 class="text-base font-semibold" id="recent-users-title">Tài khoản mới nhất</h2><p class="mt-1.5 text-xs text-muted">5 newest accounts</p></div><a class="admin-panel-link" href="admin.php">Xem tất cả <?php admin_icon('arrow', 'size-4'); ?></a></div>
                     <div class="overflow-x-auto">
                         <table class="admin-table min-w-[560px]">
                             <thead><tr><th>Tài khoản</th><th>Trạng thái</th><th>Tham gia</th><th><span class="sr-only">Thao tác</span></th></tr></thead>

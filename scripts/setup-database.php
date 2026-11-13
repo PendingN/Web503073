@@ -27,6 +27,9 @@ try {
     if (!$connection->query("SHOW COLUMNS FROM blog_posts LIKE 'is_hidden'")->fetch()) {
         $connection->exec('ALTER TABLE blog_posts ADD COLUMN is_hidden TINYINT(1) NOT NULL DEFAULT 0 AFTER image_path');
     }
+    if (!$connection->query("SHOW COLUMNS FROM blog_posts LIKE 'content_blocks'")->fetch()) {
+        $connection->exec('ALTER TABLE blog_posts ADD COLUMN content_blocks MEDIUMTEXT NULL AFTER content');
+    }
     require __DIR__ . '/../data/plants.php';
     $connection->beginTransaction();
     $statement = $connection->prepare('INSERT INTO plants (id, name, category, description, care, image)'

@@ -98,7 +98,7 @@ input:focus-visible { outline-offset: 2px; }
  .dashboard-hero > :nth-child(2) { flex-wrap: wrap; }
  .dashboard-banner { gap: 20px; flex-wrap: wrap; }
  .site-header { padding: 12px 16px; gap: 12px; }
- .brand-link { font-size: 10px; }
+ .brand-link { font-size: 11px; }
  .site-header .nav-right { gap: 10px; }
  .login-page .login-row { min-height: auto; }
 }
@@ -1148,13 +1148,13 @@ input:focus-visible { outline-offset: 2px; }
 }
 
 /* Inner pages use black text by default; colored text is reserved for emphasis and controls. */
-body:not(.landing-page) {
+body:not(.landing-page):not(.blog-page):not(.blog-post-page):not(.blog-editor-page) {
     --brand-ink: #000;
     --brand-muted: #000;
 }
 
-body:not(.landing-page) :where(h1, h2, h3, h4, h5, h6, p, a, span, strong, small, time, label, legend, li, td, th, summary, dt, dd, button),
-body:not(.landing-page) :where(input, select, textarea, input::placeholder, textarea::placeholder) {
+body:not(.landing-page):not(.blog-page):not(.blog-post-page):not(.blog-editor-page) :where(h1, h2, h3, h4, h5, h6, p, a, span, strong, small, time, label, legend, li, td, th, summary, dt, dd, button),
+body:not(.landing-page):not(.blog-page):not(.blog-post-page):not(.blog-editor-page) :where(input, select, textarea, input::placeholder, textarea::placeholder) {
     color: #000;
 }
 

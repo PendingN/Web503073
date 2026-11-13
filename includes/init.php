@@ -177,7 +177,7 @@ function safe_return_url(mixed $returnTo, string $fallback = 'collection.php'): 
     if ($path === '') {
         $path = 'index.php';
     }
-    $pages = ['index.php', 'dashboard.php', 'collection.php', 'favorites.php', 'profile.php', 'plant-detail.php', 'blog.php', 'blog-post.php', 'admin.php', 'admin-dashboard.php', 'admin-posts.php', 'admin-plants.php'];
+    $pages = ['index.php', 'dashboard.php', 'collection.php', 'favorites.php', 'profile.php', 'plant-detail.php', 'blog.php', 'blog-post.php', 'blog-editor.php', 'admin.php', 'admin-dashboard.php', 'admin-posts.php', 'admin-plants.php'];
     if (!in_array($path, $pages, true)) {
         return app_url($fallback);
     }

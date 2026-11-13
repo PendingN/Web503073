@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../includes/init.php';
 require_once __DIR__ . '/../includes/blog-images.php';
+require_once __DIR__ . '/../includes/blog-blocks.php';
 require_post();
 require_csrf();
 $returnTo = safe_return_url($_POST['return_to'] ?? null, 'blog.php');
@@ -47,13 +48,16 @@ if ($operation !== 'create') {
     }
 }
 
+$newUploads = [];
+$removedImages = [];
 $newImage = null;
 $oldImage = null;
 // Remove a new upload if a database write fails before commit.
 $imageCommitted = false;
-register_shutdown_function(static function () use (&$newImage, &$imageCommitted): void {
+register_shutdown_function(static function () use (&$newImage, &$imageCommitted, &$newUploads): void {
     if (!$imageCommitted) {
         delete_blog_image($newImage);
+        foreach ($newUploads as $path) { delete_blog_image($path); }
     }
 });
 
@@ -61,36 +65,90 @@ if ($operation === 'create' || $operation === 'update') {
     $title = trim(request_string($_POST, 'title'));
     $content = trim(request_string($_POST, 'content'));
     $tag = request_string($_POST, 'tag');
-    $errors = blog_post_errors($title, $content, $tag);
-    if ($errors === []) {
-        try {
-            $newImage = store_blog_image($_FILES['image'] ?? null);
-        } catch (InvalidArgumentException $exception) {
-            $errors[] = $exception->getMessage();
+    $blocksJson = null;
+    $blocks = null;
+    $errors = [];
+    $blockInput = request_string($_POST, 'content_blocks');
+    $existingImages = isset($post) ? blog_block_images(blog_blocks($post)) : [];
+    try {
+        if ($blockInput !== '') {
+            $files = $_FILES['block_images'] ?? [];
+            if (isset($files['name']) && (!is_array($files['name']) || count($files['name']) > 10)) {
+                throw new InvalidArgumentException('Tối đa 10 ảnh cho mỗi bài.');
+            }
+            $totalBytes = (int) ($_FILES['image']['size'] ?? 0);
+            foreach (($files['name'] ?? []) as $key => $name) {
+                if (!preg_match('/^upload_[a-f0-9]+$/D', (string) $key)) {
+                    throw new InvalidArgumentException('Mã ảnh không hợp lệ.');
+                }
+                $file = [];
+                foreach (['name', 'type', 'tmp_name', 'error', 'size'] as $field) {
+                    $file[$field] = $files[$field][$key] ?? null;
+                }
+                $totalBytes += (int) $file['size'];
+                if ($totalBytes > 6 * 1024 * 1024) {
+                    throw new InvalidArgumentException('Tổng ảnh tải lên tối đa 6 MB.');
+                }
+                $path = store_blog_image($file);
+                if ($path === null) {
+                    throw new InvalidArgumentException('Vui lòng chọn lại ảnh.');
+                }
+                $newUploads[$key] = $path;
+            }
+            $blocks = normalize_blog_blocks($blockInput, $existingImages, $newUploads);
+            $content = blog_blocks_text($blocks);
+            if (count(array_filter($blocks, static fn(array $b): bool => $b['type'] === 'image')) + (!empty($_FILES['image']['name']) || !empty($post['image_path']) ? 1 : 0) > 10) {
+                throw new InvalidArgumentException('Tối đa 10 ảnh, tính cả ảnh bìa.');
+            }
+            if (count(array_diff($newUploads, blog_block_images($blocks))) > 0) {
+                throw new InvalidArgumentException('Có ảnh không nằm trong nội dung bài.');
+            }
+            $retainedImages = array_diff(blog_block_images($blocks), $newUploads);
+            if (empty($_FILES['image']['name']) && !empty($post['image_path'])) {
+                $retainedImages[] = $post['image_path'];
+            }
+            foreach (array_unique($retainedImages) as $path) {
+                $absolute = dirname(__DIR__) . '/' . $path;
+                $totalBytes += is_file($absolute) ? (int) filesize($absolute) : 0;
+            }
+            if ($totalBytes > 6 * 1024 * 1024) {
+                throw new InvalidArgumentException('Tổng dung lượng ảnh của bài viết tối đa 6 MB.');
+            }
+            $blocksJson = json_encode(['version' => 1, 'blocks' => $blocks], JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+            $removedImages = array_diff($existingImages, blog_block_images($blocks));
+        } elseif (isset($post) && !empty($post['content_blocks'])) {
+            throw new InvalidArgumentException('Vui lòng dùng trình viết mới để sửa bài này.');
         }
+        $errors = blog_post_errors($title, $content, $tag);
+        if ($errors === []) {
+            $newImage = store_blog_image($_FILES['image'] ?? null);
+        }
+    } catch (InvalidArgumentException $exception) {
+        $errors[] = $exception->getMessage();
     }
     if ($errors !== []) {
         $connection->rollBack();
-        $_SESSION['blog_draft'] = ['title' => mb_substr($title, 0, 120), 'content' => mb_substr($content, 0, 10000), 'tag' => $tag, 'slug' => $operation === 'update' ? $slug : ''];
+        $_SESSION['blog_draft'] = ['title' => mb_substr($title, 0, 120), 'content' => mb_substr($content, 0, 10000), 'tag' => $tag, 'slug' => $operation === 'update' ? $slug : '', 'content_blocks' => strlen($blockInput) <= 250000 ? $blockInput : ''];
         set_flash(implode(' ', $errors) . ' Nếu đã chọn ảnh, vui lòng chọn lại trước khi gửi.');
-        redirect_to(app_url($adminEditor ? 'admin-posts.php' : 'blog.php') . ($operation === 'update' ? '?edit=' . rawurlencode($slug) : ($adminEditor ? '?create=1' : '')));
+        redirect_to(app_url('blog-editor.php') . ($operation === 'update' ? '?edit=' . rawurlencode($slug) : ''));
     }
     $excerpt = mb_substr(preg_replace('/\s+/u', ' ', $content), 0, 220, 'UTF-8');
     if ($operation === 'create') {
         $slug = 'bai-viet-' . bin2hex(random_bytes(12));
-        $statement = $connection->prepare('INSERT INTO blog_posts (user_id, slug, title, tag, excerpt, content, image_path) VALUES (?, ?, ?, ?, ?, ?, ?)');
-        $statement->execute([$user['id'], $slug, $title, $tag, $excerpt, $content, $newImage]);
+        $statement = $connection->prepare('INSERT INTO blog_posts (user_id, slug, title, tag, excerpt, content, image_path, content_blocks) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+        $statement->execute([$user['id'], $slug, $title, $tag, $excerpt, $content, $newImage, $blocksJson]);
         $createdPostId = (int) $connection->lastInsertId();
     } else {
         $oldImage = $newImage !== null ? $post['image_path'] : null;
-        $statement = $connection->prepare('UPDATE blog_posts SET title = ?, tag = ?, excerpt = ?, content = ?, image_path = ? WHERE id = ?');
-        $statement->execute([$title, $tag, $excerpt, $content, $newImage ?? $post['image_path'], $post['id']]);
+        $statement = $connection->prepare('UPDATE blog_posts SET title = ?, tag = ?, excerpt = ?, content = ?, image_path = ?, content_blocks = ? WHERE id = ?');
+        $statement->execute([$title, $tag, $excerpt, $content, $newImage ?? $post['image_path'], $blocksJson, $post['id']]);
     }
     unset($_SESSION['blog_draft']);
     $returnTo = $adminEditor ? app_url('admin-posts.php?edit=' . rawurlencode($slug)) . '#post-editor' : app_url('blog-post.php?slug=' . rawurlencode($slug));
     $message = $operation === 'create' ? 'Đã đăng bài viết.' : 'Đã cập nhật bài viết.';
 } elseif ($operation === 'delete') {
     $oldImage = $post['image_path'];
+    $removedImages = blog_block_images(blog_blocks($post));
     $statement = $connection->prepare('DELETE FROM blog_posts WHERE id = ?');
     $statement->execute([$post['id']]);
     $returnTo = app_url($adminEditor ? 'admin-posts.php' : 'blog.php');
@@ -177,6 +235,7 @@ if (wants_json() && in_array($operation, ['vote', 'save'], true)) {
 $connection->commit();
 $imageCommitted = true;
 delete_blog_image($oldImage);
+foreach ($removedImages as $path) { delete_blog_image($path); }
 if ($reaction !== null) {
     json_response($reaction);
 }

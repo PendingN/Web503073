@@ -479,3 +479,14 @@ Khi triển khai lên InfinityFree, upload PHP, `css/admin.css`, `css/fonts.css`
 - `images/optimized/` chứa các bản WebP giữ nguyên kích thước của ảnh gốc. Ảnh gốc được giữ lại. `image_url()` ưu tiên bản WebP; nếu thay ảnh gốc mới hơn bản tối ưu, helper tự dùng lại ảnh gốc. Hai ảnh nền trong CSS trỏ trực tiếp tới bản WebP, cần cập nhật bản này khi thay nền.
 - CSS, JavaScript và ảnh trong HTML có phiên bản dựa trên thời gian sửa file để trình duyệt lấy đúng tài nguyên sau mỗi lần thay đổi.
 - Thống kê danh mục chỉ lấy số lượng và nhóm cây. Danh sách yêu thích và cây nổi bật được tải theo một truy vấn nhóm; các handler không tải toàn bộ danh sách cây khi khởi tạo.
+
+
+## Block-based Blog editor
+
+“Viết bài mới” opens `blog-editor.php`; existing edit links redirect to this editor. It supports formatted text, headings, lists, quotes, multiple inline images with captions, a cover image, preview, and browser-local draft recovery. Drafts do not preserve unsubmitted image files after a reload.
+
+PHP's `dom` extension is required for server-side formatting sanitization. Posts allow up to 10 images including the cover, 2 MB per image and 6 MB total. PHP's `post_max_size` must exceed 6 MB plus form data (8 MB or higher), `upload_max_filesize` must be at least 2 MB, and `max_file_uploads` must be at least 10.
+
+For existing installations, run `scripts/setup-database.php` with the configured setup credentials before deploying the editor. It adds a nullable `blog_posts.content_blocks` column without replacing existing posts. Plain-text content remains available for search and legacy articles.
+
+Run `C:/xampp/php/php.exe tests/blog-blocks.php` for standalone validation and rendering checks. The disposable-database suite includes multi-image publishing, image ownership, editing, and cleanup checks. `tests/blog-ui.cjs` includes editor layout, preview, undo/redo and draft recovery checks and requires Playwright as described in that test.

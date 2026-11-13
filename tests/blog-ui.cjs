@@ -118,25 +118,54 @@ const { chromium } = require('playwright');
         for (const width of [320, 390, 1440]) {
             await composerPage.setViewportSize({ width, height: 1000 });
             await composerPage.goto(base + 'blog.php');
-            await composerPage.locator('.composer-summary').click();
-            assert.equal(await composerPage.locator('.blog-form').isVisible(), true);
+            const writeLink = composerPage.getByRole('link', { name: /Viết bài mới/ });
+            assert.equal(await writeLink.getAttribute('href'), 'blog-editor.php');
+            assert.equal(await composerPage.locator('.blog-form').count(), 0);
             assert.equal(await composerPage.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
-            assert.equal(await composerPage.locator('.blog-form').evaluate(form => form.checkValidity()), false);
-            await composerPage.getByLabel('Tiêu đề', { exact: true }).fill('Một góc phòng với cây xanh');
-            await composerPage.getByLabel('Nội dung', { exact: true }).fill('Một câu chuyện đủ dài để kiểm tra phần viết bài.');
-            assert.equal(await composerPage.locator('.blog-form').evaluate(form => form.checkValidity()), true);
-            const fields = await composerPage.locator('.blog-form').evaluate(form => ({
-                method: form.method, encoding: form.enctype, operation: form.elements.operation.value,
-                csrf: Boolean(form.elements.csrf_token.value), file: form.elements.image.type
-            }));
-            assert.deepEqual(fields, { method: 'post', encoding: 'multipart/form-data', operation: 'create', csrf: true, file: 'file' });
             await composerPage.locator('.feed-composer').screenshot({ path: path.join(output, 'composer-' + width + '.png') });
         }
-        await composerPage.locator('#post-image').setInputFiles({ name: 'preview.png', mimeType: 'image/png', buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a6foAAAAASUVORK5CYII=', 'base64') });
-        assert.equal(await composerPage.locator('#post-image-preview').isVisible(), true);
-        assert.match(await composerPage.locator('#post-image-preview').getAttribute('src'), /^blob:/);
-        await composerPage.locator('#post-image').setInputFiles([]);
-        assert.equal(await composerPage.locator('#post-image-preview').isVisible(), false);
+        const editorFixture = spawnSync(php, ['-r', `
+            $_SERVER['SCRIPT_NAME'] = getenv('EDITOR_SCRIPT_NAME');
+            $_SERVER['REQUEST_URI'] = $_SERVER['SCRIPT_NAME'];
+            $source = file_get_contents('blog-editor.php');
+            $source = str_replace('$user = require_login(current_request_url());', '$user = ["id" => -1, "role" => "user"];', $source, $replacements);
+            if ($replacements !== 1) exit(1);
+            eval(substr($source, 5));
+        `], { cwd: root, encoding: 'utf8', env: { ...process.env, EDITOR_SCRIPT_NAME: new URL('blog-editor.php', base).pathname } });
+        assert.equal(editorFixture.status, 0, 'Editor fixture renders actual PHP template.');
+        const editorPage = await browser.newPage();
+        editorPage.on('pageerror', error => errors.push(error.message));
+        editorPage.on('dialog', dialog => dialog.accept());
+        await editorPage.route('**/blog-editor.php', route => route.fulfill({ status: 200, contentType: 'text/html; charset=utf-8', body: editorFixture.stdout }));
+        await editorPage.goto(base + 'blog-editor.php');
+        await editorPage.getByLabel('Tiêu đề bài viết', { exact: true }).fill('Một góc xanh trong nhà');
+        await editorPage.getByRole('textbox', { name: 'Đoạn văn 1', exact: true }).fill('Chia sẻ cách chăm cây trong góc phòng sáng và thoáng.');
+        await editorPage.getByLabel('Thêm khối', { exact: true }).selectOption('h2');
+        await editorPage.getByRole('button', { name: 'Thêm', exact: true }).click();
+        await editorPage.getByRole('textbox', { name: 'Tiêu đề H2 2', exact: true }).fill('Ánh sáng và nước');
+        const tinyPng = { name: 'leaf.png', mimeType: 'image/png', buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a6foAAAAASUVORK5CYII=', 'base64') };
+        await editorPage.locator('#block-files').setInputFiles([tinyPng, { ...tinyPng, name: 'leaf-two.png' }]);
+        await editorPage.getByLabel('Chú thích ảnh', { exact: true }).first().fill('Góc cây đầu tiên');
+        await editorPage.getByRole('button', { name: 'Xem trước', exact: true }).click();
+        assert.equal(await editorPage.locator('#editor-preview h2').textContent(), 'Ánh sáng và nước');
+        assert.equal(await editorPage.locator('#editor-preview figure').count(), 2);
+        assert.equal(await editorPage.locator('#editor-preview figcaption').first().textContent(), 'Góc cây đầu tiên');
+        await editorPage.getByRole('button', { name: 'Tiếp tục viết' }).click();
+        await editorPage.getByRole('button', { name: 'Hoàn tác', exact: true }).click();
+        await editorPage.getByRole('button', { name: 'Làm lại', exact: true }).click();
+        assert.equal(await editorPage.locator('.editor-block img').count(), 2);
+        for (const width of [320, 390, 768, 1440]) {
+            await editorPage.setViewportSize({ width, height: 1000 });
+            assert.equal(await editorPage.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+            await editorPage.screenshot({ path: path.join(output, 'editor-' + width + '.png'), fullPage: true });
+        }
+        await editorPage.reload();
+        await editorPage.getByRole('button', { name: 'Khôi phục', exact: true }).click();
+        assert.equal(await editorPage.getByLabel('Tiêu đề bài viết', { exact: true }).inputValue(), 'Một góc xanh trong nhà');
+        assert.equal(await editorPage.locator('.editor-block').count(), 4);
+        assert.equal(await editorPage.getByText('Ảnh chưa được tải lên. Chọn lại ảnh để tiếp tục.', { exact: true }).count(), 2);
+        await editorPage.evaluate(() => localStorage.removeItem(document.querySelector('form').dataset.draftKey));
+        await editorPage.close();
         const responses = [
             { vote: 1, likes: 1, dislikes: 0, saved: false },
             { vote: -1, likes: 0, dislikes: 1, saved: false },
@@ -181,7 +210,7 @@ const { chromium } = require('playwright');
         await noJs.close();
         assert.deepEqual(errors, []);
         console.log('PASS: live blog at six widths, images/fonts, keyboard, search/sort, empty recovery, pagination, login gates, article/404, mobile menu and no-JS search.');
-        console.log('PASS: actual composer template at three widths, CSRF fields, local image preview, and mocked vote/save/error states. No database writes.');
+        console.log('PASS: dedicated editor link at three widths and mocked vote/save/error states. No database writes.');
         console.log('Screenshots: ' + output);
     } finally {
         await browser.close();

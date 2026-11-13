@@ -22,11 +22,11 @@ try {
     $imageUrl = $imagePost['image_path'];
     $response = $reader->request($imageUrl);
     check($response['status'] === 200 && $response['body'] === $png && str_contains($response['headers']['content-type'], 'image/png'), 'Uploaded image must be publicly served as an image.');
-    foreach (['blog.php', 'blog-post.php?slug=' . $imageSlug, 'blog.php?edit=' . $imageSlug] as $page) {
+    foreach (['blog.php', 'blog-post.php?slug=' . $imageSlug, 'blog-editor.php?edit=' . $imageSlug] as $page) {
         check(str_contains($aliceBrowser->request($page)['body'], 'src="' . $imageUrl . '"'), 'Image missing from feed, detail, or editor: ' . $page);
     }
     $imageUpdate = array_merge($imageDraft, ['operation' => 'update', 'slug' => $imageSlug]);
-    $otherUpdate = array_merge($imageUpdate, ['csrf_token' => $blockedLogin->token('blog.php'), 'image' => $upload]);
+    $otherUpdate = array_merge($imageUpdate, ['csrf_token' => $blockedLogin->token('blog-editor.php'), 'image' => $upload]);
     check($blockedLogin->request('actions/blog-action.php', $otherUpdate, true)['status'] === 403, 'Another author must not replace an image.');
     $aliceBrowser->request('actions/blog-action.php', $imageUpdate);
     $savedImage = db()->prepare('SELECT image_path FROM blog_posts WHERE slug = ?');
@@ -37,7 +37,7 @@ try {
         $aliceBrowser->request('actions/blog-action.php', $imageUpdate + ['image' => $upload], true);
         $savedImage->execute([$imageSlug]);
         check($savedImage->fetchColumn() === $imageUrl, 'Invalid or oversized upload replaced the existing image.');
-        check(str_contains($aliceBrowser->request('blog.php?edit=' . $imageSlug)['body'], 'vui lòng chọn lại'), 'Invalid upload must show a retry message and retain the draft.');
+        check(str_contains($aliceBrowser->request('blog-editor.php?edit=' . $imageSlug)['body'], 'vui lòng chọn lại'), 'Invalid upload must show a retry message and retain the draft.');
     }
     file_put_contents($imageFixture, $png);
     $aliceBrowser->request('actions/blog-action.php', $imageUpdate + ['image' => $upload], true);

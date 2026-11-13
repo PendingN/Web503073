@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/includes/init.php';
 require_once __DIR__ . '/includes/blog-images.php';
+require_once __DIR__ . '/includes/blog-blocks.php';
+$pageStyles = ['css/blog-editor.css'];
 
 $slug = trim(request_string($_GET, 'slug'));
 $post = find_post($slug);
@@ -32,9 +34,13 @@ require __DIR__ . '/includes/navbar.php';
 <?php else: ?>
     <main class="blog-post-main" id="article-content" tabindex="-1">
         <?php if ($flash = take_flash()): ?><p class="status-note" role="status"><?= e($flash) ?></p><?php endif; ?>
-        <a class="back-link" href="blog.php"> Quay lại nhật ký</a>
+        <a class="back-link" href="blog.php">Quay lại nhật ký</a>
         <header class="blog-post-header">
-            <div class="post-meta"><span><?= e($post['tag']) ?></span><span><time datetime="<?= e(str_replace(' ', 'T', $post['created_at'])) ?>"><?= e(date('d/m/Y H:i', strtotime($post['created_at']))) ?></time> · <?= e($post['author']) ?></span></div>
+            <?php
+            $postCreatedAt = strtotime($post['created_at']);
+            $postDateDisplay = date(date('H:i', $postCreatedAt) === '00:00' ? 'd/m/Y' : 'd/m/Y H:i', $postCreatedAt);
+            ?>
+            <div class="post-meta"><span><?= e($post['tag']) ?></span><span><time datetime="<?= e(str_replace(' ', 'T', $post['created_at'])) ?>"><?= e($postDateDisplay) ?></time> · <?= e($post['author']) ?></span></div>
             <h1><?= e($post['title']) ?></h1>
             <p><?= e($post['excerpt']) ?></p>
         </header>
@@ -42,7 +48,7 @@ require __DIR__ . '/includes/navbar.php';
             <img class="blog-cover" src="<?= e(blog_cover_url($post)) ?>" alt="<?= !empty($post['image_path']) ? e($post['title']) : '' ?>" width="1000" height="560">
         </div>
         <article class="blog-post-body">
-            <div class="blog-text"><?= e($post['content']) ?></div>
+            <div class="block-article"><?= render_blog_blocks(blog_blocks($post)) ?></div>
             <?php require __DIR__ . '/includes/blog-actions.php'; ?>
             <div class="blog-post-cta"><p>Muốn tìm một người bạn xanh cho không gian của mình?</p><a class="btn-brand" href="collection.php">Khám phá bộ sưu tập</a></div>
         </article>
@@ -54,7 +60,7 @@ require __DIR__ . '/includes/navbar.php';
                     <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
                     <input type="hidden" name="operation" value="delete">
                     <input type="hidden" name="slug" value="<?= e($slug) ?>">
-                    <button class="btn-quiet" type="submit">Xác nhận xóa bài</button>
+                    <button class="btn-quiet btn-danger-quiet" type="submit">Xác nhận xóa bài</button>
                 </form>
             </details>
         <?php endif; ?>
@@ -78,11 +84,11 @@ require __DIR__ . '/includes/navbar.php';
                     <p><strong><?= e($comment['author']) ?></strong> · <?= e(date('d/m/Y H:i', strtotime($comment['created_at']))) ?></p>
                     <p class="blog-text"><?= e($comment['content']) ?></p>
                     <?php if ($user !== null && ($user['role'] === 'admin' || (int) $comment['user_id'] === (int) $user['id'])): ?>
-                        <form action="actions/blog-action.php" method="post">
+                        <form action="actions/blog-action.php" method="post" data-confirm="Bạn có chắc muốn xóa bình luận này?" onsubmit="return confirm(this.dataset.confirm);">
                             <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
                             <input type="hidden" name="operation" value="delete-comment">
                             <input type="hidden" name="slug" value="<?= e($slug) ?>">
-                            <button class="btn-quiet" name="comment_id" value="<?= e($comment['id']) ?>">Xóa bình luận</button>
+                            <button class="btn-quiet btn-danger-quiet" name="comment_id" value="<?= e($comment['id']) ?>">Xóa bình luận</button>
                         </form>
                     <?php endif; ?>
                 </article>
@@ -90,7 +96,7 @@ require __DIR__ . '/includes/navbar.php';
             <?php if ($comments['comments'] === []): ?><p class="blog-empty">Chưa có bình luận. Hãy chia sẻ ý kiến đầu tiên.</p><?php endif; ?>
             <?php if ($comments['pages'] > 1): ?>
                 <nav class="pagination" aria-label="Phân trang bình luận">
-                    <?php if ($comments['page'] > 1): ?><a href="blog-post.php?<?= e(http_build_query(['slug' => $slug, 'page' => $comments['page'] - 1])) ?>#comments"> Trước</a><?php endif; ?>
+                    <?php if ($comments['page'] > 1): ?><a href="blog-post.php?<?= e(http_build_query(['slug' => $slug, 'page' => $comments['page'] - 1])) ?>#comments">Trước</a><?php endif; ?>
                     <span>Trang <?= e($comments['page']) ?> / <?= e($comments['pages']) ?></span>
                     <?php if ($comments['page'] < $comments['pages']): ?><a href="blog-post.php?<?= e(http_build_query(['slug' => $slug, 'page' => $comments['page'] + 1])) ?>#comments">Sau</a><?php endif; ?>
                 </nav>
