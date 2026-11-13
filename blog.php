@@ -37,7 +37,7 @@ require __DIR__ . '/includes/header.php';
 <?php
 require __DIR__ . '/includes/navbar.php';
 ?>
-<main class="blog-feed-main">
+<main class="blog-feed-main" id="main-content" tabindex="-1">
     <section class="feed-hero" aria-labelledby="feed-title">
         <div class="feed-hero-copy">
             <h1 id="feed-title">Chuyện cây cỏ,<br><em>kể cùng nhau.</em></h1>
@@ -49,7 +49,7 @@ require __DIR__ . '/includes/navbar.php';
                     <div class="feed-ticker-group">
                         <?php foreach ($tickerPosts as $tickerPost): ?>
                             <a class="feed-ticker-card" href="blog-post.php?slug=<?= e(rawurlencode($tickerPost['slug'])) ?>">
-                                <img src="<?= e(blog_cover_url($tickerPost)) ?>" alt="" width="260" height="180">
+                                <img src="<?= e(blog_cover_url($tickerPost)) ?>" alt="" width="260" height="180" decoding="async">
                                 <span class="feed-ticker-label"><?= e($tickerPost['tag']) ?></span>
                                 <strong><?= e($tickerPost['title']) ?></strong>
                                 <time datetime="<?= e(str_replace(' ', 'T', $tickerPost['created_at'])) ?>"><?= e(date('d/m/Y', strtotime($tickerPost['created_at']))) ?></time>
@@ -99,7 +99,7 @@ require __DIR__ . '/includes/navbar.php';
                             <p><?= e($post['excerpt']) ?></p>
                         </div>
                         <a class="feed-post-art" href="blog-post.php?slug=<?= e(rawurlencode($post['slug'])) ?>" aria-label="Đọc bài: <?= e($post['title']) ?>">
-                            <img class="blog-cover" src="<?= e(blog_cover_url($post)) ?>" alt="" loading="lazy" width="200" height="150">
+                            <img class="blog-cover" src="<?= e(blog_cover_url($post)) ?>" alt="" loading="lazy" decoding="async" width="200" height="150">
                         </a>
                         <?php require __DIR__ . '/includes/blog-actions.php'; ?>
                     </article>
@@ -132,13 +132,13 @@ require __DIR__ . '/includes/navbar.php';
         <aside class="feed-sidebar" aria-label="Khám phá cộng đồng">
             <section class="feed-community">
                 <nav class="feed-topics" aria-label="Khám phá chủ đề">
-                    <h3>Khám phá chủ đề</h3>
-                    <?php foreach (['Bài nổi bật', 'Chăm cây', 'Không gian', 'Cảm hứng', 'Mẹo hay', 'Sống xanh'] as $topic): ?>
-                        <a href="blog.php?<?= e(http_build_query(['search' => $topic, 'sort' => $sort])) ?>#blog-content"<?= $search === $topic ? ' aria-current="page"' : '' ?>><?= e($topic) ?><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></a>
+                    <h2>Khám phá chủ đề</h2>
+                    <?php foreach (['Chăm cây', 'Không gian', 'Cảm hứng', 'Mẹo hay', 'Sống xanh', 'Bài nổi bật'] as $topic): ?>
+                        <a href="blog.php?<?= e(http_build_query(['search' => $topic, 'sort' => $sort, 'view' => $view])) ?>#blog-content"<?= $search === $topic ? ' aria-current="page"' : '' ?>><?= e($topic) ?><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></a>
                     <?php endforeach; ?>
                 </nav>
                 <div class="feed-explore">
-                    <h3>Tìm cây cho không gian của bạn</h3>
+                    <h2>Tìm cây cho không gian của bạn</h2>
                     <a href="index.php#find-plant">Chọn cây theo góc phòng</a>
                     <a href="collection.php?category=<?= e(rawurlencode('Cây trong nhà')) ?>">Khám phá cây trong nhà</a>
                 </div>

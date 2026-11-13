@@ -68,6 +68,19 @@ $plants = [
         'image' => 'anh25.jpg',
     ],
     [
+        'id' => 26,
+        'name' => 'Cây Bàng Singapore',
+        'category' => 'Cây trong nhà',
+        'description' => 'Bàng Singapore nổi bật với thân gỗ mảnh vươn thẳng và những chiếc lá to bản hình đàn violin, mặt lá xanh đậm có gân nổi rõ rất sang trọng. Cây tạo điểm nhấn tự nhiên và hiện đại cho phòng khách, góc đọc sách hay hành lang nhiều ánh sáng. Khi đặt cố định ở nơi đủ sáng và thoáng khí, cây giữ dáng gọn gàng và bền lá suốt nhiều năm.',
+        'care' => implode("\n", [
+            'Ánh sáng: ưa ánh sáng tự nhiên sáng và gián tiếp gần cửa sổ; xoay chậu định kỳ để tán lá mọc cân đối, tránh nắng trưa gắt làm cháy lá.',
+            'Tưới nước: tưới đẫm khi lớp đất mặt khô khoảng 3–5 cm (thường 1 lần/tuần); để nước thoát hết khỏi đáy chậu, tránh úng rễ.',
+            'Đất và phân: đất tơi xốp, thoát nước tốt (trộn vỏ thông, đá perlite và phân hữu cơ); bón phân NPK loãng 1 tháng/lần vào mùa xuân hè.',
+            'Lưu ý: dùng khăn ẩm lau bụi trên mặt lá to để cây quang hợp tốt; hạn chế di chuyển chỗ đặt liên tục và tránh gió điều hòa thổi trực tiếp; nhựa cây có thể gây kích ứng nhẹ.',
+        ]),
+        'image' => 'anh26.jpg',
+    ],
+    [
         'id' => 27,
         'name' => 'Cây Ngũ Gia Bì',
         'category' => 'Cây trong nhà',

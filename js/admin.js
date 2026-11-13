@@ -76,6 +76,36 @@
         });
     });
     document.querySelectorAll('[data-auto-dismiss]').forEach(function (note) {
-        window.setTimeout(function () { note.remove(); }, 5000);
+        var timer = null;
+        var hovered = false;
+        var focused = false;
+        function scheduleDismiss() {
+            window.clearTimeout(timer);
+            if (!hovered && !focused) {
+                timer = window.setTimeout(function () { note.remove(); }, 5000);
+            }
+        }
+        function pauseDismiss() {
+            window.clearTimeout(timer);
+        }
+        note.addEventListener('mouseenter', function () {
+            hovered = true;
+            pauseDismiss();
+        });
+        note.addEventListener('mouseleave', function () {
+            hovered = false;
+            scheduleDismiss();
+        });
+        note.addEventListener('focusin', function () {
+            focused = true;
+            pauseDismiss();
+        });
+        note.addEventListener('focusout', function (event) {
+            if (!note.contains(event.relatedTarget)) {
+                focused = false;
+                scheduleDismiss();
+            }
+        });
+        scheduleDismiss();
     });
 }());

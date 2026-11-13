@@ -10,7 +10,7 @@ $flashMessage = take_flash();
 $featuredIds = [22, 21, 23, 27];
 $featuredPlants = plants_by_ids($featuredIds);
 $catalog = plant_catalog_statistics();
-$activePage = 'collection';
+$activePage = 'dashboard';
 require __DIR__ . '/includes/header.php';
 require __DIR__ . '/includes/navbar.php';
 ?>
@@ -19,11 +19,10 @@ require __DIR__ . '/includes/navbar.php';
     <?php require __DIR__ . '/includes/dashboard-sidebar.php'; ?>
     <div class="dashboard-main">
         <?php require __DIR__ . '/includes/dashboard-toolbar.php'; ?>
-        <main class="dashboard-content">
+        <main id="main-content" class="dashboard-content" tabindex="-1">
             <?php if ($flashMessage !== null): ?><div class="status-note" data-auto-dismiss><?= e($flashMessage) ?></div><?php endif; ?>
             <header>
                 <div>
-                    <p class="eyebrow">KHÔNG GIAN CỦA BẠN</p>
                     <h1>Chào ngày mới,<br><em>người làm vườn.</em></h1>
                     <p class="lead">Khám phá cây và chăm góc xanh mỗi ngày.</p>
                 </div>
@@ -35,7 +34,6 @@ require __DIR__ . '/includes/navbar.php';
 
             <section class="dashboard-hero-card" aria-label="Gợi ý chăm cây">
                 <div>
-                    <p class="eyebrow" style="color:#dfe8d2;">GỢI Ý HÔM NAY</p>
                     <h2>Chăm cây cũng là<br>chăm mình.</h2>
                     <p>Kiểm tra độ ẩm đất và lau lá hôm nay.</p>
                 </div>
@@ -45,15 +43,15 @@ require __DIR__ . '/includes/navbar.php';
             </section>
 
             <section class="stats-grid" aria-label="Thống kê bộ sưu tập">
-                <article class="stat-card"><span>Tổng số giống cây</span><strong><?= $catalog['total'] ?></strong></article>
+                <article class="stat-card"><span>Tổng số giống cây</span><strong><?= (int) $catalog['total'] ?></strong></article>
                 <article class="stat-card"><span>Nhóm cây</span><strong><?= count($catalog['categories']) ?></strong></article>
                 <article class="stat-card"><span>Đã yêu thích</span><strong><?= count(favorite_ids()) ?></strong></article>
-                <article class="stat-card"><span>Bài viết chăm cây</span><strong><?= count_blog_posts() ?></strong></article>
+                <article class="stat-card"><span>Bài viết chăm cây</span><strong><?= (int) count_blog_posts() ?></strong></article>
             </section>
 
             <section>
                 <div class="section-heading">
-                    <div><p class="eyebrow">GỢI Ý CHO BẠN</p><h2>Bốn người bạn xanh</h2></div>
+                    <h2>Bốn người bạn xanh</h2>
                     <a href="collection.php">Xem tất cả cây</a>
                 </div>
                 <div class="plant-grid">
@@ -66,4 +64,4 @@ require __DIR__ . '/includes/navbar.php';
     </div>
 </div>
 
-<?php $showSiteFooter = false; require __DIR__ . '/includes/footer.php'; ?>
+<?php $showSiteFooter = true; require __DIR__ . '/includes/footer.php'; ?>

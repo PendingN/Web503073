@@ -8,7 +8,7 @@ $favoritePlants = plants_by_ids(favorite_ids());
 $pageTitle = 'Yêu thích';
 $bodyClass = 'dashboard-page';
 $dashboardActive = 'favorites';
-$activePage = 'collection';
+$activePage = 'favorites';
 $flashMessage = take_flash();
 $pageStyles = ['css/shoe-orbit.css', 'css/favorite-orbit.css'];
 $pageScripts = ['js/favorite-orbit.js', 'js/shoe-orbit.js'];
@@ -20,18 +20,17 @@ require __DIR__ . '/includes/navbar.php';
     <?php require __DIR__ . '/includes/dashboard-sidebar.php'; ?>
     <div class="dashboard-main">
         <?php require __DIR__ . '/includes/dashboard-toolbar.php'; ?>
-        <main class="dashboard-content">
+        <main id="main-content" class="dashboard-content" tabindex="-1">
             <?php if ($flashMessage !== null): ?><div class="status-note" data-auto-dismiss><?= e($flashMessage) ?></div><?php endif; ?>
             <header>
                 <div>
-                    <p class="eyebrow">GÓC RIÊNG CỦA BẠN</p>
                     <h1>Cây yêu thích</h1>
                     <p class="lead">Những cây bạn đã lưu.</p>
                 </div>
             </header>
             <?php require __DIR__ . '/includes/favorite-orbit.php'; ?>
             <div class="section-heading favorite-grid-heading"<?= $favoritePlants === [] ? ' hidden' : '' ?> data-favorites-heading>
-                <div><p class="eyebrow">QUẢN LÝ</p><h2>Danh sách đã lưu</h2></div>
+                <h2>Danh sách đã lưu</h2>
             </div>
             <div class="empty-state" data-favorites-empty<?= $favoritePlants === [] ? '' : ' hidden' ?>>
                 <h2>Chưa có cây yêu thích</h2>
@@ -47,4 +46,4 @@ require __DIR__ . '/includes/navbar.php';
     </div>
 </div>
 
-<?php $showSiteFooter = false; require __DIR__ . '/includes/footer.php'; ?>
+<?php $showSiteFooter = true; require __DIR__ . '/includes/footer.php'; ?>

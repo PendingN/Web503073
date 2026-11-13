@@ -35,17 +35,20 @@ $bodyClass = 'blog-editor-page';
 $pageStyles = ['css/blog-editor.css'];
 $pageScripts = ['js/blog-editor.js'];
 $showSiteFooter = false;
-$back = request_string($_GET, 'from') === 'admin' && $user['role'] === 'admin' ? 'admin-posts.php' : 'blog.php';
+$fromAdmin = request_string($_GET, 'from') === 'admin' && $user['role'] === 'admin';
+$back = $fromAdmin ? 'admin-posts.php' : 'blog.php';
 require __DIR__ . '/includes/header.php';
 ?>
-<main class="editor-shell">
+<a class="blog-skip-link" href="#main-content">Đến nội dung chính</a>
+<main class="editor-shell" id="main-content" tabindex="-1">
     <form id="blog-editor" action="actions/blog-action.php" method="post" enctype="multipart/form-data" data-draft-key="blog-draft-<?= (int) $user['id'] ?>-<?= e($slug ?: 'new') ?>" data-cover="<?= e($post['image_path'] ?? '') ?>" data-base="<?= e(app_url()) ?>" data-existing-sizes="<?= e(json_encode($existingSizes)) ?>">
         <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
         <input type="hidden" name="operation" value="<?= $post ? 'update' : 'create' ?>">
         <input type="hidden" name="slug" value="<?= e($slug) ?>">
+        <input type="hidden" name="return_to" value="<?= e($back) ?>">
         <input type="hidden" name="content_blocks" id="blocks-data">
         <header class="editor-header">
-            <a href="<?= e($back) ?>">← Quay lại Blog</a>
+            <a href="<?= e($back) ?>">← <?= $fromAdmin ? 'Quay lại Quản trị bài viết' : 'Quay lại Blog' ?></a>
             <span id="draft-status" role="status">Nháp trên thiết bị này</span>
             <button type="button" id="preview-toggle" aria-pressed="false">Xem trước</button>
             <button class="editor-primary" type="submit"><?= $post ? 'Lưu thay đổi' : 'Đăng bài' ?></button>
@@ -82,7 +85,7 @@ require __DIR__ . '/includes/header.php';
                     <select id="editor-tag" name="tag"><?php foreach (['Chăm cây', 'Không gian', 'Cảm hứng', 'Mẹo hay', 'Sống xanh', 'Bài nổi bật'] as $tag): ?><option<?= $form['tag'] === $tag ? ' selected' : '' ?>><?= e($tag) ?></option><?php endforeach; ?></select>
                     <label for="editor-cover">Ảnh bìa</label>
                     <input type="file" id="editor-cover" name="image" accept="image/jpeg,image/png,image/webp">
-                    <img id="cover-preview" alt="Xem trước ảnh bìa"<?= !empty($post['image_path']) ? ' src="' . e($post['image_path']) . '"' : ' hidden' ?>>
+                    <?php if (!empty($post['image_path'])): ?><img id="cover-preview" src="<?= e($post['image_path']) ?>" alt="Xem trước ảnh bìa" decoding="async"><?php endif; ?>
                     <p class="editor-hint">JPG, PNG hoặc WebP. Tối đa 10 ảnh kể cả ảnh bìa, 2 MB/ảnh và 6 MB tổng dung lượng ảnh.</p>
                     <p class="editor-hint">Nháp lưu chữ và bố cục trên máy này. Ảnh mới chưa đăng cần chọn lại sau khi tải lại trang.</p>
                 </details>

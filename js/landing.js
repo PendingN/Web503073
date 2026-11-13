@@ -51,9 +51,7 @@
         var plants = Array.from(document.querySelectorAll('[data-plant-picks] > article'));
         var status = document.querySelector('[data-finder-status]');
         var empty = document.querySelector('[data-finder-empty]');
-        finder.hidden = false;
-        finder.addEventListener('submit', function (event) {
-            event.preventDefault();
+        var filterPlants = function () {
             var light = finder.elements.light.value;
             var position = finder.elements.position.value;
             var count = 0;
@@ -65,6 +63,13 @@
             });
             empty.hidden = count > 0;
             status.textContent = count + ' gợi ý cho góc nhà của bạn. Mở từng cây để tìm hiểu thêm.';
+        };
+        finder.hidden = false;
+        finder.elements.light.addEventListener('change', filterPlants);
+        finder.elements.position.addEventListener('change', filterPlants);
+        finder.addEventListener('submit', function (event) {
+            event.preventDefault();
+            filterPlants();
         });
     }
 })();

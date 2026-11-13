@@ -20,8 +20,12 @@
 :is(.blog-page, .blog-post-page) .btn-quiet:hover { color: #34533c; }
 :is(.blog-page, .blog-post-page) .btn-danger-quiet { color: #994b42; font-weight: 600; }
 :is(.blog-page, .blog-post-page) .btn-danger-quiet:hover { color: #7a352e; }
-.blog-skip-link { position: fixed; z-index: 200; top: 12px; left: 20px; padding: 12px 18px; background: #fff; color: #243b30; transform: translateY(-160%); }
+.blog-skip-link { position: fixed; z-index: 200; top: 12px; left: 20px; padding: 12px 18px; border: 2px solid #34533c; border-radius: 8px; background: #fff; color: #243b30; font-weight: 600; transform: translateY(-160%); }
 .blog-skip-link:focus { transform: translateY(0); }
+:is(.blog-page, .blog-post-page) .status-note { margin: 0 auto 20px; padding: 14px 18px; border: 1px solid #b7c8b5; border-radius: 10px; background: #edf4ec; color: #243b30; font-size: 14px; font-weight: 500; line-height: 1.6; }
+.blog-post-page .blog-post-main > .status-note { max-width: 720px; }
+.blog-post-page .blog-comments .blog-comment-status { margin: 16px 0; }
+.blog-post-page .status-note.is-error { border-color: #e4bcb6; background: #fdf2f0; color: #7a352e; }
 .blog-page #blog-content,
 .blog-post-page #comments { scroll-margin-top: 24px; }
 
@@ -121,14 +125,14 @@
 .blog-page .blog-empty a { display: inline-flex; color: #34533c; }
 .blog-page .feed-sidebar { position: sticky; top: 24px; min-width: 0; margin-top: 24px; }
 .blog-page .feed-community { padding: 22px; border: 1px solid #dce3dc; border-radius: 12px; background: #fff; }
-.blog-page .feed-community h2 { margin: 0 0 12px; color: #243b30; font-size: 17px; line-height: 1.6; }
 .blog-page .feed-community p { margin: 0 0 24px; color: #52604f; font-size: 13px; line-height: 1.8; text-wrap: pretty; }
+.blog-page .feed-community h2,
 .blog-page .feed-community h3 { margin: 0 0 12px; color: #243b30; font-size: 13px; font-weight: 600; line-height: 1.7; }
 .blog-page .feed-topics a { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; padding: 10px 0; color: #40503f; font-size: 13px; }
 .blog-page .feed-topics a:hover { color: #34533c; text-decoration: underline; }
 .blog-page .feed-topics a[aria-current="page"] { background: #eef4ec; color: #243b30; font-weight: 700; padding-inline: 10px; border-radius: 8px; }
 .blog-page .feed-explore { margin-top: 20px; padding-top: 20px; border-top: 1px solid #dce3dc; }
-.blog-page .feed-explore a { display: block; padding-block: 10px; color: #34533c; font-size: 12px; line-height: 1.8; }
+.blog-page .feed-explore a { display: flex; align-items: center; min-height: 44px; padding-block: 10px; color: #34533c; font-size: 12px; line-height: 1.8; }
 .blog-page .feed-explore a:hover { text-decoration: underline; }
 
 .blog-post-page .blog-post-main { max-width: 1000px; width: calc(100% - 40px); margin: 32px auto; padding: 24px 40px 56px; border: 1px solid #dce3dc; border-radius: 12px; background: #fff; }

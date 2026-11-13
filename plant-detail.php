@@ -23,24 +23,23 @@ require __DIR__ . '/includes/navbar.php';
 ?>
 
 <?php if ($plant === null): ?>
-    <main class="not-found">
-        <p class="eyebrow">404 · KHÔNG TÌM THẤY</p>
+    <main id="main-content" class="not-found" tabindex="-1">
         <h1>Cây này chưa có trong khu vườn.</h1>
         <p>Đường dẫn bạn mở không trỏ tới một giống cây hợp lệ. Hãy quay lại bộ sưu tập để tiếp tục khám phá.</p>
         <a class="btn-brand" href="collection.php">Về bộ sưu tập</a>
     </main>
 <?php else: ?>
-    <main class="detail-main">
+    <main id="main-content" class="detail-main" tabindex="-1">
         <a class="back-link" href="<?= e($returnTo) ?>"><?= e($backLabel) ?></a>
         <article class="plant-detail">
-            <div class="detail-image"><img src="<?= e(image_url($plant['image'])) ?>" alt="<?= e($plant['name']) ?>" decoding="async" fetchpriority="high"></div>
+            <div class="detail-image"><img src="<?= e(image_url($plant['image'])) ?>" alt="<?= e($plant['name']) ?>" width="900" height="1200" decoding="async" fetchpriority="high"></div>
             <div class="detail-copy">
                 <p class="plant-category"><?= e($plant['category']) ?></p>
                 <h1><?= e($plant['name']) ?></h1>
                 <p class="detail-description"><?= e($plant['description']) ?></p>
                 <div class="care-box"><strong>Gợi ý chăm sóc</strong><ul class="care-list"><?php foreach (preg_split('/\R+/u', trim($plant['care'])) as $careLine): ?><?php $careParts = explode(':', $careLine, 2); ?><li><?php if (count($careParts) === 2): ?><b><?= e(trim($careParts[0])) ?>:</b> <?= e(trim($careParts[1])) ?><?php else: ?><?= e($careLine) ?><?php endif; ?></li><?php endforeach; ?></ul></div>
                 <div class="dashboard-actions">
-                    <form class="favorite-form" data-reaction="favorite" data-plant-name="<?= e($plant['name']) ?>" method="post" action="actions/favorite-action.php" style="position:static;">
+                    <form class="favorite-form" data-reaction="favorite" data-plant-name="<?= e($plant['name']) ?>" method="post" action="actions/favorite-action.php">
                         <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
                         <input type="hidden" name="plant_id" value="<?= (int) $plant['id'] ?>">
                         <input type="hidden" name="return_to" value="<?= e(current_request_url()) ?>">

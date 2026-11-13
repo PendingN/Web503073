@@ -22,7 +22,19 @@
 }
 
 @layer base {
-    body { @apply bg-soft font-sans text-ink antialiased; }
+    html {
+        scrollbar-color: var(--color-muted) var(--color-soft);
+        scrollbar-width: thin;
+    }
+    body {
+        @apply bg-soft font-sans text-ink antialiased;
+        caret-color: var(--color-primary-dark);
+    }
+    ::selection {
+        background-color: color-mix(in srgb, var(--color-primary) 22%, #ffffff);
+        color: var(--color-ink);
+    }
+    a { text-underline-offset: 0.2em; }
     :focus-visible { outline: 2px solid var(--color-primary); outline-offset: 3px; }
     button, summary { cursor: pointer; }
     button:disabled { cursor: default; }
@@ -32,10 +44,11 @@
     .admin-card { @apply rounded-xl border border-border bg-white; }
     .admin-button { @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-primary-dark px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#2c4fb8]; }
     .admin-button-secondary { @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-border bg-white px-4 py-2.5 text-sm font-medium text-muted transition-colors hover:bg-soft hover:text-primary-dark; }
-    .admin-input { @apply min-h-11 w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm text-ink placeholder:text-muted/70 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20; }
+    .admin-input { @apply min-h-11 w-full rounded-lg border border-border bg-white px-3 py-2.5 text-base text-ink placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 sm:text-sm; }
     .admin-field-label { @apply mb-2 block text-sm font-medium; }
     .admin-panel-link { @apply inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-primary-dark hover:underline; }
-    .admin-table { @apply w-full text-left text-sm; }
+    .admin-table { @apply w-full text-left text-sm tabular-nums; }
+    [data-stat], .registration-day, #overview dd { font-variant-numeric: tabular-nums; }
     .admin-table th { @apply border-b border-border bg-soft px-5 py-3.5 text-xs font-medium whitespace-nowrap text-muted; }
     .admin-table td { @apply border-b border-border px-5 py-4 align-middle; }
     .admin-table tbody tr:last-child td { @apply border-b-0; }

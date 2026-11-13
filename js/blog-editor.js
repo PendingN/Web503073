@@ -223,9 +223,21 @@
     cover.onchange = () => {
         try {
             validateFiles([]);
-            const img = document.getElementById('cover-preview');
-            img.src = cover.files[0] ? URL.createObjectURL(cover.files[0]) : form.dataset.cover;
-            img.hidden = !img.getAttribute('src'); flush(); message('');
+            const coverSrc = cover.files[0] ? URL.createObjectURL(cover.files[0]) : form.dataset.cover;
+            let img = document.getElementById('cover-preview');
+            if (coverSrc) {
+                if (!img) {
+                    img = make('img');
+                    img.id = 'cover-preview';
+                    img.alt = 'Xem trước ảnh bìa';
+                    cover.after(img);
+                }
+                img.src = coverSrc;
+                img.hidden = false;
+            } else if (img) {
+                img.remove();
+            }
+            flush(); message('');
         } catch (exception) { cover.value = ''; message(exception.message); }
     };
     document.addEventListener('selectionchange', () => {
@@ -279,7 +291,7 @@
     });
     function showPreview() {
         read(); preview.replaceChildren(make('h1', title.value || 'Bài viết chưa có tiêu đề'));
-        const coverSrc = document.getElementById('cover-preview').getAttribute('src');
+        const coverSrc = document.getElementById('cover-preview')?.getAttribute('src');
         if (coverSrc) { const img = make('img'); img.src = coverSrc; img.alt = title.value; preview.append(img); }
         blocks.forEach(block => {
             let node;
@@ -330,9 +342,13 @@
             try {
                 const response = await fetch(form.action, { method: 'POST', body: data });
                 const url = new URL(response.url);
-                if (response.ok && /\/blog-post\.php$/.test(url.pathname)) {
+                const isAdminRedirect = /\/blog-editor\.php$/.test(url.pathname)
+                    && url.searchParams.get('from') === 'admin'
+                    && url.searchParams.has('edit');
+                if (response.ok && (/\/(blog-post|admin-posts)\.php$/.test(url.pathname) || isAdminRedirect)) {
                     clearTimeout(pending); dirty = false; try { localStorage.removeItem(key); } catch {}
-                    location.assign(response.url); return;
+                    location.assign(isAdminRedirect ? new URL('admin-posts.php', response.url).href : response.url);
+                    return;
                 }
                 const doc = new DOMParser().parseFromString(await response.text(), 'text/html');
                 throw new Error(doc.querySelector('.editor-notice, .status-note')?.textContent || 'Không đăng được bài. Kiểm tra phiên đăng nhập và thử lại; nội dung vẫn được giữ tại đây.');

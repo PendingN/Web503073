@@ -126,8 +126,16 @@ function render_blog_blocks(array $blocks): string
             if (!preg_match('#^images/blog/[a-f0-9]{32}\.(jpg|png|webp)$#D', $src)) {
                 continue;
             }
+            $dimensions = '';
+            $filePath = dirname(__DIR__) . '/' . $src;
+            if (is_file($filePath)) {
+                $size = @getimagesize($filePath);
+                if (is_array($size) && $size[0] > 0 && $size[1] > 0) {
+                    $dimensions = ' width="' . (int) $size[0] . '" height="' . (int) $size[1] . '"';
+                }
+            }
             $captionHtml = trim((string) ($block['caption'] ?? '')) !== '' ? '<figcaption>' . e((string) $block['caption']) . '</figcaption>' : '';
-            $output .= '<figure><img src="' . e(app_url($src)) . '" alt="' . e((string) ($block['alt'] ?? '')) . '" loading="lazy">' . $captionHtml . '</figure>';
+            $output .= '<figure><img src="' . e(app_url($src)) . '" alt="' . e((string) ($block['alt'] ?? '')) . '"' . $dimensions . ' loading="lazy" decoding="async">' . $captionHtml . '</figure>';
         } elseif ($type === 'divider') {
             $output .= '<hr>';
         } elseif ($type === 'ul' || $type === 'ol') {

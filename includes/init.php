@@ -95,9 +95,15 @@ function abort_request(int $status, string $message): void
         json_response(['message' => $message], $status);
     }
     http_response_code($status);
-    echo '<!doctype html><html lang="vi"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">';
-    echo '<title>Vũ Điệu Rừng Xanh</title><link rel="stylesheet" href="' . e(app_url('css/style.css')) . '">';
-    echo '<main class="not-found"><h1>' . e($message) . '</h1><a class="btn-brand" href="' . e(app_url('index.php')) . '">Về trang chủ</a></main></html>';
+    $homeUrl = app_url('index.php');
+    $fontsUrl = app_url('css/fonts.css');
+    $styleUrl = app_url('css/style.css');
+    echo '<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">';
+    echo '<title>Lỗi ' . (int) $status . ' | Vũ Điệu Rừng Xanh</title>';
+    echo '<link rel="stylesheet" href="' . e($fontsUrl) . '">';
+    echo '<link rel="stylesheet" href="' . e($styleUrl) . '">';
+    echo '<style>.error-shell{min-height:100svh;display:grid;place-items:center;padding:32px 20px;background:#faf9f6;color:#243b30;font-family:"Be Vietnam Pro",sans-serif}.error-card{max-width:520px;width:100%;padding:40px 32px;border:1px solid #dedfd6;border-radius:16px;background:#fff;text-align:center}.error-card h1{margin:0 0 12px;color:#243b30;font-size:clamp(22px,3vw,30px);line-height:1.35;text-wrap:balance}.error-code{margin:0 0 24px;color:#536052;font-size:13px;line-height:1.6}.error-card .btn-brand{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:12px 24px;border-radius:999px;background:#34533c;color:#fff;font-size:14px;font-weight:600;text-decoration:none}.error-card .btn-brand:hover{background:#243b30}</style>';
+    echo '</head><body class="error-page"><main id="main-content" tabindex="-1" class="error-shell"><section class="error-card" aria-labelledby="error-title"><h1 id="error-title">' . e($message) . '</h1><p class="error-code">Mã trạng thái ' . (int) $status . ' · Vũ Điệu Rừng Xanh</p><a class="btn-brand" href="' . e($homeUrl) . '">Về trang chủ</a></section></main></body></html>';
     exit;
 }
 

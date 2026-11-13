@@ -5,13 +5,19 @@ require_once __DIR__ . '/../includes/init.php';
 require_post();
 require_csrf();
 $returnTo = safe_return_url($_POST['return_to'] ?? null);
-$user = require_login($returnTo);
 $plantId = filter_var($_POST['plant_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+$desiredFavorite = request_string($_POST, 'favorite');
+if (current_user() === null) {
+    if ($plantId !== false && $desiredFavorite !== '0' && find_plant((int) $plantId) !== null) {
+        $_SESSION['pending_favorite_plant_id'] = (int) $plantId;
+    }
+    require_login($returnTo);
+}
+$user = require_login($returnTo);
 $plant = $plantId === false ? null : find_plant((int) $plantId);
 if ($plant === null) {
     abort_request(404, 'Không tìm thấy cây này trong bộ sưu tập.');
 }
-$desiredFavorite = request_string($_POST, 'favorite');
 if ($desiredFavorite !== '' && !in_array($desiredFavorite, ['0', '1'], true)) {
     abort_request(400, 'Trạng thái yêu thích không hợp lệ.');
 }

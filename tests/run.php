@@ -104,7 +104,7 @@ try {
     $server = create_database_connection(load_database_config(true), false);
     putenv('DB_NAME=' . $testName);
     run_cli(['scripts/setup-database.php']);
-    check((int) db()->query('SELECT COUNT(*) FROM plants')->fetchColumn() === 28, 'Seed must import all 28 plants.');
+    check((int) db()->query('SELECT COUNT(*) FROM plants')->fetchColumn() === 29, 'Seed must import all 29 plants.');
     check(array_column(plants_by_ids([22, 21, 22, 99999]), 'id') === [22, 21], 'Bulk plant lookup must preserve order, remove duplicates and skip missing IDs.');
 
     $adminEnvironment = ['APP_ADMIN_NAME' => 'Test Admin', 'APP_ADMIN_EMAIL' => 'admin@example.test', 'APP_ADMIN_PASSWORD' => 'TestAdmin123!'];

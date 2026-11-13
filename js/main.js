@@ -240,6 +240,17 @@
             }
         });
 
+        document.querySelectorAll('form[data-confirm]').forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                var inlineSubmit = form.getAttribute('onsubmit') || '';
+                if (inlineSubmit.indexOf('confirm(') !== -1) return;
+                var message = form.getAttribute('data-confirm') || 'Bạn có chắc chắn muốn thực hiện thao tác này?';
+                if (!window.confirm(message)) {
+                    event.preventDefault();
+                }
+            });
+        });
+
         document.querySelectorAll('form[method="post"]').forEach(function (form) {
             form.addEventListener('submit', function (event) {
                 if (event.defaultPrevented) return;
@@ -277,19 +288,50 @@
         });
 
         document.querySelectorAll('[data-auto-dismiss]').forEach(function (note) {
-            window.setTimeout(function () { note.remove(); }, 5000);
+            var remainingMs = 5000;
+            var startedAt = 0;
+            var timerId = 0;
+
+            function scheduleDismiss() {
+                if (timerId) window.clearTimeout(timerId);
+                startedAt = Date.now();
+                timerId = window.setTimeout(function () {
+                    note.remove();
+                }, remainingMs);
+            }
+
+            function pauseDismiss() {
+                if (!timerId) return;
+                window.clearTimeout(timerId);
+                timerId = 0;
+                remainingMs = Math.max(0, remainingMs - (Date.now() - startedAt));
+            }
+
+            note.addEventListener('mouseenter', pauseDismiss);
+            note.addEventListener('focusin', pauseDismiss);
+            note.addEventListener('mouseleave', function () {
+                if (note.contains(document.activeElement)) return;
+                scheduleDismiss();
+            });
+            note.addEventListener('focusout', function (event) {
+                if (event.relatedTarget && note.contains(event.relatedTarget)) return;
+                if (note.matches(':hover')) return;
+                scheduleDismiss();
+            });
+
+            scheduleDismiss();
         });
 
-        var sortSelect = document.getElementById('blog-sort');
-        if (sortSelect && sortSelect.form) {
-            sortSelect.addEventListener('change', function () {
-                if (typeof sortSelect.form.requestSubmit === 'function') {
-                    sortSelect.form.requestSubmit();
+        document.querySelectorAll('select[data-auto-submit], #blog-sort').forEach(function (select) {
+            if (!select.form) return;
+            select.addEventListener('change', function () {
+                if (typeof select.form.requestSubmit === 'function') {
+                    select.form.requestSubmit();
                 } else {
-                    sortSelect.form.submit();
+                    select.form.submit();
                 }
             });
-        }
+        });
 
     }
 

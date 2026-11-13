@@ -61,12 +61,26 @@ function require_admin(string $returnTo = 'admin.php'): array
 
 function sign_in(array $user): void
 {
+    $pendingFavoritePlantId = $_SESSION['pending_favorite_plant_id'] ?? null;
+    unset($_SESSION['pending_favorite_plant_id']);
     $connection = db();
     $connection->beginTransaction();
     try {
         $statement = $connection->prepare('UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE id = ?');
         $statement->execute([$user['id']]);
         record_activity($user, 'auth.login', 'Đăng nhập thành công');
+        if (is_int($pendingFavoritePlantId) && $pendingFavoritePlantId > 0) {
+            $plant = find_plant($pendingFavoritePlantId);
+            if ($plant !== null) {
+                $checkFavorite = $connection->prepare('SELECT 1 FROM favorites WHERE user_id = ? AND plant_id = ?');
+                $checkFavorite->execute([$user['id'], $pendingFavoritePlantId]);
+                if (!$checkFavorite->fetchColumn()) {
+                    $insertFavorite = $connection->prepare('INSERT INTO favorites (user_id, plant_id) VALUES (?, ?)');
+                    $insertFavorite->execute([$user['id'], $pendingFavoritePlantId]);
+                    record_activity($user, 'plant.saved', 'Cây #' . $pendingFavoritePlantId . ': ' . $plant['name'], $user);
+                }
+            }
+        }
         $connection->commit();
     } catch (Throwable $exception) {
         $connection->rollBack();

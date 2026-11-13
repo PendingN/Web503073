@@ -36,7 +36,7 @@ require __DIR__ . '/includes/header.php';
         <main id="admin-main" class="mx-auto w-full max-w-[1480px] space-y-6 px-4 py-6 sm:px-6 xl:px-8">
             <?php if ($flashMessage !== null): ?><div class="status-note" role="status" data-auto-dismiss><?= e($flashMessage) ?></div><?php endif; ?>
             <div class="flex flex-wrap items-center justify-between gap-4">
-                <div><h2 class="text-xl font-semibold">Thành viên khu vườn</h2></div>
+                <div><h2 class="text-lg font-bold">Thành viên khu vườn</h2></div>
                 <a class="admin-button-secondary" href="admin-dashboard.php"><?php admin_icon('dashboard', 'size-4'); ?>Tổng quan</a>
             </div>
             <dl class="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-4" id="overview" aria-label="Thống kê tài khoản">
@@ -47,7 +47,7 @@ require __DIR__ . '/includes/header.php';
             </dl>
             <?php if ($editUser !== null): ?>
                 <section class="admin-card scroll-mt-28 p-5 sm:p-6" id="edit-user" aria-labelledby="edit-user-title">
-                    <div class="flex items-start justify-between gap-4"><div><h2 class="text-lg font-semibold" id="edit-user-title">Tài khoản #<?= (int) $editUser['id'] ?></h2></div><a class="admin-button-secondary" href="admin.php#users"><?php admin_icon('close', 'size-4'); ?>Đóng</a></div>
+                    <div class="flex items-start justify-between gap-4"><div><h2 class="text-lg font-bold" id="edit-user-title">Tài khoản #<?= (int) $editUser['id'] ?></h2></div><a class="admin-button-secondary" href="admin.php#users"><?php admin_icon('close', 'size-4'); ?>Đóng</a></div>
                     <p class="my-5 text-xs leading-loose text-muted"><?= $editUser['role'] === 'admin' ? 'Quản trị viên' : 'Thành viên' ?> · <?= $editUser['status'] === 'active' ? 'Đang hoạt động' : 'Đã khóa' ?> · Tham gia <?= e(date('d/m/Y', strtotime($editUser['created_at']))) ?> · <?= count(user_favorite_ids((int) $editUser['id'])) ?> cây yêu thích</p>
                     <?php if ($errors !== []): ?><div class="login-error mb-5" role="alert"><ul><?php foreach ($errors as $error): ?><li><?= e($error) ?></li><?php endforeach; ?></ul></div><?php endif; ?>
                     <form class="grid gap-5 md:grid-cols-2" method="post" action="actions/user-action.php">
@@ -63,7 +63,7 @@ require __DIR__ . '/includes/header.php';
             <?php endif; ?>
             <section class="admin-card min-w-0 scroll-mt-28 overflow-hidden" id="users" aria-labelledby="users-title">
                 <div class="border-b border-border p-5 sm:p-6">
-                    <div class="mb-5 flex flex-wrap items-center justify-between gap-3"><h2 class="text-base font-semibold" id="users-title">Danh sách tài khoản</h2><span class="rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary-dark"><?= (int) $result['total'] ?> tài khoản</span></div>
+                    <div class="mb-5 flex flex-wrap items-center justify-between gap-3"><h2 class="text-lg font-bold" id="users-title">Danh sách tài khoản</h2><span class="rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary-dark"><?= (int) $result['total'] ?> tài khoản</span></div>
                     <form class="grid items-end gap-4 sm:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_200px_auto]" method="get" action="admin.php">
                         <div><label class="admin-field-label" for="user-search">Tìm người dùng</label><input class="admin-input" id="user-search" type="search" name="search" value="<?= e($search) ?>" maxlength="200" placeholder="Họ tên hoặc email"></div>
                         <div><label class="admin-field-label" for="user-status">Trạng thái</label><select class="admin-input" id="user-status" name="status"><option value="">Tất cả</option><option value="active"<?= $status === 'active' ? ' selected' : '' ?>>Đang hoạt động</option><option value="blocked"<?= $status === 'blocked' ? ' selected' : '' ?>>Đã khóa</option></select></div>
@@ -82,24 +82,24 @@ require __DIR__ . '/includes/header.php';
                                     <td><span class="status-<?= e($member['status']) ?>"><?= $member['status'] === 'active' ? 'Đang hoạt động' : 'Đã khóa' ?></span></td>
                                     <td class="text-sm"><?= (int) $member['favorite_count'] ?></td>
                                     <td class="text-sm whitespace-nowrap text-muted"><?= e(date('d/m/Y', strtotime($member['created_at']))) ?></td>
-                                    <td><div class="flex items-center gap-3 whitespace-nowrap">
-                                        <a class="admin-panel-link" href="admin.php?edit=<?= (int) $member['id'] ?>#edit-user">Xem / sửa</a>
+                                    <td><div class="flex items-center gap-2 whitespace-nowrap">
+                                        <a class="admin-panel-link min-h-[36px] px-2.5 py-1.5" href="admin.php?edit=<?= (int) $member['id'] ?>#edit-user">Xem / sửa</a>
                                         <?php if ((int) $member['id'] !== (int) $admin['id']): ?>
                                             <form method="post" action="actions/user-action.php" data-confirm="<?= e($member['role'] === 'admin' ? 'Hạ quyền quản trị của ' . $member['name'] . ' ('. $member['email'] . ')? Tài khoản này sẽ không còn truy cập được khu vực quản trị.' : 'Nâng ' . $member['name'] . ' ('. $member['email'] . ') thành quản trị viên? Tài khoản này sẽ có toàn quyền quản lý người dùng và bài viết.') ?>">
                                                 <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
                                                 <input type="hidden" name="user_id" value="<?= (int) $member['id'] ?>">
                                                 <input type="hidden" name="operation" value="<?= $member['role'] === 'admin' ? 'demote' : 'promote' ?>">
                                                 <input type="hidden" name="return_to" value="<?= e(current_request_url()) ?>">
-                                                <button class="rounded-md px-2.5 py-2 text-sm font-medium bg-violet-50 text-violet-700 hover:bg-violet-100" type="submit"><?= $member['role'] === 'admin' ? 'Hạ quyền' : 'Nâng quyền' ?></button>
+                                                <button class="inline-flex min-h-[36px] items-center rounded-md bg-primary/10 px-2.5 py-1.5 text-sm font-medium text-primary-dark hover:bg-primary/20" type="submit"><?= $member['role'] === 'admin' ? 'Hạ quyền' : 'Nâng quyền' ?></button>
                                             </form>
                                         <?php endif; ?>
                                         <?php if ($member['role'] !== 'admin'): ?>
-                                            <form method="post" action="actions/user-action.php"<?php if ($member['status'] === 'active'): ?> data-confirm="<?= e('Khóa ' . $member['name'] . ' ('. $member['email'] . ')? Tài khoản sẽ bị đăng xuất và không thể đăng nhập cho đến khi được mở khóa.') ?>"<?php endif; ?>>
+                                            <form method="post" action="actions/user-action.php" data-confirm="<?= e($member['status'] === 'active' ? 'Khóa ' . $member['name'] . ' (' . $member['email'] . ')? Tài khoản sẽ bị đăng xuất và không thể đăng nhập cho đến khi được mở khóa.' : 'Mở khóa tài khoản ' . $member['name'] . ' (' . $member['email'] . ')? Tài khoản sẽ có thể đăng nhập trở lại.') ?>">
                                                 <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
                                                 <input type="hidden" name="user_id" value="<?= (int) $member['id'] ?>">
                                                 <input type="hidden" name="operation" value="<?= $member['status'] === 'active' ? 'block' : 'unblock' ?>">
                                                 <input type="hidden" name="return_to" value="<?= e(current_request_url()) ?>">
-                                                <button class="rounded-md px-2.5 py-2 text-sm font-medium <?= $member['status'] === 'active' ? 'bg-red-50 text-red-700 hover:bg-red-100' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' ?>" type="submit"><?= $member['status'] === 'active' ? 'Khóa' : 'Mở khóa' ?></button>
+                                                <button class="inline-flex min-h-[36px] items-center rounded-md px-2.5 py-1.5 text-sm font-medium <?= $member['status'] === 'active' ? 'bg-red-50 text-red-700 hover:bg-red-100' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' ?>" type="submit"><?= $member['status'] === 'active' ? 'Khóa' : 'Mở khóa' ?></button>
                                             </form>
                                         <?php endif; ?>
                                     </div></td>

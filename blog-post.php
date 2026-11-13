@@ -15,6 +15,9 @@ $user = current_user();
 $comments = $post === null ? null : list_blog_comments((int) $post['id'], max(1, (int) request_string($_GET, 'page', '1')));
 $commentDraft = $_SESSION['comment_draft'] ?? null;
 unset($_SESSION['comment_draft']);
+$flash = $post === null ? null : take_flash();
+$isCommentFlash = $flash !== null && (str_contains($flash, 'bình luận') || str_contains($flash, 'Bình luận'));
+$isCommentError = $isCommentFlash && ($commentDraft !== null || str_contains($flash, 'cần có'));
 $pageTitle = $post === null ? 'Không tìm thấy bài viết' : $post['title'];
 $bodyClass = 'blog-post-page';
 $activePage = 'blog';
@@ -33,7 +36,7 @@ require __DIR__ . '/includes/navbar.php';
     </main>
 <?php else: ?>
     <main class="blog-post-main" id="article-content" tabindex="-1">
-        <?php if ($flash = take_flash()): ?><p class="status-note" role="status"><?= e($flash) ?></p><?php endif; ?>
+        <?php if ($flash !== null && !$isCommentFlash): ?><p class="status-note" role="status"><?= e($flash) ?></p><?php endif; ?>
         <a class="back-link" href="blog.php">Quay lại nhật ký</a>
         <header class="blog-post-header">
             <?php
@@ -45,7 +48,7 @@ require __DIR__ . '/includes/navbar.php';
             <p><?= e($post['excerpt']) ?></p>
         </header>
         <div class="blog-post-art">
-            <img class="blog-cover" src="<?= e(blog_cover_url($post)) ?>" alt="<?= !empty($post['image_path']) ? e($post['title']) : '' ?>" width="1000" height="560">
+            <img class="blog-cover" src="<?= e(blog_cover_url($post)) ?>" alt="<?= !empty($post['image_path']) ? e($post['title']) : '' ?>" width="1000" height="560" decoding="async">
         </div>
         <article class="blog-post-body">
             <div class="block-article"><?= render_blog_blocks(blog_blocks($post)) ?></div>
@@ -66,6 +69,7 @@ require __DIR__ . '/includes/navbar.php';
         <?php endif; ?>
         <section class="blog-comments" id="comments" aria-labelledby="comments-title">
             <h2 id="comments-title">Bình luận (<?= e($post['comment_count']) ?>)</h2>
+            <?php if ($isCommentFlash): ?><p class="status-note blog-comment-status<?= $isCommentError ? ' is-error' : '' ?>" role="<?= $isCommentError ? 'alert' : 'status' ?>"><?= e($flash) ?></p><?php endif; ?>
             <?php if ($user !== null): ?>
                 <form class="blog-form" action="actions/blog-action.php" method="post">
                     <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
@@ -84,7 +88,7 @@ require __DIR__ . '/includes/navbar.php';
                     <p><strong><?= e($comment['author']) ?></strong> · <?= e(date('d/m/Y H:i', strtotime($comment['created_at']))) ?></p>
                     <p class="blog-text"><?= e($comment['content']) ?></p>
                     <?php if ($user !== null && ($user['role'] === 'admin' || (int) $comment['user_id'] === (int) $user['id'])): ?>
-                        <form action="actions/blog-action.php" method="post" data-confirm="Bạn có chắc muốn xóa bình luận này?" onsubmit="return confirm(this.dataset.confirm);">
+                        <form action="actions/blog-action.php" method="post" data-confirm="Bạn có chắc muốn xóa bình luận này?">
                             <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
                             <input type="hidden" name="operation" value="delete-comment">
                             <input type="hidden" name="slug" value="<?= e($slug) ?>">

@@ -39,12 +39,18 @@ require __DIR__ . '/includes/header.php';
         <?php require __DIR__ . '/includes/admin-topbar.php'; ?>
         <main id="admin-main" class="mx-auto w-full max-w-[1480px] space-y-6 px-4 py-6 sm:px-6 xl:px-8">
             <?php if ($flashMessage !== null): ?><div class="status-note" role="status" data-auto-dismiss><?= e($flashMessage) ?></div><?php endif; ?>
-            <div class="flex flex-wrap items-center justify-between gap-4"><div><h2 class="text-xl font-semibold">Bộ sưu tập cây</h2>
+            <div class="flex flex-wrap items-center justify-between gap-4"><div><h2 class="text-lg font-bold">Bộ sưu tập cây</h2>
         </div><a class="admin-button" href="admin-plants.php?plant=new#plant-form">+ Thêm cây</a></div>
 
             <?php if ($plantForm !== null): ?>
                 <section class="admin-card scroll-mt-28 p-5 sm:p-6" id="plant-form" aria-labelledby="plant-form-title">
-                    <div class="mb-6 flex items-center justify-between gap-3"><div><p class="mb-2 text-[10px] font-semibold tracking-wider text-primary-dark"><?= (int) $plantForm['id'] === 0 ? 'THÊM CÂY MỚI' : 'CÂY #' . (int) $plantForm['id'] ?></p><h2 class="text-lg font-semibold" id="plant-form-title"><?= (int) $plantForm['id'] === 0 ? 'Thêm cây vào bộ sưu tập' : 'Sửa thông tin cây' ?></h2></div><a class="admin-button-secondary" href="admin-plants.php"><?php admin_icon('close', 'size-4'); ?>Đóng</a></div>
+                    <div class="mb-6 flex items-center justify-between gap-3">
+                        <div class="flex flex-wrap items-center gap-2.5">
+                            <h2 class="text-lg font-bold" id="plant-form-title"><?= (int) $plantForm['id'] === 0 ? 'Thêm cây vào bộ sưu tập' : 'Sửa thông tin cây' ?></h2>
+                            <?php if ((int) $plantForm['id'] !== 0): ?><span class="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary-dark">#<?= (int) $plantForm['id'] ?></span><?php endif; ?>
+                        </div>
+                        <a class="admin-button-secondary" href="admin-plants.php"><?php admin_icon('close', 'size-4'); ?>Đóng</a>
+                    </div>
                     <?php if ($plantErrors !== []): ?><div class="login-error mb-5" role="alert"><ul><?php foreach ($plantErrors as $error): ?><li><?= e($error) ?></li><?php endforeach; ?></ul></div><?php endif; ?>
                     <form class="grid gap-5 md:grid-cols-2" method="post" action="actions/plant-action.php" enctype="multipart/form-data">
                         <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
@@ -62,7 +68,7 @@ require __DIR__ . '/includes/header.php';
 
             <section class="admin-card min-w-0 overflow-hidden" id="plants" aria-labelledby="plants-title">
                 <div class="border-b border-border p-5 sm:p-6">
-                    <div class="mb-5 flex items-center justify-between gap-3"><h2 class="text-base font-semibold" id="plants-title">Danh sách cây</h2><span class="rounded-full bg-primary/10 px-3 py-1.5 text-xs text-primary-dark"><?= count($plants) ?> cây<?= $plantSearch !== '' ? ' phù hợp' : '' ?></span></div>
+                    <div class="mb-5 flex items-center justify-between gap-3"><h2 class="text-lg font-bold" id="plants-title">Danh sách cây</h2><span class="rounded-full bg-primary/10 px-3 py-1.5 text-xs text-primary-dark"><?= count($plants) ?> cây<?= $plantSearch !== '' ? ' phù hợp' : '' ?></span></div>
                     <form class="grid items-end gap-4 sm:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_auto]" method="get" action="admin-plants.php">
                         <div><label class="admin-field-label" for="plant-search">Tìm cây</label><input class="admin-input" id="plant-search" type="search" name="pq" value="<?= e($plantSearch) ?>" maxlength="100" placeholder="Tên hoặc nhóm cây"></div>
                         <div class="flex flex-wrap gap-2"><button class="admin-button min-h-11" type="submit">Tìm kiếm</button><?php if ($plantSearch !== ''): ?><a class="admin-button-secondary min-h-11" href="admin-plants.php">Xóa bộ lọc</a><?php endif; ?></div>
@@ -77,14 +83,14 @@ require __DIR__ . '/includes/header.php';
                                     <td class="text-xs text-muted">#<?= (int) $plant['id'] ?></td>
                                     <td><img class="size-14 rounded-lg object-cover ring-1 ring-border" src="<?= e(image_url($plant['image'])) ?>" alt="" width="56" height="56" loading="lazy"></td>
                                     <td class="text-xs font-semibold"><?= e($plant['name']) ?></td>
-                                    <td><span class="rounded-md bg-soft px-2 py-1 text-[11px] text-muted"><?= e($plant['category']) ?></span></td>
-                                    <td><div class="flex items-center gap-4 whitespace-nowrap">
-                                        <a class="admin-panel-link" href="admin-plants.php?plant=<?= (int) $plant['id'] ?>#plant-form">Sửa</a>
-                                        <form method="post" action="actions/plant-action.php" onsubmit="return confirm('Xóa cây này khỏi bộ sưu tập? Thao tác không hoàn tác.');">
+                                    <td><span class="rounded-md bg-soft px-2 py-1 text-xs text-muted"><?= e($plant['category']) ?></span></td>
+                                    <td><div class="flex items-center gap-2 whitespace-nowrap">
+                                        <a class="admin-panel-link min-h-[36px] px-2.5 py-1.5" href="admin-plants.php?plant=<?= (int) $plant['id'] ?>#plant-form">Sửa</a>
+                                        <form method="post" action="actions/plant-action.php" data-confirm="Xóa cây <?= e($plant['name']) ?>?">
                                             <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
                                             <input type="hidden" name="plant_id" value="<?= (int) $plant['id'] ?>">
                                             <input type="hidden" name="operation" value="delete">
-                                            <button class="rounded-md bg-red-50 px-2 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100" type="submit">Xóa</button>
+                                            <button class="inline-flex min-h-[36px] items-center rounded-md bg-red-50 px-2.5 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100" type="submit">Xóa</button>
                                         </form>
                                     </div></td>
                                 </tr>

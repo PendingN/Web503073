@@ -110,9 +110,3 @@ $featuredPost = [
     'time' => '7 phút đọc',
 ];
 
-$orders = [
-    ['id' => '#RX1048', 'customer' => 'Nguyễn Minh Anh', 'product' => 'Lưỡi hổ mini', 'total' => '289.000 ₫', 'status' => 'Hoàn thành'],
-    ['id' => '#RX1047', 'customer' => 'Trần Quốc Bảo', 'product' => 'Trầu bà lá xẻ', 'total' => '349.000 ₫', 'status' => 'Đang giao'],
-    ['id' => '#RX1046', 'customer' => 'Lê Hoàng Yến', 'product' => 'Kim tiền', 'total' => '289.000 ₫', 'status' => 'Chờ xác nhận'],
-    ['id' => '#RX1045', 'customer' => 'Phạm Gia Hân', 'product' => 'Lan ý trắng', 'total' => '315.000 ₫', 'status' => 'Hoàn thành'],
-];

@@ -1,5 +1,4 @@
-/* Shoe Orbit — JS gốc từ github.com/IdeaToCodee/runway (pages/nike-orbit). Không sửa file này;
-   data lấy từ includes/favorite-orbit.php. */
+/* Favorite Orbit — vòng xoay cây yêu thích (data từ includes/favorite-orbit.php). */
 (function () {
   'use strict';
   if (window.ShoeOrbit) return;
@@ -23,16 +22,10 @@
     var LOOP = sec.getAttribute('data-loop') !== 'false' && n > 2;
     var TILT = clamp(num(sec, 'data-tilt', 55), 0, 100) / 100;
     var FLOAT = sec.getAttribute('data-float') !== 'false' && !reduce;
-    var AFTER = sec.getAttribute('data-after') || 'stay';
     var HDR = sec.getAttribute('data-hdr') !== 'false';
-    var DEMO = sec.getAttribute('data-demo') === 'true';
     var AUTO = sec.getAttribute('data-autoplay') === 'true' && !reduce;
     var AUTO_MS = clamp(num(sec, 'data-auto-s', 4), 2, 20) * 1000;
-    var SIGN = MIRROR ? 1 : -1;     // dragging toward where shoes go advances
-    function T(k, fb) { return sec.getAttribute('data-t-' + k) || fb; }
-    var STR = { added: T('added', 'added to your bag'), view: T('view', 'View bag'), add: T('add', 'Add to bag'), soldout: T('soldout', 'Sold out'), error: T('error', 'Could not add to bag. Please try again.'),
-      select: T('select', 'Select a size'), addbtn: T('addbtn', 'Add to bag'), addedbtn: T('addedbtn', 'Added to bag'), unavailable: T('unavailable', 'Unavailable') };
-    var SIZE_NAMES = (sec.getAttribute('data-size-names') || 'Size').split(',').map(function (x) { return x.trim().toLowerCase(); }).filter(Boolean);
+    var SIGN = MIRROR ? 1 : -1;     // dragging toward where items go advances
 
     var dead = false, listeners = [], timers = [];
     function on(t, ty, fn, o) { t.addEventListener(ty, fn, o || false); listeners.push([t, ty, fn, o || false]); }
@@ -42,8 +35,7 @@
     var wheel = sec.querySelector('[data-so-wheel]'), ridgeBox = sec.querySelector('[data-so-ridges]');
     var info = sec.querySelector('.so-info');
     var elIdx = sec.querySelector('[data-so-idx]'), elTag = sec.querySelector('[data-so-tag]'), elName = sec.querySelector('[data-so-name]');
-    var elPrice = sec.querySelector('[data-so-price]'), elCmp = sec.querySelector('[data-so-cmp]'), elSub = sec.querySelector('[data-so-sub]');
-    var elView = sec.querySelector('[data-so-view]'), elSizes = sec.querySelector('[data-so-sizes]'), elStatus = sec.querySelector('[data-so-status]');
+    var elView = sec.querySelector('[data-so-view]');
     var elLast = sec.querySelector('[data-so-last]');
     if (elLast) elLast.textContent = pad2(n);
     if (wheel) wheel.setAttribute('aria-valuemax', n);
@@ -51,18 +43,14 @@
     var data = shoes.map(function (el) {
       var j = null, s = el.querySelector('[data-so-json]');
       if (s) { try { j = JSON.parse(s.textContent); } catch (e) { j = null; } }
-      return j || { options: [], variants: [] };
+      return j || {};
     });
 
     /* ---------- section height (vh, minus the header if asked) ---------- */
     var vhH = 0, vhW = 0;
     function headerH() {
-      var h = 0;
-      [].forEach.call(document.querySelectorAll('.shopify-section-group-header-group'), function (el) {
-        if (!el.contains(sec)) h += el.getBoundingClientRect().height || 0;
-      });
-      if (!h) { var hd = document.querySelector('header'); if (hd && !hd.contains(sec)) h = hd.getBoundingClientRect().height || 0; }
-      return h;
+      var hd = document.querySelector('header');
+      return hd && !hd.contains(sec) ? (hd.getBoundingClientRect().height || 0) : 0;
     }
     function sizeSection() {
       var vh = mob() ? num(sec, 'data-vh-m', 90) : num(sec, 'data-vh-d', 100);
@@ -182,18 +170,18 @@
     function goTo(t, instant) {
       if (!LOOP) t = clamp(t, 0, n - 1);
       target = t;
-      if (instant) { v = t; vel = 0; }
+      if (instant || reduce) { v = t; vel = 0; }
       kick();
     }
     function step(dir) { goTo(Math.round(target) + dir); pauseAuto(); }
-    // shortest way round to shoe i
+    // shortest way round to item i
     function goToIndex(i) {
       if (!LOOP) { goTo(i); return; }
       var d = wrapD(i - target);
       goTo(Math.round(target + d));
     }
 
-    /* ---------- active shoe: info + sizes ---------- */
+    /* ---------- active item: info ---------- */
     function setText(el, t) { if (el) el.textContent = t || ''; }
     function setActive(i) {
       active = i;
@@ -204,15 +192,11 @@
         setText(elIdx, pad2(i + 1) + ' / ' + pad2(n));
         setText(elTag, el.getAttribute('data-tag'));
         setText(elName, el.getAttribute('data-name'));
-        setText(elPrice, el.getAttribute('data-price'));
-        setText(elCmp, el.getAttribute('data-cmp'));
-        setText(elSub, el.getAttribute('data-sub'));
         if (elView) {
           var u = el.getAttribute('data-url');
           elView.hidden = !u;
           elView.setAttribute('href', u || '#');
         }
-        buildSizes(i);
         if (info) info.classList.remove('so-swap');
       };
       if (info && info.getAttribute('data-filled') && !reduce) {
@@ -222,231 +206,8 @@
       } else { if (info) info.setAttribute('data-filled', '1'); fill(); }
     }
 
-    function sizeIndex(d) {
-      if (!d.options || !d.options.length) return -1;
-      for (var k = 0; k < d.options.length; k++) {
-        var nm = ('' + d.options[k]).toLowerCase();
-        if (SIZE_NAMES.indexOf(nm) > -1) return k;
-      }
-      for (k = 0; k < d.options.length; k++) if (('' + d.options[k]).toLowerCase().indexOf('size') > -1) return k;
-      return d.options.length === 1 ? 0 : -1;
-    }
-    var chosen = {};
-    function buildSizes(i) {
-      if (!elSizes) return;
-      elSizes.innerHTML = '';
-      if (elStatus && !elStatus._keep) { elStatus.textContent = ''; elStatus.classList.remove('so-err'); }
-      var d = data[i], vs = d.variants || [];
-      if (!vs.length) return;
-      var si = sizeIndex(d);
-      var base = null;
-      for (var k = 0; k < vs.length; k++) if (vs[k].av) { base = vs[k]; break; }
-      base = base || vs[0];
-      var single = si < 0 || (vs.length === 1);
-      if (single) {
-        var b = mkBtn(STR.add, base, i, true);
-        b.classList.add('so-wide');
-        if (!base.av) { b.disabled = true; b.textContent = STR.soldout; }
-        elSizes.appendChild(b);
-        return;
-      }
-      var seen = [];
-      vs.forEach(function (x) { var val = x.opts[si]; if (seen.indexOf(val) < 0) seen.push(val); });
-      seen.forEach(function (val) {
-        // same colour / other options as the default variant, this size
-        var match = null;
-        for (var k = 0; k < vs.length; k++) {
-          var x = vs[k];
-          if (x.opts[si] !== val) continue;
-          var same = true;
-          for (var o = 0; o < x.opts.length; o++) if (o !== si && x.opts[o] !== base.opts[o]) { same = false; break; }
-          if (same) { match = x; break; }
-        }
-        if (!match) for (k = 0; k < vs.length; k++) if (vs[k].opts[si] === val && vs[k].av) { match = vs[k]; break; }
-        var btn = mkBtn(val, match, i, false);
-        if (!match || !match.av) { btn.disabled = true; btn.setAttribute('aria-label', val + ' – ' + STR.soldout); }
-        if (chosen[i] === val) btn.classList.add('so-on');
-        elSizes.appendChild(btn);
-      });
-    }
-    function mkBtn(label, variant, i, single) {
-      var b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'so-size';
-      b.textContent = label;
-      b.addEventListener('click', function () {
-        if (!variant || b.disabled || b.classList.contains('so-busy')) return;
-        add(variant, i, single ? '' : label, b);
-      });
-      return b;
-    }
-
-    /* ---------- cart (Horizon storefront events, Dawn drawers, the rest) ---------- */
-    function cartRoot() { return (window.Shopify && window.Shopify.routes && window.Shopify.routes.root) || '/'; }
-    function uniq(a) { return a.filter(function (x, i) { return x && a.indexOf(x) === i; }); }
-    function cartSectionIds() {
-      var ids = [];
-      [].forEach.call(document.querySelectorAll('cart-items-component[data-section-id]'), function (el) { ids.push(el.getAttribute('data-section-id')); });
-      return uniq(ids);
-    }
-    function dawnDrawer() {
-      var d = document.querySelector('cart-drawer');
-      return d && typeof d.renderContents === 'function' && typeof d.getSectionsToRender === 'function' ? d : null;
-    }
-    function openThemeCart() {
-      var td = document.querySelector('theme-drawer#cart-drawer');
-      if (td && (td.isOpen || td.hasAttribute('open'))) return Promise.resolve(true);
-      if (window.Shopify && Shopify.actions && typeof Shopify.actions.openCart === 'function' && document.querySelector('theme-drawer, cart-drawer-component')) {
-        return Promise.resolve(Shopify.actions.openCart()).then(function () { return true; }, function () { return false; });
-      }
-      if (td && typeof td.open === 'function') { td.open(); return Promise.resolve(true); }
-      var tags = ['cart-drawer', 'cart-notification', 'side-cart', 'cart-sidebar', 'mini-cart'];
-      for (var i = 0; i < tags.length; i++) {
-        var el = document.querySelector(tags[i]);
-        if (!el) continue;
-        var fns = ['open', 'show', 'openDrawer'];
-        for (var k = 0; k < fns.length; k++) if (typeof el[fns[k]] === 'function') { try { el[fns[k]](); return Promise.resolve(true); } catch (e) {} }
-      }
-      return Promise.resolve(false);
-    }
-    function announceStandard(cart, variantId, res) {
-      if (!document.querySelector('cart-items-component')) return Promise.resolve(false);
-      return import('@shopify/events').then(function (m) {
-        var Ev = m && m.CartLinesUpdateEvent;
-        if (!Ev) return false;
-        var dfd = typeof Ev.createPromise === 'function' ? Ev.createPromise() : null;
-        var resolveNow;
-        var promise = dfd ? dfd.promise : new Promise(function (r) { resolveNow = r; });
-        sec.dispatchEvent(new Ev({ action: 'add', context: 'product', lines: [{ merchandiseId: String(variantId), quantity: 1 }], promise: promise }));
-        var payload = {
-          cart: typeof Ev.createCartFromAjaxResponse === 'function' ? Ev.createCartFromAjaxResponse(cart) : cart,
-          detail: { items: cart.items, source: 'shoe-orbit', sourceId: sec.id, itemCount: 1, sections: res && res.sections ? res.sections : undefined, didError: false }
-        };
-        if (dfd) dfd.resolve(payload); else resolveNow(payload);
-        return true;
-      }).catch(function () { return false; });
-    }
-    function legacyCartUI(cart, res, variantId) {
-      var dawn = dawnDrawer();
-      if (AFTER === 'drawer' && dawn && res && res.sections) {
-        try {
-          dawn.classList.remove('is-empty');
-          var inner = dawn.querySelector('.drawer__inner'); if (inner) inner.classList.remove('is-empty');
-          dawn.renderContents(Object.assign({ id: variantId }, res));
-          return;
-        } catch (e) {}
-      }
-      try {
-        var html = res && res.sections && res.sections['cart-icon-bubble'];
-        var bubble = document.getElementById('cart-icon-bubble');
-        if (html && bubble) {
-          var doc = new DOMParser().parseFromString(html, 'text/html');
-          var src = doc.querySelector('.shopify-section') || doc.body;
-          bubble.innerHTML = src.innerHTML;
-        }
-      } catch (e) {}
-      [].forEach.call(document.querySelectorAll('[data-cart-count], .cart-count-bubble span[aria-hidden="true"]'), function (el) { el.textContent = cart.item_count; });
-      try {
-        if (typeof window.publish === 'function' && window.PUB_SUB_EVENTS && window.PUB_SUB_EVENTS.cartUpdate) {
-          window.publish(window.PUB_SUB_EVENTS.cartUpdate, { source: 'shoe-orbit', cartData: cart });
-        }
-      } catch (e) {}
-      document.dispatchEvent(new CustomEvent('cart:update', { bubbles: true, detail: { resource: cart, sourceId: sec.id, data: { source: 'shoe-orbit', itemCount: cart.item_count, sections: (res && res.sections) || {} } } }));
-      if (AFTER === 'drawer') openThemeCart();
-    }
-
-    var CHECK = '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="8" fill="currentColor"/><path d="M4.5 8.2 L7 10.5 L11.5 5.5" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-    function showAdded(i, label) {
-      if (!elStatus) return;
-      var nm = shoes[i].getAttribute('data-name') || '';
-      elStatus.classList.remove('so-err');
-      elStatus.innerHTML = '';
-      var ic = document.createElement('span'); ic.style.color = 'var(--so-acc)'; ic.innerHTML = CHECK; ic.style.display = 'inline-flex';
-      var t = document.createElement('span'); t.textContent = nm + (label ? ', ' + label : '') + ' ' + STR.added;
-      var a = document.createElement('a'); a.href = cartRoot() + 'cart'; a.textContent = STR.view;
-      elStatus.appendChild(ic); elStatus.appendChild(t); elStatus.appendChild(a);
-      elStatus._keep = true;
-      later(function () { elStatus._keep = false; }, 4000);
-    }
-    var flying = [];
-    function flyToCart(img) {
-      if (reduce || !Element.prototype.animate || !img) return;
-      var from = img.getBoundingClientRect();
-      if (!from.width) return;
-      var target = document.querySelector('#cart-icon-bubble, cart-icon, [data-cart-icon], .header__icon--cart, a[href$="/cart"]');
-      var tr = target ? target.getBoundingClientRect() : null;
-      if (!tr || !tr.width) tr = { left: window.innerWidth - 48, top: 18, width: 24, height: 24 };
-      var f = img.cloneNode(true);
-      f.removeAttribute('srcset'); f.removeAttribute('sizes');
-      if (img.currentSrc) f.setAttribute('src', img.currentSrc);
-      f.removeAttribute('class'); f.classList.add('so-fly');
-      f.style.left = from.left + 'px'; f.style.top = from.top + 'px';
-      f.style.width = from.width + 'px'; f.style.height = from.height + 'px';
-      document.body.appendChild(f);
-      flying.push(f);
-      var dx = (tr.left + tr.width / 2) - (from.left + from.width / 2);
-      var dy = (tr.top + tr.height / 2) - (from.top + from.height / 2);
-      var a = f.animate([
-        { transform: 'translate(0,0) scale(1)', opacity: 1 },
-        { transform: 'translate(' + (dx * 0.55) + 'px,' + (dy * 0.55 - 90) + 'px) scale(.4) rotate(-14deg)', opacity: 1, offset: 0.6 },
-        { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(.05) rotate(-24deg)', opacity: 0.3 }
-      ], { duration: 820, easing: 'cubic-bezier(.5,0,.3,1)' });
-      a.onfinish = function () {
-        if (f.parentNode) f.parentNode.removeChild(f);
-        flying.splice(flying.indexOf(f), 1);
-        if (target && target.animate) target.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.28)' }, { transform: 'scale(1)' }], { duration: 380, easing: 'ease-out' });
-      };
-    }
-
-    // one add-to-cart for the orbit sizes and the product view
-    function cartAdd(variant, i) {
-      if (data[i].demo || !variant.id) return Promise.resolve({ demo: true });   // theme editor demo
-      var root = cartRoot(), vid = variant.id;
-      var ids = cartSectionIds();
-      var dawn = dawnDrawer();
-      if (dawn) { try { ids = ids.concat(dawn.getSectionsToRender().map(function (x) { return x.section || x.id; })); } catch (e) {} }
-      if (document.getElementById('cart-icon-bubble')) ids.push('cart-icon-bubble');
-      ids = uniq(ids);
-      var body = { items: [{ id: vid, quantity: 1 }] };
-      if (ids.length) { body.sections = ids.join(','); body.sections_url = window.location.pathname; }
-      var addRes = null;
-      return fetch(root + 'cart/add.js', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify(body) })
-        .then(function (r) { return r.json().then(function (j) { if (!r.ok || j.status) throw new Error(j.description || j.message || STR.error); return j; }); })
-        .then(function (j) { addRes = j; return fetch(root + 'cart.js', { headers: { 'Accept': 'application/json' } }).then(function (r) { return r.json(); }); })
-        .then(function (cart) {
-          if (AFTER === 'cart') { window.location.href = root + 'cart'; return { redirect: true }; }
-          document.dispatchEvent(new CustomEvent('shoe-orbit:added', { detail: { variantId: vid, cart: cart } }));
-          announceStandard(cart, vid, addRes).then(function (handled) {
-            if (dead) return;
-            if (handled) { if (AFTER === 'drawer') setTimeout(openThemeCart, 80); }
-            else legacyCartUI(cart, addRes, vid);
-          });
-          return { cart: cart };
-        });
-    }
-    var busy = false;
-    function add(variant, i, label, btn) {
-      if (busy) return;
-      chosen[i] = label;
-      [].forEach.call(elSizes.querySelectorAll('.so-size'), function (b) { b.classList.toggle('so-on', b === btn && !!label); });
-      busy = true;
-      btn.classList.add('so-busy');
-      if (elStatus) { elStatus.textContent = ''; elStatus.classList.remove('so-err'); }
-      cartAdd(variant, i).then(function (r) {
-        if (dead || (r && r.redirect)) return;
-        flyToCart(shoes[i].querySelector('.so-img'));
-        showAdded(i, label);
-      }).catch(function (err) {
-        if (dead || !elStatus) return;
-        elStatus.textContent = (err && err.message) || STR.error;
-        elStatus.classList.add('so-err');
-      }).then(function () { busy = false; btn.classList.remove('so-busy'); });
-    }
-
-    /* ================= FULL-PAGE PRODUCT VIEW =================
-       Opens from a shoe (the shoe flies into place). The arrows move to the next shoe:
-       the image blurs and drifts into the next one, the title morphs letter by letter,
-       the background tint melts across. */
+    /* ================= FULL-PAGE DETAIL VIEW =================
+       Opens from a plant card in the orbit; arrow keys or buttons move to the next plant. */
     var modal = sec.querySelector('[data-so-modal]');
     if (modal) {
       modal.setAttribute('style', sec.getAttribute('style') || '');
@@ -455,12 +216,10 @@
     }
     function mq_(sel) { return modal ? modal.querySelector(sel) : null; }
     var mStage = mq_('[data-so-mstage]'), mThumbs = mq_('[data-so-mthumbs]'), mCount = mq_('[data-so-mcount]');
-    var mMeta = mq_('[data-so-mmeta]'), mName = mq_('[data-so-mname]'), mPrice = mq_('[data-so-mprice]'), mCmp = mq_('[data-so-mcmp]');
-    var mSub = mq_('[data-so-msub]'), mDesc = mq_('[data-so-mdesc]'), mOpts = mq_('[data-so-mopts]');
-    var mAdd = mq_('[data-so-madd]'), mAddLbl = mq_('[data-so-maddlbl]'), mStatus = mq_('[data-so-mstatus]'), mLink = mq_('[data-so-mlink]');
+    var mMeta = mq_('[data-so-mmeta]'), mName = mq_('[data-so-mname]'), mDesc = mq_('[data-so-mdesc]'), mLink = mq_('[data-so-mlink]');
     var mClose = mq_('[data-so-mclose]'), mPrev = mq_('[data-so-mprev]'), mNext = mq_('[data-so-mnext]');
     var MORPH = clamp(num(sec, 'data-morph', 850), 200, 2000);
-    var mi = -1, mOpen = false, mSel = [], mImg = 0, lastFocus = null, mBusy = false, mHide = null;
+    var mi = -1, mOpen = false, mImg = 0, lastFocus = null, mHide = null;
 
     function srcW(url, w) { return url ? url.replace(/([?&])width=\d+/, '$1width=' + w) : url; }
     function imagesOf(i) {
@@ -524,7 +283,7 @@
         b.setAttribute('aria-label', 'Image ' + (j + 1));
         if (it.svg) { var c = it.svg.cloneNode(true); c.removeAttribute('class'); b.appendChild(c); }
         else { var im = new Image(); im.alt = ''; im.src = srcW(it.url, 160); b.appendChild(im); }
-        b.style.animation = 'soPillIn .5s cubic-bezier(.2,.8,.3,1) ' + (j * 40) + 'ms both';
+        if (!reduce) b.style.animation = 'soPillIn .5s cubic-bezier(.2,.8,.3,1) ' + (j * 40) + 'ms both';
         b.addEventListener('click', function () { if (j !== mImg) showImage(j, j > mImg ? 1 : -1); });
         mThumbs.appendChild(b);
       });
@@ -577,136 +336,17 @@
       later(function () { el.textContent = txt; el.classList.remove('so-fadeout'); }, 260);
     }
 
-    /* options: colours (with a swatch when the value is a colour name), sizes, anything else */
-    function optValues(d, k) {
-      if (d.ov && d.ov[k]) return d.ov[k];
-      var out = [];
-      (d.variants || []).forEach(function (x) { if (out.indexOf(x.opts[k]) < 0) out.push(x.opts[k]); });
-      return out;
-    }
-    function fits(x, sel) { for (var q = 0; q < x.opts.length; q++) if (sel[q] != null && x.opts[q] !== sel[q]) return false; return true; }
-    function availWith(sel) { return (data[mi].variants || []).some(function (x) { return x.av && fits(x, sel); }); }
-    function existsWith(sel) { return (data[mi].variants || []).some(function (x) { return fits(x, sel); }); }
-    function curVariant() {
-      if (mSel.some(function (x) { return x == null; })) return null;
-      var vs = data[mi].variants || [];
-      for (var k = 0; k < vs.length; k++) if (fits(vs[k], mSel)) return vs[k];
-      return null;
-    }
-    function cssColor(val) {
-      var c = ('' + val).toLowerCase().replace(/\s+/g, '');
-      try { return window.CSS && CSS.supports && CSS.supports('color', c) ? c : ''; } catch (e) { return ''; }
-    }
-    function buildOpts() {
-      if (!mOpts) return;
-      mOpts.innerHTML = '';
-      var d = data[mi], names = d.options || [], si = sizeIndex(d);
-      if (!(d.variants || []).length || (d.variants.length === 1)) return;
-      names.forEach(function (nm, k) {
-        var vals = optValues(d, k);
-        if (vals.length < 2 && k !== si) return;
-        var box = document.createElement('div');
-        var head = document.createElement('div');
-        head.className = 'so-m-optname';
-        var hs = document.createElement('span'); hs.textContent = nm;
-        var hb = document.createElement('b'); hb.setAttribute('data-k', k);
-        head.appendChild(hs); head.appendChild(hb);
-        var pills = document.createElement('div');
-        pills.className = k === si ? 'so-m-sizes' : 'so-m-pills';
-        pills.setAttribute('role', 'group');
-        pills.setAttribute('aria-label', nm);
-        var isColor = /colou?r|shade/i.test(nm);
-        vals.forEach(function (val, j) {
-          var b = document.createElement('button');
-          b.type = 'button';
-          b.className = 'so-m-pill';
-          b.setAttribute('data-k', k);
-          b.setAttribute('data-val', val);
-          b.style.animationDelay = (j * 25) + 'ms';
-          if (isColor) {
-            var c = cssColor(val);
-            if (c) { var sw = document.createElement('span'); sw.className = 'so-sw'; sw.style.background = c; b.appendChild(sw); }
-          }
-          var t = document.createElement('span'); t.textContent = val; b.appendChild(t);
-          b.addEventListener('click', function () {
-            if (b.disabled) return;
-            mSel[k] = val;
-            mAdd.classList.remove('so-done');
-            if (mStatus) { mStatus.textContent = ''; mStatus.classList.remove('so-err'); }
-            if (k !== si) followVariantImage();
-            refreshOpts();
-            updateBuy();
-          });
-          pills.appendChild(b);
-        });
-        box.appendChild(head);
-        box.appendChild(pills);
-        mOpts.appendChild(box);
-      });
-      refreshOpts();
-    }
-    function refreshOpts() {
-      if (!mOpts) return;
-      var si = sizeIndex(data[mi]);
-      [].forEach.call(mOpts.querySelectorAll('.so-m-pill'), function (b) {
-        var k = +b.getAttribute('data-k'), val = b.getAttribute('data-val');
-        b.setAttribute('aria-pressed', mSel[k] === val ? 'true' : 'false');
-        var test = mSel.slice(); test[k] = val;
-        var ok = availWith(test);
-        b.classList.toggle('so-na', !ok);
-        b.disabled = k === si ? !ok : !existsWith(test);
-      });
-      [].forEach.call(mOpts.querySelectorAll('.so-m-optname b'), function (h) {
-        var k = +h.getAttribute('data-k');
-        h.textContent = k === si ? (mSel[k] || '') : (mSel[k] || '');
-      });
-    }
-    function followVariantImage() {
-      var vs = data[mi].variants || [], u = '';
-      for (var k = 0; k < vs.length; k++) if (vs[k].img && fits(vs[k], mSel.map(function (x, q) { return q === sizeIndex(data[mi]) ? null : x; }))) { u = vs[k].img; break; }
-      if (!u) return;
-      var list = imagesOf(mi), key = u.split('?')[0], at = -1;
-      for (var j = 0; j < list.length; j++) if (list[j].url && list[j].url.split('?')[0] === key) { at = j; break; }
-      if (at < 0) { list.push({ url: u }); buildThumbs(); at = list.length - 1; }
-      if (at !== mImg) showImage(at, at > mImg ? 1 : -1);
-    }
-    function updateBuy(instant) {
-      if (!mAdd) return;
-      var d = data[mi], si = sizeIndex(d), x = curVariant();
-      var needSize = si > -1 && (d.variants || []).length > 1 && mSel[si] == null;
-      var price = x && x.price ? x.price : shoes[mi].getAttribute('data-price');
-      var cmp = x ? (x.cmp || '') : shoes[mi].getAttribute('data-cmp');
-      morphText(mPrice, price, instant);
-      if (mCmp) mCmp.textContent = cmp || '';
-      if (mAdd.classList.contains('so-done')) return;
-      mAdd.disabled = needSize || !x || !x.av;
-      mAddLbl.textContent = needSize ? STR.select : (!x ? STR.unavailable : (!x.av ? STR.soldout : STR.addbtn));
-    }
-
     function fillModal(i, dir, instant) {
       mi = i;
       var el = shoes[i], d = data[i];
-      var tint = el.getAttribute('data-tint');
-      if (tint) modal.style.setProperty('--so-tint', tint); else modal.style.removeProperty('--so-tint');
       if (mCount) mCount.textContent = pad2(i + 1) + ' / ' + pad2(n);
       morphText(mName, el.getAttribute('data-name'), instant);
       fadeText(mMeta, el.getAttribute('data-tag'), instant);
-      fadeText(mSub, el.getAttribute('data-sub'), instant);
       fadeText(mDesc, d.desc || '', instant);
       var u = el.getAttribute('data-url');
       if (mLink) { mLink.hidden = !u; mLink.setAttribute('href', u || '#'); }
-      var vs = d.variants || [], base = null;
-      for (var k = 0; k < vs.length; k++) if (vs[k].av) { base = vs[k]; break; }
-      base = base || vs[0];
-      mSel = base ? base.opts.slice() : [];
-      var si = sizeIndex(d);
-      if (si > -1 && vs.length > 1) mSel[si] = null;     // the shopper picks the size
-      if (mAdd) mAdd.classList.remove('so-done', 'so-busy');
-      if (mStatus) { mStatus.textContent = ''; mStatus.classList.remove('so-err'); }
       buildThumbs();
       showImage(0, dir, instant);
-      buildOpts();
-      updateBuy(instant);
       [].slice.call(imagesOf(i)).slice(0, 3).forEach(function (it) { if (it.url) { var p = new Image(); p.src = it.url; } });
     }
     function stepModal(dir) {
@@ -730,7 +370,7 @@
       modal.setAttribute('aria-hidden', 'false');
       modal.scrollTop = 0;
       document.documentElement.classList.add('so-lock');
-      [mName, mPrice].forEach(function (x) { if (x) x.removeAttribute('data-t'); });
+      if (mName) mName.removeAttribute('data-t');
       fillModal(i, 1, true);
       mOpen = true;
       requestAnimationFrame(function () { modal.classList.add('so-in'); });
@@ -757,12 +397,12 @@
       var src = shoes[mi], si = src && src.querySelector('.so-img');
       var slide = mStage && mStage.lastElementChild, img = slide && slide.firstElementChild;
       var done = function () { modal.classList.remove('so-open'); if (mStage) mStage.innerHTML = ''; if (src) src.classList.remove('so-lifted'); mHide = null; };
-      // fly back once the orbit has turned to this shoe
+      // fly back once the orbit has turned to this item
       var to = si ? si.getBoundingClientRect() : null, from = img ? img.getBoundingClientRect() : null;
       var land = G ? { x: (MIRROR ? W - (G.cx + G.R * Math.cos(G.hero * Math.PI / 180)) : G.cx + G.R * Math.cos(G.hero * Math.PI / 180)), y: G.cy - G.R * Math.sin(G.hero * Math.PI / 180) } : null;
       if (from && from.width && to && to.width && land && !reduce && Element.prototype.animate) {
         var sr = sec.getBoundingClientRect();
-        var w = src.offsetWidth, h = src.offsetHeight;      // where the front shoe sits, at full size
+        var w = src.offsetWidth, h = src.offsetHeight;      // where the front item sits, at full size
         var tx = sr.left + land.x - w / 2, ty = sr.top + land.y - h * 0.62;
         src.classList.add('so-lifted');
         img.animate([
@@ -770,7 +410,7 @@
           { transformOrigin: '0 0', transform: 'translate(' + (tx - from.left) + 'px,' + (ty - from.top) + 'px) scale(' + (w / from.width) + ',' + (h / from.height) + ')' }
         ], { duration: 620, easing: 'cubic-bezier(.5,0,.2,1)', fill: 'forwards' });
         mHide = setTimeout(done, 630);
-      } else mHide = setTimeout(done, 420);
+      } else mHide = setTimeout(done, reduce ? 0 : 420);
       if (lastFocus && lastFocus.focus && lastFocus.isConnected) { try { lastFocus.focus({ preventScroll: true }); } catch (e) {} }
     }
     if (mClose) on(mClose, 'click', closeModal);
@@ -800,32 +440,7 @@
         if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) && imagesOf(mi).length > 1) showImage(mImg + (dx < 0 ? 1 : -1), dx < 0 ? 1 : -1);
       });
     }
-    if (mAdd) on(mAdd, 'click', function () {
-      var x = curVariant();
-      if (!x || !x.av || mBusy) return;
-      mBusy = true;
-      mAdd.classList.add('so-busy');
-      if (mStatus) { mStatus.textContent = ''; mStatus.classList.remove('so-err'); }
-      var si = sizeIndex(data[mi]), i = mi;
-      cartAdd(x, i).then(function (r) {
-        if (dead || (r && r.redirect)) return;
-        var slide = mStage && mStage.lastElementChild;
-        flyToCart(slide && slide.firstElementChild);
-        mAdd.classList.add('so-done');
-        mAddLbl.textContent = STR.addedbtn;
-        if (mStatus) {
-          mStatus.innerHTML = '';
-          var a = document.createElement('a'); a.href = cartRoot() + 'cart'; a.textContent = STR.view + ' →';
-          mStatus.appendChild(a);
-        }
-        if (AFTER === 'drawer') later(closeModal, 250);
-        later(function () { if (mi === i) { mAdd.classList.remove('so-done'); updateBuy(); } }, 2600);
-      }).catch(function (err) {
-        if (mStatus) { mStatus.textContent = (err && err.message) || STR.error; mStatus.classList.add('so-err'); }
-      }).then(function () { mBusy = false; mAdd.classList.remove('so-busy'); });
-    });
-
-    /* ---------- drag: the wheel (fine control) and the stage (swipe the shoes) ---------- */
+    /* ---------- drag: the wheel (fine control) and the stage ---------- */
     var drag = null, moved = false;
     function startDrag(e, src, pps) {
       if (e.pointerType === 'mouse' && e.button !== 0) return;
@@ -966,7 +581,6 @@
       if (autoTimer) clearInterval(autoTimer);
       if (raf) cancelAnimationFrame(raf);
       if (io) io.disconnect();
-      flying.forEach(function (f) { if (f.parentNode) f.parentNode.removeChild(f); });
       if (mHide) clearTimeout(mHide);
       if (mOpen) document.documentElement.classList.remove('so-lock');
       if (modal && modal.parentNode) modal.parentNode.removeChild(modal);
@@ -978,9 +592,7 @@
   function destroy(sec) { var i = instances.get(sec); if (i) { i.destroy(); instances.delete(sec); } }
   function initAll(root, o) { [].forEach.call((root || document).querySelectorAll('[data-so]'), function (s) { init(s, o); }); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { initAll(); }); else initAll();
-  document.addEventListener('shopify:section:load', function (e) { initAll(e.target, { noDrop: true }); });
-  document.addEventListener('shopify:section:unload', function (e) { [].forEach.call(e.target.querySelectorAll('[data-so]'), destroy); });
-  document.addEventListener('shopify:block:select', function (e) {
+  document.addEventListener('orbit:select', function (e) {
     var s = e.target && e.target.closest ? e.target.closest('[data-so]') : null;
     var i = s && instances.get(s);
     if (i && e.detail) i.select(e.detail.blockId);

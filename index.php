@@ -112,7 +112,7 @@ require __DIR__ . '/includes/header.php';
 
     <section class="room-beginnings" id="first-steps" aria-labelledby="beginnings-title">
         <div class="beginnings-photo">
-            <img src="<?= e(image_url('indoor-room.png')) ?>" alt="Những tán lá xanh bên chiếc ghế đọc sách và cửa sổ sáng" width="1586" height="992" loading="lazy" decoding="async">
+            <img src="<?= e(image_url('anh21.jpg')) ?>" alt="Chậu cây Trầu Bà Thanh Xuân lá xẻ xanh tươi đặt cạnh bình xịt nước trên nền tường sáng" width="900" height="1200" loading="lazy" decoding="async">
         </div>
         <div class="beginnings-copy">
             <h2 id="beginnings-title">Chăm một chiếc lá.<br><em>Yêu thêm góc nhà.</em></h2>

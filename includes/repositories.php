@@ -6,7 +6,17 @@ function search_pattern(string $search): string
     return '%' . str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $search) . '%';
 }
 
-function list_plants(string $search = '', string $category = ''): array
+function plant_light_keywords(string $light): array
+{
+    return match ($light) {
+        'bright' => ['ưa sáng', 'ưa nắng', 'nhiều sáng', 'nhiều ánh sáng', 'nhiều nắng', 'ánh sáng mạnh', 'tán xạ mạnh', 'tán xạ sáng', 'nơi sáng', 'nắng sớm', 'nắng nhẹ', 'nắng sáng', 'gần cửa sổ', 'sát cửa sổ', 'bệ cửa sổ', 'bậu cửa sổ'],
+        'indirect' => ['tán xạ', 'bán phần', 'ánh sáng nhẹ', 'sáng vừa', 'gần cửa sổ'],
+        'low' => ['bóng râm', 'bóng bán phần', 'đèn văn phòng', 'đèn huỳnh quang', 'góc thiếu sáng', 'chịu ít sáng', 'tán xạ yếu', 'tán xạ nhẹ', 'chịu bóng'],
+        default => [],
+    };
+}
+
+function list_plants(string $search = '', string $category = '', string $light = ''): array
 {
     $sql = 'SELECT id, name, category, description, care, image FROM plants WHERE 1 = 1';
     $parameters = [];
@@ -20,6 +30,19 @@ function list_plants(string $search = '', string $category = ''): array
     if ($category !== '') {
         $sql .= ' AND category = :category';
         $parameters['category'] = $category;
+    }
+    $lightKeywords = plant_light_keywords($light);
+    if ($lightKeywords !== []) {
+        $clauses = [];
+        foreach ($lightKeywords as $index => $keyword) {
+            $descKey = 'light_desc_' . $index;
+            $careKey = 'light_care_' . $index;
+            $clauses[] = "(description LIKE :$descKey ESCAPE '!' OR care LIKE :$careKey ESCAPE '!')";
+            $pattern = search_pattern($keyword);
+            $parameters[$descKey] = $pattern;
+            $parameters[$careKey] = $pattern;
+        }
+        $sql .= ' AND (' . implode(' OR ', $clauses) . ')';
     }
     $statement = db()->prepare($sql . ' ORDER BY category, id');
     $statement->execute($parameters);
@@ -38,7 +61,7 @@ function plant_catalog_statistics(): array
     static $statistics = null;
     if ($statistics === null) {
         $rows = db()->query('SELECT category, COUNT(*) AS total FROM plants GROUP BY category ORDER BY category')->fetchAll();
-        $statistics = ['total' => array_sum(array_column($rows, 'total')), 'categories' => array_column($rows, 'category')];
+        $statistics = ['total' => (int) array_sum(array_column($rows, 'total')), 'categories' => array_column($rows, 'category')];
     }
     return $statistics;
 }

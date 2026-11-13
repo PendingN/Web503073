@@ -6,6 +6,18 @@ $adminNavigation = [
     ['id' => 'posts', 'href' => 'admin-posts.php', 'icon' => 'book', 'label' => 'Quản trị bài viết'],
     ['id' => 'plants', 'href' => 'admin-plants.php', 'icon' => 'leaf', 'label' => 'Quản lý cây'],
 ];
+$adminName = trim((string) ($admin['name'] ?? ''));
+$nameParts = $adminName === '' ? [] : (preg_split('/\s+/u', $adminName, -1, PREG_SPLIT_NO_EMPTY) ?: []);
+if (count($nameParts) >= 2) {
+    $adminInitials = mb_strtoupper(mb_substr($nameParts[0], 0, 1, 'UTF-8') . mb_substr($nameParts[count($nameParts) - 1], 0, 1, 'UTF-8'), 'UTF-8');
+} elseif (count($nameParts) === 1) {
+    $adminInitials = mb_strtoupper(mb_substr($nameParts[0], 0, 2, 'UTF-8'), 'UTF-8');
+} else {
+    $adminInitials = 'AD';
+}
+if ($adminInitials === '') {
+    $adminInitials = 'AD';
+}
 ?>
 <a class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[60] focus:rounded-lg focus:bg-primary-dark focus:p-3 focus:text-white" href="#admin-main">Đến nội dung chính</a>
 <aside id="admin-sidebar" class="fixed inset-y-0 left-0 z-50 flex w-[270px] -translate-x-full flex-col overflow-y-auto border-r border-border bg-white px-5 py-6 transition-transform duration-200 data-[open=true]:translate-x-0 motion-reduce:transition-none lg:translate-x-0" data-open="false">
@@ -14,9 +26,9 @@ $adminNavigation = [
             <span class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary text-white"><?php admin_icon('leaf', 'size-6'); ?></span>
             <span class="text-sm font-bold leading-relaxed">VŨ ĐIỆU<br><span class="font-medium text-muted">RỪNG XANH</span></span>
         </a>
-        <button class="rounded-lg p-2 text-muted hover:bg-soft lg:hidden" type="button" data-admin-menu-close aria-label="Đóng menu quản trị"><?php admin_icon('close'); ?></button>
+        <button class="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg p-2 text-muted hover:bg-soft lg:hidden" type="button" data-admin-menu-close aria-label="Đóng menu quản trị"><?php admin_icon('close'); ?></button>
     </div>
-    <p class="mb-4 px-3 text-[10px] font-semibold tracking-[0.15em] text-muted">KHÔNG GIAN LÀM VIỆC</p>
+    <p class="mb-4 px-3 text-xs font-semibold tracking-[0.15em] text-muted">KHÔNG GIAN LÀM VIỆC</p>
     <nav class="space-y-1.5" aria-label="Điều hướng quản trị">
         <?php foreach ($adminNavigation as $item): ?>
             <a class="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors <?= $adminActive === $item['id'] ? 'bg-primary-dark text-white shadow-sm' : 'text-muted hover:bg-primary/10 hover:text-primary-dark' ?>"<?= $adminActive === $item['id'] ? ' aria-current="page"' : '' ?> href="<?= e($item['href']) ?>">
@@ -26,8 +38,8 @@ $adminNavigation = [
     </nav>
     <div class="mt-auto pt-8">
         <a class="flex items-center gap-3 rounded-xl bg-soft p-3" href="profile.php">
-            <span class="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/15 text-sm font-semibold text-primary-dark">AD</span>
-            <span class="min-w-0"><strong class="block truncate text-xs"><?= e($admin['name']) ?></strong><span class="mt-1 block text-[11px] text-muted">Quản trị viên</span></span>
+            <span class="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/15 text-sm font-semibold text-primary-dark"><?= e($adminInitials) ?></span>
+            <span class="min-w-0"><strong class="block truncate text-xs"><?= e($adminName !== '' ? $adminName : 'Quản trị viên') ?></strong><span class="mt-1 block text-xs text-muted">Quản trị viên</span></span>
             <?php admin_icon('arrow', 'ml-auto size-4 shrink-0 text-muted'); ?>
         </a>
     </div>

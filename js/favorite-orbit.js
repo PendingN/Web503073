@@ -15,8 +15,72 @@
         if (!shoe || shoe.classList.contains('so-active') || Date.now() < hoverLockUntil) return;
         hoverLockUntil = Date.now() + 450;
         // shoe-orbit.js lắng nghe sự kiện này và xoay tới cây có data-block-id tương ứng.
-        shoe.dispatchEvent(new CustomEvent('shopify:block:select', { bubbles: true, detail: { blockId: shoe.getAttribute('data-block-id') } }));
+        shoe.dispatchEvent(new CustomEvent('orbit:select', { bubbles: true, detail: { blockId: shoe.getAttribute('data-block-id') } }));
     });
+
+    var loopOrbit = section.getAttribute('data-loop') !== 'false';
+    var handledKeyEvents = new WeakSet();
+    var boundKeyTargets = new WeakSet();
+
+    function handleOrbitKeydown(event) {
+        if (handledKeyEvents.has(event) || event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
+        if (document.querySelector('.favorite-orbit-modal.so-open')) return;
+        var tagName = event.target && event.target.tagName ? event.target.tagName : '';
+        if (tagName === 'INPUT' || tagName === 'TEXTAREA' || tagName === 'SELECT') return;
+
+        var key = event.key;
+        if (key !== 'ArrowLeft' && key !== 'ArrowRight' && key !== 'Home' && key !== 'End') return;
+
+        var shoes = [].slice.call(section.querySelectorAll('[data-so-shoe]'));
+        if (!shoes.length) return;
+        handledKeyEvents.add(event);
+
+        var focusedShoe = event.target && event.target.closest ? event.target.closest('[data-so-shoe]') : null;
+        var currentIndex = focusedShoe ? shoes.indexOf(focusedShoe) : -1;
+        if (currentIndex < 0) {
+            currentIndex = shoes.findIndex(function (shoe) { return shoe.classList.contains('so-active'); });
+        }
+        if (currentIndex < 0) currentIndex = 0;
+
+        var nextIndex = currentIndex;
+        var canLoop = loopOrbit && shoes.length > 2;
+        if (key === 'ArrowRight') {
+            nextIndex = canLoop ? (currentIndex + 1) % shoes.length : Math.min(shoes.length - 1, currentIndex + 1);
+        } else if (key === 'ArrowLeft') {
+            nextIndex = canLoop ? (currentIndex - 1 + shoes.length) % shoes.length : Math.max(0, currentIndex - 1);
+        } else if (key === 'Home') {
+            nextIndex = 0;
+        } else if (key === 'End') {
+            nextIndex = shoes.length - 1;
+        }
+
+        event.preventDefault();
+        var nextShoe = shoes[nextIndex];
+        if (!nextShoe) return;
+        shoes.forEach(function (shoe) {
+            shoe.setAttribute('tabindex', shoe === nextShoe ? '0' : '-1');
+        });
+        nextShoe.dispatchEvent(new CustomEvent('orbit:select', {
+            bubbles: true,
+            detail: { blockId: nextShoe.getAttribute('data-block-id') }
+        }));
+        try {
+            nextShoe.focus({ preventScroll: true });
+        } catch (err) {
+            nextShoe.focus();
+        }
+    }
+
+    function bindKeyNav() {
+        var targets = [section, section.querySelector('.so-stage')];
+        targets.forEach(function (target) {
+            if (!target || boundKeyTargets.has(target)) return;
+            boundKeyTargets.add(target);
+            target.addEventListener('keydown', handleOrbitKeydown);
+        });
+    }
+
+    bindKeyNav();
 
     var grid = document.querySelector('[data-favorites-grid]');
     if (!grid || !window.MutationObserver) return;

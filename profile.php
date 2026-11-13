@@ -16,17 +16,16 @@ require __DIR__ . '/includes/header.php';
 require __DIR__ . '/includes/navbar.php';
 ?>
 
-        <main class="profile-content profile-page-content">
+        <main id="main-content" class="profile-content profile-page-content" tabindex="-1">
             <?php if ($flashMessage !== null): ?><div class="status-note" data-auto-dismiss><?= e($flashMessage) ?></div><?php endif; ?>
             <header>
                 <div>
-                    <p class="eyebrow">GÓC RIÊNG CỦA BẠN</p>
                     <h1>Trang cá nhân</h1>
                 </div>
             </header>
             <section class="profile-card">
                 <div class="profile-avatar"><?= e(mb_strtoupper(mb_substr($user['name'], 0, 1, 'UTF-8'), 'UTF-8')) ?></div>
-                <div><p class="eyebrow">TÀI KHOẢN HIỆN TẠI</p><h2><?= e($user['name']) ?></h2><p><?= e($userEmail) ?> · <?= $user['role'] === 'admin' ? 'Quản trị viên' : 'Thành viên' ?></p></div>
+                <div><h2><?= e($user['name']) ?></h2><p><?= e($userEmail) ?> · <?= $user['role'] === 'admin' ? 'Quản trị viên' : 'Thành viên' ?></p></div>
                 <form class="profile-logout" method="post" action="actions/logout.php">
                     <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
                     <button class="btn-outline-brand" type="submit">Đăng xuất</button>
@@ -34,16 +33,47 @@ require __DIR__ . '/includes/navbar.php';
             </section>
             <section class="account-panel">
                 <h2>Thông tin tài khoản</h2>
-                <?php if ($errors !== []): ?><div class="login-error" role="alert"><ul><?php foreach ($errors as $error): ?><li><?= e($error) ?></li><?php endforeach; ?></ul></div><?php endif; ?>
-                <div class="account-form">
-                    <div class="form-group"><label class="form-label" for="name">Họ tên</label><input class="form-control" id="name" name="name" value="<?= e($input['name']) ?>" readonly></div>
-                    <div class="form-group"><label class="form-label" for="email">Email</label><input class="form-control" id="email" name="email" type="email" value="<?= e($input['email']) ?>" readonly></div>
-                </div>
+                <?php if ($errors !== []): ?><div class="login-error" id="profile-errors" role="alert"><ul><?php foreach ($errors as $error): ?><li><?= e($error) ?></li><?php endforeach; ?></ul></div><?php endif; ?>
+                <form class="account-form" method="post" action="actions/profile-action.php">
+                    <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+                    <div class="form-group">
+                        <label class="form-label" for="name">Họ tên</label>
+                        <input class="form-control" id="name" name="name" value="<?= e($input['name']) ?>" autocomplete="name" minlength="2" maxlength="100" required<?= $errors !== [] ? ' aria-describedby="profile-errors"' : '' ?>>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="email">Email</label>
+                        <input class="form-control" id="email" name="email" type="email" value="<?= e($input['email']) ?>" autocomplete="email" maxlength="254" required<?= $errors !== [] ? ' aria-describedby="profile-errors"' : '' ?>>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="current_password">Mật khẩu hiện tại</label>
+                        <div class="password-field">
+                            <input class="form-control" id="current_password" name="current_password" type="password" autocomplete="current-password" maxlength="72"<?= $errors !== [] ? ' aria-describedby="profile-errors"' : '' ?>>
+                            <button class="password-toggle" type="button" data-password-toggle aria-controls="current_password" aria-label="Hiện mật khẩu" aria-pressed="false">Hiện</button>
+                        </div>
+                        <small>Chỉ cần nhập khi đổi email hoặc mật khẩu.</small>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="new_password">Mật khẩu mới</label>
+                        <div class="password-field">
+                            <input class="form-control" id="new_password" name="new_password" type="password" autocomplete="new-password" minlength="8" maxlength="72"<?= $errors !== [] ? ' aria-describedby="profile-errors"' : '' ?>>
+                            <button class="password-toggle" type="button" data-password-toggle aria-controls="new_password" aria-label="Hiện mật khẩu" aria-pressed="false">Hiện</button>
+                        </div>
+                        <small>Ít nhất 8 ký tự. Để trống nếu chỉ đổi họ tên hoặc email.</small>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="password_confirmation">Nhập lại mật khẩu mới</label>
+                        <div class="password-field">
+                            <input class="form-control" id="password_confirmation" name="password_confirmation" type="password" autocomplete="new-password" minlength="8" maxlength="72"<?= $errors !== [] ? ' aria-describedby="profile-errors"' : '' ?>>
+                            <button class="password-toggle" type="button" data-password-toggle aria-controls="password_confirmation" aria-label="Hiện mật khẩu" aria-pressed="false">Hiện</button>
+                        </div>
+                    </div>
+                    <button class="btn-brand" type="submit">Lưu thay đổi</button>
+                </form>
             </section>
             <section class="profile-summary">
                 <article><strong><?= count(favorite_ids()) ?></strong><span>Cây yêu thích</span><a href="favorites.php">Xem danh sách</a></article>
-                <article><strong><?= plant_catalog_statistics()['total'] ?></strong><span>Giống cây trong vườn</span><a href="collection.php">Khám phá thêm</a></article>
-                <article><strong><?= count_blog_posts() ?></strong><span>Bài viết chăm cây</span><a href="blog.php">Đọc nhật ký</a></article>
+                <article><strong><?= (int) plant_catalog_statistics()['total'] ?></strong><span>Giống cây trong vườn</span><a href="collection.php">Khám phá thêm</a></article>
+                <article><strong><?= (int) count_blog_posts() ?></strong><span>Bài viết chăm cây</span><a href="blog.php">Đọc nhật ký</a></article>
             </section>
         </main>
 

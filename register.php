@@ -17,7 +17,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     $confirmation = request_string($_POST, 'password_confirmation');
     $errors = account_errors($name, $email);
     if (!valid_password($password)) {
-        $errors[] = 'Mật khẩu cần ít nhất 8 ký tự và tối đa 72 byte (ký tự có dấu chiếm nhiều byte).';
+        $errors[] = 'Mật khẩu cần ít nhất 8 ký tự và không vượt quá 72 ký tự (hoặc ít hơn nếu dùng nhiều ký tự có dấu).';
     }
     if ($password !== $confirmation) {
         $errors[] = 'Mật khẩu nhập lại chưa khớp.';
@@ -52,43 +52,44 @@ $activePage = 'login';
 require __DIR__ . '/includes/header.php';
 require __DIR__ . '/includes/navbar.php';
 ?>
-<main class="login-layout">
+<main id="main-content" class="login-layout" tabindex="-1">
     <section class="brand-pane" aria-label="Giới thiệu Vũ Điệu Rừng Xanh">
         <div class="auth-brand-copy">
-            <p class="eyebrow">VŨ ĐIỆU RỪNG XANH</p>
             <h1>Một góc xanh<br>của riêng bạn.</h1>
             <p>Tạo tài khoản để lưu những giống cây yêu thích và tiếp tục hành trình chăm cây từ bất kỳ thiết bị nào.</p>
         </div>
     </section>
     <section class="login-form-panel">
         <div class="login-form-wrap">
-            <p class="eyebrow">BẮT ĐẦU HÀNH TRÌNH</p>
             <h1>Đăng ký</h1>
             <p>Chào đón một người làm vườn mới.</p>
             <?php if ($errors !== []): ?>
-                <div class="login-error" role="alert"><ul><?php foreach ($errors as $error): ?><li><?= e($error) ?></li><?php endforeach; ?></ul></div>
+                <div class="login-error" id="register-errors" role="alert"><ul><?php foreach ($errors as $error): ?><li><?= e($error) ?></li><?php endforeach; ?></ul></div>
             <?php endif; ?>
             <form class="login-form" method="post" action="register.php">
                 <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
                 <input type="hidden" name="return_to" value="<?= e($returnTo) ?>">
                 <div class="form-group">
                     <label class="form-label" for="name">Họ tên</label>
-                    <input class="form-control" id="name" name="name" value="<?= e($name) ?>" autocomplete="name" minlength="2" maxlength="100" required>
+                    <input class="form-control" id="name" name="name" value="<?= e($name) ?>" autocomplete="name" minlength="2" maxlength="100" required<?= $errors !== [] ? ' aria-invalid="true" aria-describedby="register-errors"' : '' ?>>
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="email">Email</label>
-                    <input class="form-control" id="email" name="email" type="email" value="<?= e($email) ?>" autocomplete="email" maxlength="254" required>
+                    <input class="form-control" id="email" name="email" type="email" value="<?= e($email) ?>" autocomplete="email" maxlength="254" required<?= $errors !== [] ? ' aria-invalid="true" aria-describedby="register-errors"' : '' ?>>
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="password">Mật khẩu (ít nhất 8 ký tự)</label>
                     <div class="password-field">
-                        <input class="form-control" id="password" name="password" type="password" autocomplete="new-password" minlength="8" maxlength="72" required>
-                        <button class="password-toggle" type="button" data-password-toggle aria-controls="password" aria-label="Hiện mật khẩu">Hiện</button>
+                        <input class="form-control" id="password" name="password" type="password" autocomplete="new-password" minlength="8" maxlength="72" required<?= $errors !== [] ? ' aria-invalid="true" aria-describedby="register-errors"' : '' ?>>
+                        <button class="password-toggle" type="button" data-password-toggle aria-controls="password" aria-label="Hiện mật khẩu" aria-pressed="false">Hiện</button>
                     </div>
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="password_confirmation">Nhập lại mật khẩu</label>
-                    <input class="form-control" id="password_confirmation" name="password_confirmation" type="password" autocomplete="new-password" minlength="8" maxlength="72" required>
+                    <div class="password-field">
+                        <input class="form-control" id="password_confirmation" name="password_confirmation" type="password" autocomplete="new-password" minlength="8" maxlength="72" required<?= $errors !== [] ? ' aria-invalid="true" aria-describedby="register-errors"' : '' ?>>
+                        <button class="password-toggle" type="button" data-password-toggle aria-controls="password_confirmation" aria-label="Hiện mật khẩu" aria-pressed="false">Hiện</button>
+                    </div>
                 </div>
                 <button class="btn-brand" type="submit">Tạo tài khoản</button>
             </form>
