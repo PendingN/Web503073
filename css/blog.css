@@ -22,8 +22,8 @@
 .blog-post-page #comments { scroll-margin-top: 24px; }
 
 .blog-page .blog-feed-main { width: min(100%, 1280px); padding: 24px 40px 72px; }
-.blog-page .feed-hero { grid-template-columns: 43% 57%; align-items: center; min-height: 260px; padding: 8px 0 54px; border-bottom-color: #dce3dc; }
-.blog-page .feed-hero:not(:has(.feed-ticker-viewport)) { grid-template-columns: minmax(0, 1fr); min-height: 180px; padding-bottom: 28px; }
+.blog-page .feed-hero { grid-template-columns: 43% 57%; align-items: center; min-height: 0; padding: 4px 0 24px; border-bottom-color: #dce3dc; }
+.blog-page .feed-hero:not(:has(.feed-ticker-viewport)) { grid-template-columns: minmax(0, 1fr); min-height: 0; padding-bottom: 20px; }
 .blog-page .feed-hero-copy { width: auto; padding-right: 28px; }
 .blog-page .feed-hero h1 { color: #243b30; font-size: 2rem; font-weight: 700; line-height: 1.35; letter-spacing: -.025em; }
 .blog-page .feed-hero h1 em { color: #34533c; font-style: normal; }
@@ -33,8 +33,8 @@
 .blog-page .has-marquee .feed-ticker-viewport { position: relative; inset: auto; margin: 0; min-width: 0; overflow-x: auto; }
 .blog-page .has-marquee .feed-ticker-viewport { overflow: hidden; }
 .blog-page .feed-ticker-group { gap: 16px; padding: 4px 16px 8px 0; }
-.blog-page .feed-ticker-card { flex-basis: 190px; width: 190px; gap: 7px; padding: 0 0 8px; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
-.blog-page .feed-ticker-card img { height: 112px; border-radius: 8px; }
+.blog-page .feed-ticker-card { flex-basis: 160px; width: 160px; gap: 7px; padding: 0 0 8px; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.blog-page .feed-ticker-card img { height: 88px; border-radius: 8px; }
 .blog-page .feed-ticker-card :is(strong, time),
 .blog-page .feed-ticker-label { margin-inline: 0; }
 .blog-page .feed-ticker-card strong { color: #243b30; font-size: 12px; font-weight: 600; }

@@ -17,7 +17,7 @@ if ($view !== 'all') {
 }
 $page = max(1, (int) request_string($_GET, 'page', '1'));
 $result = list_blog_posts($search, $sort, $view, (int) ($user['id'] ?? 0), $page);
-$tickerPosts = $result['posts'];
+$tickerPosts = ($view === 'all' && $search === '' && $page === 1) ? $result['posts'] : [];
 $editSlug = request_string($_GET, 'edit');
 $editing = null;
 if ($editSlug !== '') {
@@ -72,7 +72,7 @@ require __DIR__ . '/includes/navbar.php';
                     <details<?= $editing !== null || $draft !== null ? ' open' : '' ?>>
                         <summary class="composer-summary">
                             <span class="composer-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m16 3 5 5-12 12-6 1 1-6Z"/><path d="m14 5 5 5"/></svg></span>
-                            <span class="composer-heading"><strong><?= $editing !== null ? 'Sửa bài viết' : 'Viết bài mới' ?></strong><small>Chia sẻ góc xanh của bạn</small></span>
+                            <span class="composer-heading"><strong><?= $editing !== null ? 'Sửa bài viết' : 'Viết bài mới' ?></strong><small>Chủ đề, ảnh và nội dung</small></span>
                             <svg class="composer-chevron" aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
                         </summary>
                         <form class="blog-form" action="actions/blog-action.php" method="post" enctype="multipart/form-data">
@@ -107,7 +107,7 @@ require __DIR__ . '/includes/navbar.php';
                         </form>
                     </details>
                 <?php else: ?>
-                    <div class="composer-signin"><strong>Chia sẻ góc xanh của bạn</strong><a class="btn-brand" href="login.php?return_to=<?= e(rawurlencode(app_url('blog.php'))) ?>">Đăng nhập để viết bài</a></div>
+                    <div class="composer-signin"><strong>Muốn đăng bài?</strong><a class="btn-brand" href="login.php?return_to=<?= e(rawurlencode(app_url('blog.php'))) ?>">Đăng nhập để viết bài</a></div>
                 <?php endif; ?>
             </section>
             <form class="blog-search" action="blog.php#blog-content" method="get" role="search">
@@ -148,8 +148,19 @@ require __DIR__ . '/includes/navbar.php';
                 <?php endforeach; ?>
                 <?php if ($result['posts'] === []): ?>
                     <div class="blog-empty">
-                        <h3>Chưa có bài viết phù hợp.</h3>
-                        <p><?= $search !== '' ? 'Thử một từ khóa khác hoặc xem lại tất cả bài viết.' : 'Bạn có thể khám phá những câu chuyện khác trong nhật ký.' ?></p>
+                        <?php if ($search !== ''): ?>
+                            <h3>Không có bài viết khớp “<?= e($search) ?>”.</h3>
+                            <p>Thử một từ khóa khác hoặc xem lại tất cả bài viết.</p>
+                        <?php elseif ($view === 'saved'): ?>
+                            <h3>Bạn chưa lưu bài viết nào.</h3>
+                            <p>Chọn nút lưu trên một bài viết để đọc lại sau.</p>
+                        <?php elseif ($view === 'mine'): ?>
+                            <h3>Bạn chưa đăng bài viết nào.</h3>
+                            <p>Mở mục “Viết bài mới” phía trên để đăng bài đầu tiên.</p>
+                        <?php else: ?>
+                            <h3>Chưa có bài viết nào.</h3>
+                            <p>Hãy là người đầu tiên chia sẻ một câu chuyện.</p>
+                        <?php endif; ?>
                         <a class="btn-quiet" href="blog.php#blog-content">Xem tất cả bài viết</a>
                     </div>
                 <?php endif; ?>
@@ -162,8 +173,6 @@ require __DIR__ . '/includes/navbar.php';
         </section>
         <aside class="feed-sidebar" aria-label="Khám phá cộng đồng">
             <section class="feed-community">
-                <h2>Cùng nhau chăm một góc xanh</h2>
-                <p>Chia sẻ mẹo chăm cây và góc xanh của bạn.</p>
                 <nav class="feed-topics" aria-label="Khám phá chủ đề">
                     <h3>Khám phá chủ đề</h3>
                     <?php foreach (['Chăm cây', 'Không gian', 'Cảm hứng', 'Mẹo hay', 'Sống xanh'] as $topic): ?>
