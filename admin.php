@@ -39,15 +39,15 @@ require __DIR__ . '/includes/header.php';
                 <div><h2 class="text-xl font-semibold">Thành viên khu vườn</h2></div>
                 <a class="admin-button-secondary" href="admin-dashboard.php"><?php admin_icon('dashboard', 'size-4'); ?>Tổng quan</a>
             </div>
-            <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" id="overview" aria-label="Thống kê tài khoản">
-                <article class="rounded-xl bg-blue-50 p-5"><div class="flex items-center justify-between text-primary-dark"><span class="text-xs font-medium">Tổng tài khoản</span><?php admin_icon('users'); ?></div><strong class="mt-3 block text-3xl font-semibold text-primary-dark"><?= (int) $stats['total'] ?></strong></article>
-                <article class="rounded-xl bg-emerald-50 p-5"><div class="flex items-center justify-between text-emerald-700"><span class="text-xs font-medium">Đang hoạt động</span><?php admin_icon('check'); ?></div><strong class="mt-3 block text-3xl font-semibold text-emerald-800"><?= (int) $stats['active'] ?></strong></article>
-                <article class="rounded-xl bg-rose-50 p-5"><div class="flex items-center justify-between text-rose-700"><span class="text-xs font-medium">Đã khóa</span><?php admin_icon('lock'); ?></div><strong class="mt-3 block text-3xl font-semibold text-rose-800"><?= (int) $stats['blocked'] ?></strong></article>
-                <article class="rounded-xl bg-amber-50 p-5"><div class="flex items-center justify-between text-amber-700"><span class="text-xs font-medium">Quản trị viên</span><?php admin_icon('shield'); ?></div><strong class="mt-3 block text-3xl font-semibold text-amber-800"><?= (int) $stats['admins'] ?></strong></article>
-            </section>
+            <dl class="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-4" id="overview" aria-label="Thống kê tài khoản">
+                <div class="bg-white p-4"><dt class="text-sm text-muted">Tổng tài khoản</dt><dd class="mt-1 text-2xl font-semibold"><?= (int) $stats['total'] ?></dd></div>
+                <div class="bg-white p-4"><dt class="text-sm text-muted">Đang hoạt động</dt><dd class="mt-1 text-2xl font-semibold"><?= (int) $stats['active'] ?></dd></div>
+                <div class="bg-white p-4"><dt class="text-sm text-muted">Đã khóa</dt><dd class="mt-1 text-2xl font-semibold<?= (int) $stats['blocked'] > 0 ? ' text-red-700' : '' ?>"><?= (int) $stats['blocked'] ?></dd></div>
+                <div class="bg-white p-4"><dt class="text-sm text-muted">Quản trị viên</dt><dd class="mt-1 text-2xl font-semibold"><?= (int) $stats['admins'] ?></dd></div>
+            </dl>
             <?php if ($editUser !== null): ?>
                 <section class="admin-card scroll-mt-28 p-5 sm:p-6" id="edit-user" aria-labelledby="edit-user-title">
-                    <div class="flex items-start justify-between gap-4"><div><p class="mb-2 text-[10px] font-semibold tracking-wider text-primary-dark">TÀI KHOẢN #<?= (int) $editUser['id'] ?></p><h2 class="text-lg font-semibold" id="edit-user-title">Thông tin người dùng</h2></div><a class="admin-button-secondary" href="admin.php#users"><?php admin_icon('close', 'size-4'); ?>Đóng</a></div>
+                    <div class="flex items-start justify-between gap-4"><div><h2 class="text-lg font-semibold" id="edit-user-title">Tài khoản #<?= (int) $editUser['id'] ?></h2></div><a class="admin-button-secondary" href="admin.php#users"><?php admin_icon('close', 'size-4'); ?>Đóng</a></div>
                     <p class="my-5 text-xs leading-loose text-muted"><?= $editUser['role'] === 'admin' ? 'Quản trị viên' : 'Thành viên' ?> · <?= $editUser['status'] === 'active' ? 'Đang hoạt động' : 'Đã khóa' ?> · Tham gia <?= e(date('d/m/Y', strtotime($editUser['created_at']))) ?> · <?= count(user_favorite_ids((int) $editUser['id'])) ?> cây yêu thích</p>
                     <?php if ($errors !== []): ?><div class="login-error mb-5" role="alert"><ul><?php foreach ($errors as $error): ?><li><?= e($error) ?></li><?php endforeach; ?></ul></div><?php endif; ?>
                     <form class="grid gap-5 md:grid-cols-2" method="post" action="actions/user-action.php">
@@ -76,30 +76,30 @@ require __DIR__ . '/includes/header.php';
                         <tbody>
                             <?php foreach ($result['users'] as $member): ?>
                                 <tr>
-                                    <td class="text-xs text-muted">#<?= (int) $member['id'] ?></td>
-                                    <td><strong class="block max-w-64 text-xs font-semibold wrap-anywhere"><?= e($member['name']) ?></strong><span class="mt-1 block max-w-64 text-[11px] wrap-anywhere text-muted"><?= e($member['email']) ?></span></td>
-                                    <td><span class="rounded-md bg-soft px-2 py-1 text-[11px] whitespace-nowrap text-muted"><?= $member['role'] === 'admin' ? 'Quản trị viên' : 'Thành viên' ?></span></td>
+                                    <td class="text-sm text-muted">#<?= (int) $member['id'] ?></td>
+                                    <td><strong class="block max-w-64 text-sm font-semibold wrap-anywhere"><?= e($member['name']) ?></strong><span class="mt-1 block max-w-64 text-sm wrap-anywhere text-muted"><?= e($member['email']) ?></span></td>
+                                    <td><span class="rounded-md bg-soft px-2 py-1 text-sm whitespace-nowrap text-muted"><?= $member['role'] === 'admin' ? 'Quản trị viên' : 'Thành viên' ?></span></td>
                                     <td><span class="status-<?= e($member['status']) ?>"><?= $member['status'] === 'active' ? 'Đang hoạt động' : 'Đã khóa' ?></span></td>
-                                    <td class="text-xs"><?= (int) $member['favorite_count'] ?></td>
-                                    <td class="text-xs whitespace-nowrap text-muted"><?= e(date('d/m/Y', strtotime($member['created_at']))) ?></td>
+                                    <td class="text-sm"><?= (int) $member['favorite_count'] ?></td>
+                                    <td class="text-sm whitespace-nowrap text-muted"><?= e(date('d/m/Y', strtotime($member['created_at']))) ?></td>
                                     <td><div class="flex items-center gap-3 whitespace-nowrap">
                                         <a class="admin-panel-link" href="admin.php?edit=<?= (int) $member['id'] ?>#edit-user">Xem / sửa</a>
                                         <?php if ((int) $member['id'] !== (int) $admin['id']): ?>
-                                            <form method="post" action="actions/user-action.php">
+                                            <form method="post" action="actions/user-action.php" data-confirm="<?= e($member['role'] === 'admin' ? 'Hạ quyền quản trị của ' . $member['name'] . ' ('. $member['email'] . ')? Tài khoản này sẽ không còn truy cập được khu vực quản trị.' : 'Nâng ' . $member['name'] . ' ('. $member['email'] . ') thành quản trị viên? Tài khoản này sẽ có toàn quyền quản lý người dùng và bài viết.') ?>">
                                                 <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
                                                 <input type="hidden" name="user_id" value="<?= (int) $member['id'] ?>">
                                                 <input type="hidden" name="operation" value="<?= $member['role'] === 'admin' ? 'demote' : 'promote' ?>">
                                                 <input type="hidden" name="return_to" value="<?= e(current_request_url()) ?>">
-                                                <button class="rounded-md px-2 py-1.5 text-xs font-medium bg-violet-50 text-violet-700 hover:bg-violet-100" type="submit"><?= $member['role'] === 'admin' ? 'Hạ quyền' : 'Nâng quyền' ?></button>
+                                                <button class="rounded-md px-2.5 py-2 text-sm font-medium bg-violet-50 text-violet-700 hover:bg-violet-100" type="submit"><?= $member['role'] === 'admin' ? 'Hạ quyền' : 'Nâng quyền' ?></button>
                                             </form>
                                         <?php endif; ?>
                                         <?php if ($member['role'] !== 'admin'): ?>
-                                            <form method="post" action="actions/user-action.php">
+                                            <form method="post" action="actions/user-action.php"<?php if ($member['status'] === 'active'): ?> data-confirm="<?= e('Khóa ' . $member['name'] . ' ('. $member['email'] . ')? Tài khoản sẽ bị đăng xuất và không thể đăng nhập cho đến khi được mở khóa.') ?>"<?php endif; ?>>
                                                 <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
                                                 <input type="hidden" name="user_id" value="<?= (int) $member['id'] ?>">
                                                 <input type="hidden" name="operation" value="<?= $member['status'] === 'active' ? 'block' : 'unblock' ?>">
                                                 <input type="hidden" name="return_to" value="<?= e(current_request_url()) ?>">
-                                                <button class="rounded-md px-2 py-1.5 text-xs font-medium <?= $member['status'] === 'active' ? 'bg-red-50 text-red-700 hover:bg-red-100' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' ?>" type="submit"><?= $member['status'] === 'active' ? 'Khóa' : 'Mở khóa' ?></button>
+                                                <button class="rounded-md px-2.5 py-2 text-sm font-medium <?= $member['status'] === 'active' ? 'bg-red-50 text-red-700 hover:bg-red-100' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' ?>" type="submit"><?= $member['status'] === 'active' ? 'Khóa' : 'Mở khóa' ?></button>
                                             </form>
                                         <?php endif; ?>
                                     </div></td>
@@ -117,7 +117,6 @@ require __DIR__ . '/includes/header.php';
                     </div>
                 </nav>
             </section>
-            <p class="pb-2 text-center text-[10px] text-muted">Vũ Điệu Rừng Xanh · Không gian quản trị</p>
         </main>
     </div>
 </div>

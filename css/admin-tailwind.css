@@ -29,7 +29,7 @@
 }
 
 @layer components {
-    .admin-card { @apply rounded-xl border border-border bg-white shadow-card; }
+    .admin-card { @apply rounded-xl border border-border bg-white; }
     .admin-button { @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-primary-dark px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#2c4fb8]; }
     .admin-button-secondary { @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-border bg-white px-4 py-2.5 text-sm font-medium text-muted transition-colors hover:bg-soft hover:text-primary-dark; }
     .admin-input { @apply min-h-11 w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm text-ink placeholder:text-muted/70 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20; }
