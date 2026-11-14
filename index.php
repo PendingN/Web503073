@@ -76,9 +76,6 @@ $heroTiles = [
 $categoryCounts = $catalog['counts'] ?? [
     'Cây trong nhà' => 10,
     'Cây để bàn' => 19,
-    'Cây bóng mát' => 10,
-    'Cây ăn quả' => 10,
-    'Cây nông nghiệp' => 10,
 ];
 
 $collectionDirectory = [
@@ -97,30 +94,6 @@ $collectionDirectory = [
         'frames' => ['anh47.jpg', 'anh46.jpg', 'anh48.jpg', 'anh49.jpg', 'anh51.jpg'],
         'layout' => 'before-name',
         'icon' => '<path d="M7 13h10l-1.5 8h-7z"/><path d="M12 13V7"/><path d="M12 9c0-3 2.5-5 5.5-5 0 3-2.5 5-5.5 5"/><path d="M12 10c0-2.5-2-4.5-5-4.5 0 2.5 2 4.5 5 4.5"/>',
-    ],
-    [
-        'name' => 'Cây bóng mát',
-        'label' => 'Bóng mát',
-        'image' => 'anh14.jpg',
-        'frames' => ['anh14.jpg', 'anh12.jpg', 'anh13.jpg', 'anh15.jpg', 'anh16.jpg'],
-        'layout' => 'after-count',
-        'icon' => '<path d="M12 21v-8"/><path d="M12 13c4 0 6.5-2.5 6.5-6A6.5 6.5 0 0 0 5.5 7c0 3.5 2.5 6 6.5 6Z"/><path d="M8 21h8"/>',
-    ],
-    [
-        'name' => 'Cây ăn quả',
-        'label' => 'Ăn quả',
-        'image' => 'anh4.jpg',
-        'frames' => ['anh4.jpg', 'anh3.jpg', 'anh6.jpg', 'anh8.jpg', 'anh9.jpg'],
-        'layout' => 'before-name',
-        'icon' => '<circle cx="12" cy="14" r="6"/><path d="M12 8V4"/><path d="M12 6c2-2 4.5-2 6-1-1 2-3.5 2.5-6 1"/>',
-    ],
-    [
-        'name' => 'Cây nông nghiệp',
-        'label' => 'Nông nghiệp',
-        'image' => 'anh35.jpg',
-        'frames' => ['anh35.jpg', 'anh31.jpg', 'anh32.jpg', 'anh33.jpg', 'anh34.jpg'],
-        'layout' => 'after-count',
-        'icon' => '<path d="M12 21V9"/><path d="M12 14c-3.5 0-6-2-6-5.5 3.5 0 6 2 6 5.5Z"/><path d="M12 11c3.5 0 6-2 6-5.5-3.5 0-6 2-6 5.5Z"/>',
     ],
 ];
 
@@ -459,7 +432,7 @@ require __DIR__ . '/includes/header.php';
                 </div>
             </div>
             <div class="forest-story">
-                <p>Vũ Điệu Rừng Xanh tổng hợp thông tin thực tế về <?= (int) $catalog['total'] ?> loài cây từ cây trong nhà, cây để bàn đến cây ăn quả và cây bóng mát, giúp bạn tra cứu nhanh nhu cầu nắng, nước tưới và độ ẩm.</p>
+                <p>Vũ Điệu Rừng Xanh tổng hợp thông tin thực tế về <?= (int) $catalog['total'] ?> loài cây gồm cây trong nhà và cây để bàn, giúp bạn tra cứu nhanh nhu cầu nắng, nước tưới và độ ẩm.</p>
                 <p>Nếu chưa biết bắt đầu từ chậu nào, công cụ gợi ý sẽ kết hợp ánh sáng, vị trí đặt cây cùng các bài chia sẻ từ cộng đồng để thu hẹp lựa chọn phù hợp nhất cho bạn.</p>
                 <a class="forest-link" href="plant-advisor.php">Mở công cụ gợi ý cây <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg></a>
             </div>

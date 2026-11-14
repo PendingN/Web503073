@@ -18,7 +18,7 @@ const { chromium } = require('playwright');
             $source = file_get_contents('index.php');
             $source = str_replace(
                 '$catalog = plant_catalog_statistics();',
-                '$catalog = ["total" => 59, "counts" => ["Cây trong nhà" => 10, "Cây để bàn" => 19, "Cây bóng mát" => 10, "Cây ăn quả" => 10, "Cây nông nghiệp" => 10]];',
+                '$catalog = ["total" => 29, "counts" => ["Cây trong nhà" => 10, "Cây để bàn" => 19]];',
                 $source,
                 $catalogReplacements
             );
@@ -117,12 +117,12 @@ const { chromium } = require('playwright');
         await page.waitForTimeout(450);
         const typedLenNext = await getManifestoTypedLen();
         assert.ok(typedLenNext > typedLenStart, `Expected manifesto text to keep typing forward (${typedLenStart} -> ${typedLenNext})`);
-        assert.equal(await page.locator('.collections-overview .collection-row').count(), 5);
+        assert.equal(await page.locator('.collections-overview .collection-row').count(), 2);
         assert.deepEqual(
             await page.locator('.collections-overview .collection-name').allTextContents(),
-            ['Trong nhà', 'Để bàn', 'Bóng mát', 'Ăn quả', 'Nông nghiệp']
+            ['Trong nhà', 'Để bàn']
         );
-        assert.equal(await page.locator('.collections-overview .collection-thumb img').count(), 25);
+        assert.equal(await page.locator('.collections-overview .collection-thumb img').count(), 10);
         const firstRow = page.locator('.collections-overview .collection-row').first();
         const firstThumb = firstRow.locator('.collection-thumb');
         await firstRow.scrollIntoViewIfNeeded();

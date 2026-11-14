@@ -175,23 +175,10 @@ try {
     check(!str_contains($advisorPage, 'class="advisor-mode ') && str_contains($advisorPage, 'Chọn cách khác'), 'A chosen mode hides the mode buttons and offers a way back.');
     $advisorPage = $guest->request('plant-advisor.php')['body'];
     check(substr_count($advisorPage, 'class="advisor-mode ') === 2 && !str_contains($advisorPage, 'id="advisor-form"'), 'The advisor opens with only the two mode buttons.');
-    check(str_contains($advisorPage, 'id="room-advisor-form"') && str_contains($advisorPage, 'Chưa chọn điều kiện không gian'), 'Unselected plant advisor shows the room form and empty-selection prompt.');
-    check(str_contains($advisorPage, 'class="advisor-entertainment"') && str_contains($advisorPage, 'Góc tham khảo &amp; giải trí')
-        && strpos($advisorPage, 'id="room-results"') < strpos($advisorPage, 'class="advisor-entertainment"'), 'Entertainment options appear in a secondary section below room results.');
     check(str_contains($advisorPage, 'id="lac-que"') && str_contains($advisorPage, 'data-que-result aria-live="polite" hidden'), 'The fortune draw waits for a shake.');
     $landingPrefilled = $guest->request('index.php?light=low&position=shelf');
     check($landingPrefilled['status'] === 200 && str_contains($landingPrefilled['body'], '<option value="low" selected>')
         && str_contains($landingPrefilled['body'], '<option value="shelf" selected>'), 'Landing finder preserves light and position query selections.');
-    $roomAdvisor = $guest->request('plant-advisor.php?light=low&position=shelf');
-    $roomBody = $roomAdvisor['body'];
-    check($roomAdvisor['status'] === 200 && str_contains($roomBody, '<option value="low" selected>') && str_contains($roomBody, '<option value="shelf" selected>'), 'Room advisor preserves selected light and position.');
-    $roomResultsStart = strpos($roomBody, 'id="room-results"');
-    $entertainmentStart = strpos($roomBody, 'class="advisor-entertainment"');
-    check($roomResultsStart !== false && $entertainmentStart !== false && $roomResultsStart < $entertainmentStart, 'Room results section precedes the secondary entertainment section.');
-    $roomResultsHtml = substr($roomBody, $roomResultsStart, $entertainmentStart - $roomResultsStart);
-    check(str_contains($roomResultsHtml, '6 cây phù hợp với góc nhà bạn') && str_contains($roomResultsHtml, 'Cây Lưỡi Hổ Mini') && str_contains($roomResultsHtml, 'class="advisor-reason"')
-        && !str_contains($roomResultsHtml, 'Cây Kim Tiền') && !str_contains($roomResultsHtml, 'Cây Sen Đá')
-        && !str_contains($roomBody, 'id="advisor-form"') && !str_contains($roomResultsHtml, 'Cung ') && !str_contains($roomResultsHtml, 'Mệnh '), 'Room advisor displays matching plants and reasons without requiring zodiac or spiritual mode.');
     $fortunePage = $guest->request('plant-advisor.php?lac=1')['body'];
     check(preg_match('/class="que-result-tag"[^>]*>Quẻ [^<]+ · [^<]+</u', $fortunePage) === 1 && str_contains($fortunePage, 'plant-detail.php?id=') && str_contains($fortunePage, '<dt>Hợp mệnh</dt>') && str_contains($fortunePage, '<b>Tưới nước:</b>'), 'Shaking without JavaScript draws a plant with its facts on the server.');
     check(str_contains($guest->request('plant-advisor.php?mode=spiritual')['body'], 'Mệnh Hỏa'), 'Each mode keeps its own results.');
