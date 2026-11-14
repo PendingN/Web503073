@@ -73,6 +73,6 @@ Thumbs.db
 Desktop.ini
 .archify/
 .impeccable/hook.cache.json
-.impeccable/questions/
+.impeccable/*
 images/blog/*
 !images/blog/.htaccess

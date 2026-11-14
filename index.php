@@ -25,10 +25,9 @@ require __DIR__ . '/includes/header.php';
 <main id="main-content">
     <section class="room-hero" aria-labelledby="room-title">
         <div class="room-copy">
-            <h1 id="room-title">Một góc nhà.<br><em>Một chút xanh.</em></h1>
-            <p>Thêm một chiếc lá, thêm một lý do để yêu không gian mình sống. Tìm người bạn xanh hợp với góc nhà của bạn.</p>
-            <a class="room-button" href="#find-plant">Tìm cây cho góc nhà <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg></a>
-            <a class="room-story-link" href="#first-steps">Chưa từng trồng cây? Bắt đầu ở đây</a>
+            <h1 id="room-title">Dành một góc<br>cho màu xanh.</h1>
+            <p>Khám phá cây trong nhà theo ánh sáng và nơi bạn muốn đặt cây.</p>
+            <a class="room-button" href="#find-plant">Tìm cây phù hợp <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg></a>
         </div>
 
         <div class="room-scene" id="room-scene" aria-label="Khám phá cây trong một góc phòng">
@@ -36,7 +35,7 @@ require __DIR__ . '/includes/header.php';
                 <img class="room-image" src="<?= e(image_url('indoor-room.png')) ?>" alt="Góc phòng sáng với ghế vải, bàn gỗ và ba chậu Bàng Singapore, Trầu Bà Thanh Xuân, Lưỡi Hổ bên cửa sổ" width="1586" height="992" fetchpriority="high" decoding="async">
 
                 <details class="room-spot room-spot--fig" name="room-plants">
-                    <summary aria-label="Tìm hiểu cây Bàng Singapore"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary>
+                    <summary aria-label="Tìm hiểu cây Bàng Singapore"><span aria-hidden="true">01</span></summary>
                     <div class="room-plant-note">
                         <h2>Bàng Singapore</h2>
                         <p>Lá to, dáng cao. Một điểm nhấn tự nhiên cho góc phòng nhiều ánh sáng.</p>
@@ -45,7 +44,7 @@ require __DIR__ . '/includes/header.php';
                     </div>
                 </details>
                 <details class="room-spot room-spot--philodendron" name="room-plants">
-                    <summary aria-label="Tìm hiểu cây Trầu Bà Thanh Xuân"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary>
+                    <summary aria-label="Tìm hiểu cây Trầu Bà Thanh Xuân"><span aria-hidden="true">02</span></summary>
                     <div class="room-plant-note">
                         <h2>Trầu Bà Thanh Xuân</h2>
                         <p>Những đường xẻ lá đầy cá tính, làm góc đọc sách thêm mềm mại và sống động.</p>
@@ -54,7 +53,7 @@ require __DIR__ . '/includes/header.php';
                     </div>
                 </details>
                 <details class="room-spot room-spot--snake" name="room-plants">
-                    <summary aria-label="Tìm hiểu cây Lưỡi Hổ"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary>
+                    <summary aria-label="Tìm hiểu cây Lưỡi Hổ"><span aria-hidden="true">03</span></summary>
                     <div class="room-plant-note">
                         <h2>Lưỡi Hổ</h2>
                         <p>Vài chiếc lá thẳng, một chậu cây gọn. Dành cho góc nhỏ và nhịp sống bận rộn.</p>
@@ -63,15 +62,14 @@ require __DIR__ . '/includes/header.php';
                     </div>
                 </details>
             </div>
-            <p class="room-hint"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Chạm vào dấu cộng để gặp từng chiếc lá</p>
+            <p class="room-hint">Chọn số trên ảnh để tìm hiểu từng cây.</p>
         </div>
-        <a class="room-scroll" href="#find-plant"><span>Góc xanh của bạn bắt đầu ở đây</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v15m-6-6 6 6 6-6"/></svg></a>
     </section>
 
     <section class="plant-finder landing-content" id="find-plant" aria-labelledby="finder-title">
         <div class="finder-heading">
-            <h2 id="finder-title">Không gian của bạn.<br><em>Chiếc lá của bạn.</em></h2>
-            <p>Góc phòng ngập nắng hay chiếc bàn nhỏ?<br>Bắt đầu từ ánh sáng và nơi bạn muốn đặt cây.</p>
+            <h2 id="finder-title">Góc nhà bạn có<br>ánh sáng thế nào?</h2>
+            <p>Chọn ánh sáng và vị trí.<br> Tìm một loài cây phù hợp để bắt đầu.</p>
         </div>
         <form class="finder-form" data-plant-finder hidden>
             <label for="room-light">Ánh sáng ở góc nhà bạn
@@ -92,7 +90,7 @@ require __DIR__ . '/includes/header.php';
             <button class="room-button" type="submit">Gợi ý cây cho tôi <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg></button>
         </form>
         <div class="finder-caption">
-            <p data-finder-status role="status">Bốn gợi ý để bắt đầu một góc xanh.</p>
+            <p data-finder-status role="status">Những cây để bắt đầu.</p>
             <a class="room-text-link" href="<?= e($indoorUrl) ?>">Xem cây trong nhà <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg></a>
         </div>
         <div class="plant-picks" data-plant-picks>
@@ -115,7 +113,7 @@ require __DIR__ . '/includes/header.php';
             <img src="<?= e(image_url('anh21.jpg')) ?>" alt="Chậu cây Trầu Bà Thanh Xuân lá xẻ xanh tươi đặt cạnh bình xịt nước trên nền tường sáng" width="900" height="1200" loading="lazy" decoding="async">
         </div>
         <div class="beginnings-copy">
-            <h2 id="beginnings-title">Chăm một chiếc lá.<br><em>Yêu thêm góc nhà.</em></h2>
+            <h2 id="beginnings-title">Trước lần<br>tưới đầu tiên.</h2>
             <p>Bạn không cần giỏi trồng cây để bắt đầu. Một chút quan sát mỗi ngày đã là một khởi đầu tốt.</p>
             <ol class="room-care-steps">
                 <li><h3>Để ý một vệt nắng</h3><p>Quan sát góc nhà vào những thời điểm khác nhau. Ánh sáng giúp bạn thu hẹp lựa chọn đầu tiên.</p></li>
@@ -127,7 +125,7 @@ require __DIR__ . '/includes/header.php';
     </section>
 
     <section class="room-questions landing-content" aria-labelledby="questions-title">
-        <div><h2 id="questions-title">Trước khi mang<br><em>một chút xanh về nhà.</em></h2><p>Một vài điều bạn có thể đang băn khoăn.</p></div>
+        <div><h2 id="questions-title">Bạn có thể<br>đang băn khoăn.</h2></div>
         <div class="room-answers">
             <details><summary>Tôi chưa từng trồng cây, bắt đầu được không?</summary><p>Được chứ. Chọn điều kiện ánh sáng và vị trí ở phần gợi ý phía trên, rồi mở một loài cây để đọc đặc điểm và cách chăm. Hãy bắt đầu với một chậu nhỏ, vừa với không gian và thời gian của bạn.</p></details>
             <details><summary>Phòng ít sáng có trồng cây được không?</summary><p>Một số cây như Lưỡi Hổ hay Kim Tiền có thể chịu ánh sáng yếu hơn. Tuy vậy, cây vẫn cần ánh sáng để phát triển. Nếu phòng không có ánh sáng tự nhiên, bạn cần tìm hiểu thêm về đèn trồng cây.</p></details>
@@ -136,12 +134,9 @@ require __DIR__ . '/includes/header.php';
         </div>
     </section>
 
-    <section class="room-invitation" aria-labelledby="invitation-title">
-        <svg class="invitation-leaf" viewBox="0 0 64 80" fill="none" aria-hidden="true"><path d="M14 70C14 40 47 35 49 9c17 28 4 51-17 48M14 70c-8-18-9-34 3-46 2 17 17 19 15 33M14 70c10-20 22-27 31-41"/></svg>
-        <h2 id="invitation-title">Nhà vẫn là nhà.<br><em>Chỉ là xanh hơn một chút.</em></h2>
-        <a class="room-button" href="<?= e($indoorUrl) ?>">Tìm chiếc lá đầu tiên <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg></a>
-        <a class="invitation-catalog" href="collection.php">Còn <?= (int) $catalog['total'] ?> loài cây để bạn khám phá trong bộ sưu tập</a>
-    </section>
+    <div class="room-invitation">
+        <a class="room-text-link" href="collection.php">Khám phá bộ sưu tập · <?= (int) $catalog['total'] ?> loài cây <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg></a>
+    </div>
 </main>
 
 <?php require __DIR__ . '/includes/footer.php'; ?>
