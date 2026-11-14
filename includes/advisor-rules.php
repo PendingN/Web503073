@@ -11,8 +11,8 @@ require_once __DIR__ . '/lunar-calendar.php';
 function advisor_modes(): array
 {
     return [
-        'zodiac' => ['label' => 'Chiêm tinh học', 'hint' => '12 cung hoàng đạo'],
-        'spiritual' => ['label' => 'Một chút tâm linh', 'hint' => 'Ngày sinh & góc nhà'],
+        'zodiac' => ['label' => 'Chiêm tinh học', 'hint' => 'Tham khảo · 12 cung hoàng đạo'],
+        'spiritual' => ['label' => 'Một chút tâm linh', 'hint' => 'Tham khảo · Ngũ hành & hướng đặt'],
     ];
 }
 
@@ -217,10 +217,15 @@ function normalize_advisor_input(array $source, string $mode, string $today): ar
     return ['values' => $values, 'errors' => [], 'input' => $input];
 }
 
+function plant_fits_room(array $meta, array $roomInput): bool
+{
+    return ($roomInput['light'] === 'all' || in_array($roomInput['light'], $meta['light'], true))
+        && ($roomInput['position'] === 'any' || in_array($roomInput['position'], $meta['position'], true));
+}
+
 function plant_fits_space(array $meta, array $input): bool
 {
-    return in_array($input['light'], $meta['light'], true)
-        && ($input['position'] === 'any' || in_array($input['position'], $meta['position'], true));
+    return $input['light'] !== 'all' && plant_fits_room($meta, $input);
 }
 
 // Score how well a plant suits the person in the chosen mode; 0 or less means it does not suit.
@@ -306,4 +311,171 @@ function rule_based_picks(array $plants, array $catalogNotes, array $input, arra
     }
     usort($scored, static fn (array $a, array $b): int => [$b['score'], $a['plant_id']] <=> [$a['score'], $b['plant_id']]);
     return array_map(static fn (array $pick): array => ['plant_id' => $pick['plant_id'], 'reason' => $pick['reason']], array_slice($scored, 0, $limit));
+}
+
+/**
+ * Option labels for the practical room-based plant advisor.
+ */
+function room_advisor_options(): array
+{
+    $options = plant_advisor_options();
+    return [
+        'light' => ['all' => 'Tất cả mức ánh sáng'] + $options['light'],
+        'position' => $options['position'],
+    ];
+}
+
+/**
+ * Normalize light and position inputs from GET or form parameters for practical room filtering.
+ */
+function normalize_room_advisor_input(array $source): array
+{
+    $options = plant_advisor_options();
+    $rawLight = is_string($source['light'] ?? null) ? trim($source['light']) : '';
+    $rawPosition = is_string($source['position'] ?? null) ? trim($source['position']) : '';
+
+    $light = isset($options['light'][$rawLight]) ? $rawLight : 'all';
+    $position = in_array($rawPosition, ['floor', 'shelf'], true) ? $rawPosition : 'any';
+
+    return [
+        'light' => $light,
+        'position' => $position,
+        'has_filters' => $light !== 'all' || $position !== 'any',
+    ];
+}
+
+/**
+ * Format human-readable badges describing active room conditions.
+ */
+function room_condition_badges(array $roomInput): array
+{
+    $normalized = normalize_room_advisor_input($roomInput);
+    $options = room_advisor_options();
+    $badges = [];
+    if ($normalized['light'] !== 'all') {
+        $badges[] = ['label' => 'Ánh sáng', 'value' => $options['light'][$normalized['light']]];
+    }
+    if ($normalized['position'] !== 'any') {
+        $badges[] = ['label' => 'Vị trí', 'value' => $options['position'][$normalized['position']]];
+    }
+    return $badges;
+}
+
+function room_join_vietnamese_or(array $items): string
+{
+    $items = array_values($items);
+    $count = count($items);
+    if ($count === 0) {
+        return '';
+    }
+    if ($count === 1) {
+        return $items[0];
+    }
+    if ($count === 2) {
+        return $items[0] . ' hoặc ' . $items[1];
+    }
+    $last = array_pop($items);
+    return implode(', ', $items) . ' hoặc ' . $last;
+}
+
+/**
+ * Build a practical recommendation reason from light/position fit, care level, and plant characteristics.
+ */
+function room_rule_reason(array $meta, array $roomInput): string
+{
+    $normalized = normalize_room_advisor_input($roomInput);
+    $lightPhrases = [
+        'bright' => 'ưa góc nhiều ánh sáng tự nhiên',
+        'indirect' => 'hợp nơi có ánh sáng gián tiếp dịu nhẹ',
+        'low' => 'chịu được góc ít ánh sáng tự nhiên',
+    ];
+    $lightShort = [
+        'bright' => 'nhiều sáng',
+        'indirect' => 'ánh sáng gián tiếp',
+        'low' => 'ít sáng',
+    ];
+    $positionPhrases = [
+        'floor' => 'đặt đẹp trên sàn hoặc góc phòng',
+        'shelf' => 'gọn vừa trên bàn làm việc hoặc kệ nhỏ',
+    ];
+
+    if ($normalized['light'] !== 'all') {
+        $lightText = $lightPhrases[$normalized['light']];
+    } else {
+        $supportedLights = array_values(array_intersect_key($lightShort, array_flip($meta['light'] ?? [])));
+        $lightText = $supportedLights !== []
+            ? 'thích nghi tốt với nơi ' . room_join_vietnamese_or($supportedLights)
+            : 'thích nghi tốt trong không gian trong nhà';
+    }
+
+    $positions = $meta['position'] ?? ['shelf'];
+    if ($normalized['position'] !== 'any') {
+        $positionText = $positionPhrases[$normalized['position']];
+    } elseif (count($positions) >= 2) {
+        $positionText = 'đặt được cả trên sàn lẫn trên bàn hoặc kệ nhỏ';
+    } else {
+        $positionText = $positionPhrases[$positions[0] ?? 'shelf'] ?? 'dễ bố trí trong phòng';
+    }
+
+    $careText = match ($meta['care'] ?? 'medium') {
+        'easy' => 'Rất dễ chăm sóc, phù hợp cho người mới bắt đầu hoặc bận rộn.',
+        'medium' => 'Mức chăm sóc vừa phải, chỉ cần tưới và giữ ẩm đều đặn.',
+        default => 'Cần chú ý ánh sáng và độ ẩm hơn một chút để cây phát triển ổn định.',
+    };
+
+    $firstSentence = mb_strtoupper(mb_substr($lightText, 0, 1, 'UTF-8'), 'UTF-8')
+        . mb_substr($lightText, 1, null, 'UTF-8')
+        . ', ' . $positionText . '.';
+
+    $parts = [$firstSentence, $careText];
+    if (is_string($meta['meaning'] ?? null) && $meta['meaning'] !== '') {
+        $parts[] = $meta['meaning'];
+    }
+    return implode(' ', $parts);
+}
+
+/**
+ * Pure deterministic room-only plant recommendations without requiring astrology or feng shui data.
+ */
+function room_based_picks(array $plants, array $catalogNotes, array $roomInput, int $limit = 8): array
+{
+    $normalized = normalize_room_advisor_input($roomInput);
+    if (!$normalized['has_filters'] || $limit <= 0) {
+        return [];
+    }
+
+    $careWeight = ['easy' => 30, 'medium' => 20, 'hard' => 10];
+    $scored = [];
+    foreach ($plants as $plant) {
+        $id = (int) $plant['id'];
+        $meta = $catalogNotes[$id] ?? null;
+        if ($meta === null || !plant_fits_room($meta, $normalized)) {
+            continue;
+        }
+
+        // Prioritize easy-care plants first; prefer plants tailored to the requested light/placement.
+        $score = $careWeight[$meta['care']] ?? 0;
+        if ($normalized['light'] !== 'all' && count($meta['light']) === 1) {
+            $score += 2;
+        }
+        if ($normalized['position'] !== 'any' && count($meta['position']) === 1) {
+            $score += 2;
+        }
+
+        $scored[] = [
+            'plant_id' => $id,
+            'score' => $score,
+            'reason' => room_rule_reason($meta, $normalized),
+        ];
+    }
+
+    usort(
+        $scored,
+        static fn (array $a, array $b): int => [$b['score'], $a['plant_id']] <=> [$a['score'], $b['plant_id']]
+    );
+
+    return array_map(
+        static fn (array $pick): array => ['plant_id' => $pick['plant_id'], 'reason' => $pick['reason']],
+        array_slice($scored, 0, $limit)
+    );
 }

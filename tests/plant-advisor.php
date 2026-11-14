@@ -201,4 +201,90 @@ $first = fortune_draw($fortuneCandidates, static fn (int $min, int $max): int =>
 check($first['stick'] === 'tai-loc' && $first['plant'] === $fortuneCandidates['tai-loc'][0] && $first['level'] === 'Đại cát', 'Fortune draws use the injected random source.');
 check(fortune_draw([]) === null, 'An empty catalog draws nothing.');
 
+// Practical room-only advisor: input normalization, 3 states, strict light+position matching, and easy-care ranking.
+$unselectedEmpty = normalize_room_advisor_input([]);
+check($unselectedEmpty === ['light' => 'all', 'position' => 'any', 'has_filters' => false], 'Empty room advisor input defaults to unselected.');
+$unselectedAll = normalize_room_advisor_input(['light' => 'all', 'position' => 'all']);
+check($unselectedAll === ['light' => 'all', 'position' => 'any', 'has_filters' => false], 'All/all input normalizes to unselected.');
+$invalidRoomInput = normalize_room_advisor_input(['light' => ['low'], 'position' => 'roof']);
+check($invalidRoomInput === ['light' => 'all', 'position' => 'any', 'has_filters' => false], 'Invalid or array room parameters fall back safely.');
+$roomLightOnly = normalize_room_advisor_input(['light' => 'low', 'position' => '']);
+check($roomLightOnly === ['light' => 'low', 'position' => 'any', 'has_filters' => true], 'Selecting light alone activates room filtering.');
+$roomPositionOnly = normalize_room_advisor_input(['light' => 'all', 'position' => 'floor']);
+check($roomPositionOnly === ['light' => 'all', 'position' => 'floor', 'has_filters' => true], 'Selecting position alone activates room filtering.');
+$roomBoth = normalize_room_advisor_input(['light' => 'low', 'position' => 'shelf']);
+check($roomBoth === ['light' => 'low', 'position' => 'shelf', 'has_filters' => true], 'Selecting both light and position preserves both filters.');
+
+// State (a): Unselected conditions return no picks so UI displays the friendly prompt.
+check(room_based_picks($plants, $notes, $unselectedEmpty) === [], 'Unselected room input returns empty picks.');
+check(room_based_picks($plants, $notes, $unselectedAll) === [], 'All/all room input returns empty picks.');
+check(room_condition_badges($unselectedEmpty) === [], 'Unselected room input produces no condition badges.');
+
+// State (b): Has results, strictly matching light & position, ranking easy-care plants first.
+$lowShelfPicks = room_based_picks($plants, $notes, $roomBoth);
+$lowShelfIds = array_column($lowShelfPicks, 'plant_id');
+check(count($lowShelfPicks) === 6, 'Low light + shelf matches exactly the 6 eligible seeded plants.');
+check(!in_array(23, $lowShelfIds, true), 'Floor-only Kim Tiền must not appear in shelf results.');
+check(!in_array(47, $lowShelfIds, true), 'Bright-light Sen Đá must not appear in low-light results.');
+check($lowShelfPicks === room_based_picks($plants, $notes, ['light' => 'low', 'position' => 'shelf']), 'Room-based picks are deterministic.');
+$lowShelfCareRanks = array_map(
+    static fn (int $id): int => ['easy' => 0, 'medium' => 1, 'hard' => 2][$notes[$id]['care']],
+    $lowShelfIds
+);
+$sortedCareRanks = $lowShelfCareRanks;
+sort($sortedCareRanks);
+check($lowShelfCareRanks === $sortedCareRanks, 'Easy-care plants are ranked before medium and hard care plants.');
+foreach ($lowShelfPicks as $pick) {
+    $meta = $notes[$pick['plant_id']];
+    check(in_array('low', $meta['light'], true) && in_array('shelf', $meta['position'], true), 'Every low+shelf pick strictly matches both light and position.');
+    check(str_contains($pick['reason'], $meta['meaning']), 'Room reason includes plant characteristics/meaning.');
+    check(!str_contains($pick['reason'], 'Cung ') && !str_contains($pick['reason'], 'Mệnh '), 'Room reason does not require or cite zodiac/fengshui.');
+}
+$badges = room_condition_badges($roomBoth);
+check(count($badges) === 2 && $badges[0]['label'] === 'Ánh sáng' && $badges[1]['label'] === 'Vị trí', 'Condition badges describe both selected filters.');
+
+// Verify strict light + position matching and care ordering across every valid filter combination.
+$careOrder = ['easy' => 0, 'medium' => 1, 'hard' => 2];
+foreach (['all', 'bright', 'indirect', 'low'] as $lightChoice) {
+    foreach (['any', 'floor', 'shelf'] as $positionChoice) {
+        if ($lightChoice === 'all' && $positionChoice === 'any') {
+            continue;
+        }
+        $picks = room_based_picks($plants, $notes, ['light' => $lightChoice, 'position' => $positionChoice]);
+        check($picks !== [], "Seeded catalog has matches for $lightChoice + $positionChoice.");
+        $ranks = [];
+        foreach ($picks as $pick) {
+            $meta = $notes[$pick['plant_id']];
+            check($lightChoice === 'all' || in_array($lightChoice, $meta['light'], true), "Pick {$pick['plant_id']} must match light $lightChoice.");
+            check($positionChoice === 'any' || in_array($positionChoice, $meta['position'], true), "Pick {$pick['plant_id']} must match position $positionChoice.");
+            check(trim($pick['reason']) !== '', "Pick {$pick['plant_id']} needs a contextual reason.");
+            $ranks[] = $careOrder[$meta['care']];
+        }
+        $expectedRanks = $ranks;
+        sort($expectedRanks);
+        check($ranks === $expectedRanks, "Picks for $lightChoice + $positionChoice must rank easy care first.");
+    }
+}
+
+$brightShelfPicks = array_column(room_based_picks($plants, $notes, ['light' => 'bright', 'position' => 'shelf']), 'plant_id');
+check(count($brightShelfPicks) === 8 && !array_intersect($brightShelfPicks, [63, 64]), 'Bright+shelf top 8 picks prioritize easy/medium plants over hard-care plants.');
+
+// Contextual reasons reflect light-only, position-only, and hard-care notes.
+$lightOnlyReason = room_rule_reason($notes[22], ['light' => 'low', 'position' => 'any']);
+check(str_contains($lightOnlyReason, 'ít ánh sáng') && str_contains($lightOnlyReason, 'trên sàn lẫn trên bàn'), 'Light-only reason mentions flexible placement.');
+$posOnlyReason = room_rule_reason($notes[22], ['light' => 'all', 'position' => 'shelf']);
+check(str_contains($posOnlyReason, 'trên bàn') && str_contains($posOnlyReason, 'Rất dễ chăm sóc'), 'Position-only reason adapts light description and care level.');
+$hardCareReason = room_rule_reason($notes[63], ['light' => 'bright', 'position' => 'shelf']);
+check(str_contains($hardCareReason, 'Cần chú ý ánh sáng'), 'Hard-care reason warns about extra attention.');
+
+// State (c): No results when catalog is empty or no candidate strictly matches both conditions.
+check(room_based_picks([], $notes, $roomBoth) === [], 'Empty plant catalog yields no room picks.');
+$nonMatchingPlants = [
+    ['id' => 27, 'name' => 'Cây Ngũ Gia Bì'],
+    ['id' => 47, 'name' => 'Cây Sen Đá'],
+    ['id' => 23, 'name' => 'Cây Kim Tiền'],
+];
+// ID 27 is bright+floor, ID 47 is bright+shelf, ID 23 is indirect/low+floor: none match low+shelf!
+check(room_based_picks($nonMatchingPlants, $notes, ['light' => 'low', 'position' => 'shelf']) === [], 'Room picks never relax position or light when no candidate matches both.');
+
 echo "PASS: $checks plant advisor checks.\n";

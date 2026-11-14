@@ -16,13 +16,24 @@ const { chromium } = require('playwright');
         const rendered = spawnSync(process.env.PHP_BINARY || 'C:/xampp/php/php.exe', ['-r', `
             $_SERVER['SCRIPT_NAME'] = getenv('LANDING_SCRIPT_NAME');
             $source = file_get_contents('index.php');
-            $source = str_replace('$catalog = plant_catalog_statistics();', '$catalog = ["total" => 40];', $source, $replacements);
-            if ($replacements !== 1) exit(1);
+            $source = str_replace(
+                '$catalog = plant_catalog_statistics();',
+                '$catalog = ["total" => 59, "counts" => ["Cây trong nhà" => 10, "Cây để bàn" => 19, "Cây bóng mát" => 10, "Cây ăn quả" => 10, "Cây nông nghiệp" => 10]];',
+                $source,
+                $catalogReplacements
+            );
+            $source = str_replace(
+                '$latestPosts = latest_blog_posts(6);',
+                '$latestPosts = [["slug" => "bat-dau-mot-goc-xanh-tu-dau", "title" => "Bắt đầu một góc xanh từ đâu?", "image_path" => "images/anh24.jpg", "created_at" => "2026-04-02"], ["slug" => "5-dau-hieu-cay-can-quan-tam", "title" => "5 dấu hiệu cây đang cần bạn quan tâm", "image_path" => "images/anh48.jpg", "created_at" => "2026-03-26"]];',
+                $source,
+                $postReplacements
+            );
+            if ($catalogReplacements !== 1 || $postReplacements !== 1) exit(1);
             eval(substr($source, 5));
         `], { cwd: root, encoding: 'utf8', env: { ...process.env, LANDING_SCRIPT_NAME: new URL('index.php', base).pathname } });
         assert.equal(rendered.status, 0, rendered.stderr);
         fixture = rendered.stdout;
-        assert.ok(fixture.includes('data-plant-finder'), 'The fixture must render the actual landing template.');
+        assert.ok(fixture.includes('data-feature-showcase'), 'The fixture must render the actual landing template.');
         fs.writeFileSync(path.join(output, 'landing.html'), fixture);
     }
     const browser = await chromium.launch({ channel: 'msedge', headless: true });
@@ -51,13 +62,17 @@ const { chromium } = require('playwright');
     try {
         page = await newPage();
         assert.equal(await page.locator('h1').count(), 1);
-        assert.equal(await page.locator('.plant-pick:visible').count(), 4);
-        assert.ok(await page.locator('[data-plant-finder]').isVisible());
+        assert.equal(await page.locator('.plant-pick').count(), 0);
+        assert.equal(await page.locator('.feature-card').count(), 5);
+        assert.ok(await page.locator('[data-feature-showcase]').isVisible());
         await page.locator('img').evaluateAll(images => Promise.all(images.map(image => {
             image.loading = 'eager';
             return image.decode();
         })));
-        assert.ok(await page.evaluate(() => document.fonts.check('16px Lora')));
+        assert.ok(await page.evaluate(() => document.fonts.check('16px "Be Vietnam Pro"')));
+        await page.evaluate(() => window.scrollTo(0, 350));
+        await page.waitForFunction(() => parseFloat(document.querySelector('.room-hero').style.getPropertyValue('--hero-travel')) > 0);
+        await page.evaluate(() => window.scrollTo(0, 0));
 
         // Keyboard disclosure, exclusive selection, Escape, and outside dismissal.
         const first = page.locator('.room-spot').first();
@@ -73,40 +88,80 @@ const { chromium } = require('playwright');
         await page.locator('#room-title').click();
         assert.equal(await page.locator('.room-spot[open]').count(), 0);
 
-        // Changing room conditions previews matches in place; the button opens the advisor.
-        await page.selectOption('#room-light', 'low');
-        await page.selectOption('#room-position', 'shelf');
-        assert.deepEqual(await page.locator('.plant-pick:visible h3').allTextContents(), ['Lưỡi Hổ', 'Kim Tiền']);
-        assert.match(await page.locator('[data-finder-status]').innerText(), /^2 gợi ý/);
-        await page.selectOption('#room-light', 'bright');
-        assert.deepEqual(await page.locator('.plant-pick:visible h3').allTextContents(), ['Lưỡi Hổ']);
-        await page.selectOption('#room-light', 'all');
-        await page.selectOption('#room-position', 'all');
-        assert.equal(await page.locator('.plant-pick:visible').count(), 4);
-        assert.equal(page.url(), base);
-
-        // Exercise the empty-state recovery for a future editorial data change.
-        const lightValues = await page.locator('.plant-pick').evaluateAll(plants => plants.map(plant => plant.dataset.light));
-        await page.locator('.plant-pick').evaluateAll(plants => plants.forEach(plant => { plant.dataset.light = ''; }));
-        await page.selectOption('#room-light', 'low');
-        assert.ok(await page.locator('[data-finder-empty]').isVisible());
-        await page.locator('.plant-pick').evaluateAll((plants, values) => plants.forEach((plant, i) => { plant.dataset.light = values[i]; }), lightValues);
-        await page.selectOption('#room-light', 'all');
-        assert.equal(await page.locator('[data-finder-empty]').isVisible(), false);
-        await page.selectOption('#room-light', 'low');
-        await page.selectOption('#room-position', 'shelf');
-        await Promise.all([page.waitForURL(/plant-advisor\.php/), page.locator('[data-plant-finder] button').click()]);
-        const advisorUrl = new URL(page.url());
-        assert.equal(advisorUrl.searchParams.get('light'), 'low');
-        assert.equal(advisorUrl.searchParams.get('position'), 'shelf');
-        await page.goBack();
-        await page.selectOption('#room-light', 'all');
-        await page.selectOption('#room-position', 'all');
-        for (const href of await page.locator('.plant-pick > a, .room-plant-note a').evaluateAll(links => links.map(link => link.href))) {
+        // Verify horizontal web feature cards and room note links.
+        const featureHrefs = await page.locator('.feature-card-link').evaluateAll(links => links.map(link => link.getAttribute('href')));
+        assert.deepEqual(featureHrefs, ['plant-advisor.php', 'plant-advisor.php?mode=elements', 'collection.php', 'blog.php', 'favorites.php']);
+        const trackInitial = await page.locator('[data-feature-track]').evaluate(el => el.scrollLeft);
+        assert.equal(trackInitial, 0);
+        await page.locator('[data-feature-next]').click();
+        await page.waitForTimeout(450);
+        const trackScrolled = await page.locator('[data-feature-track]').evaluate(el => el.scrollLeft);
+        assert.ok(trackScrolled > 100, `Expected feature track to advance on next click (got ${trackScrolled})`);
+        await page.locator('[data-feature-prev]').click();
+        await page.waitForTimeout(450);
+        for (const href of await page.locator('.room-plant-note a').evaluateAll(links => links.map(link => link.href))) {
             const url = new URL(href);
             assert.equal(url.searchParams.get('category'), 'Cây trong nhà');
             assert.ok(url.searchParams.get('search'));
         }
+
+        // Verify Floema editorial sections, minimalist hero, and adaptive header theme.
+        assert.equal(await page.locator('.room-hero .hero-tile').count(), 18);
+        assert.equal(await page.locator('.room-copy a, .room-copy button').count(), 0);
+        assert.ok(await page.locator('.manifesto-section').isVisible());
+        await page.locator('.manifesto-section').scrollIntoViewIfNeeded();
+        await page.waitForSelector('.manifesto-stage .manifesto-typed', { state: 'visible' });
+        await page.waitForSelector('.manifesto-stage .manifesto-caret', { state: 'attached' });
+        const getManifestoTypedLen = () => page.locator('.manifesto-stage .manifesto-typed').evaluateAll(els => els.reduce((n, el) => n + el.textContent.length, 0));
+        const typedLenStart = await getManifestoTypedLen();
+        await page.waitForTimeout(450);
+        const typedLenNext = await getManifestoTypedLen();
+        assert.ok(typedLenNext > typedLenStart, `Expected manifesto text to keep typing forward (${typedLenStart} -> ${typedLenNext})`);
+        assert.equal(await page.locator('.collections-overview .collection-row').count(), 5);
+        assert.deepEqual(
+            await page.locator('.collections-overview .collection-name').allTextContents(),
+            ['Trong nhà', 'Để bàn', 'Bóng mát', 'Ăn quả', 'Nông nghiệp']
+        );
+        assert.equal(await page.locator('.collections-overview .collection-thumb img').count(), 25);
+        const firstRow = page.locator('.collections-overview .collection-row').first();
+        const firstThumb = firstRow.locator('.collection-thumb');
+        await firstRow.scrollIntoViewIfNeeded();
+        await page.mouse.move(0, 0);
+        const thumbBeforeHover = await firstThumb.boundingBox();
+        const restFramesA = await firstThumb.locator('img').evaluateAll(imgs => imgs.map(img => Number(getComputedStyle(img).opacity) > 0.5));
+        await page.waitForTimeout(450);
+        const restFramesB = await firstThumb.locator('img').evaluateAll(imgs => imgs.map(img => Number(getComputedStyle(img).opacity) > 0.5));
+        assert.deepEqual(restFramesA, [true, false, false, false, false], 'Expected static cover image when not hovered');
+        assert.deepEqual(restFramesB, restFramesA, 'Expected no GIF frame change when not hovered');
+        await firstRow.hover();
+        await page.waitForTimeout(260);
+        const thumbAfterHover = await firstThumb.boundingBox();
+        const hoverFramesA = await firstThumb.locator('img').evaluateAll(imgs => imgs.map(img => Number(getComputedStyle(img).opacity) > 0.5));
+        await page.waitForTimeout(360);
+        const hoverFramesB = await firstThumb.locator('img').evaluateAll(imgs => imgs.map(img => Number(getComputedStyle(img).opacity) > 0.5));
+        assert.ok(thumbAfterHover.width > thumbBeforeHover.width * 1.8, `Expected expanded thumb width (${thumbAfterHover.width}) > 1.8x (${thumbBeforeHover.width})`);
+        assert.notDeepEqual(hoverFramesB, hoverFramesA, 'Expected collection thumb GIF reel to cycle frames while hovered');
+        await page.mouse.move(0, 0);
+        assert.ok(await page.locator('.forest-highlight').isVisible());
+        assert.equal(await page.locator('.care-pillar').count(), 3);
+        assert.ok(await page.locator('.floema-footer').isVisible());
+        assert.equal(await page.locator('.site-header .nav-search-link').count(), 0);
+        const navMetrics = await page.locator('.site-header').evaluate(el => {
+            const headerStyle = getComputedStyle(el);
+            const activeLink = el.querySelector('.nav-link.active');
+            const cta = el.querySelector('.btn-contact');
+            return {
+                position: headerStyle.position,
+                minHeight: headerStyle.minHeight,
+                activeBg: activeLink ? getComputedStyle(activeLink).backgroundColor : '',
+                ctaBg: cta ? getComputedStyle(cta).backgroundColor : '',
+            };
+        });
+        assert.equal(navMetrics.position, 'relative');
+        assert.equal(navMetrics.minHeight, '82px');
+        assert.equal(navMetrics.activeBg, 'rgba(0, 0, 0, 0)');
+        assert.equal(navMetrics.ctaBg, 'rgb(52, 83, 60)');
+        await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
 
         // All three notes must stay inside the visible room on every layout.
         for (const width of [320, 390, 768, 1024, 1440, 1920]) {
@@ -146,13 +201,17 @@ const { chromium } = require('playwright');
         assert.equal(await page.locator('[data-menu-toggle]').getAttribute('aria-expanded'), 'false');
 
         const reduced = await newPage({ reducedMotion: 'reduce' });
+        await reduced.evaluate(() => window.scrollTo(0, 350));
+        assert.equal(await reduced.locator('.room-hero').evaluate(hero => hero.style.getPropertyValue('--hero-travel')), '0px');
         assert.equal(await reduced.locator('.room-image').evaluate(image => getComputedStyle(image).animationName), 'none');
         await reduced.mouse.move(1300, 500);
         assert.equal(await reduced.locator('.room-scene').evaluate(scene => scene.style.getPropertyValue('--room-x')), '');
+        assert.equal(await reduced.locator('.manifesto-stage').count(), 0);
         await reduced.close();
         const noScript = await newPage({ javaScriptEnabled: false, viewport: { width: 390, height: 844 } });
-        assert.ok(await noScript.locator('[data-plant-finder]').isVisible(), 'The finder must still open the advisor without JavaScript.');
-        assert.equal(await noScript.locator('.plant-pick:visible').count(), 4);
+        assert.ok(await noScript.locator('[data-feature-showcase]').isVisible(), 'Feature showcase must remain accessible without JavaScript.');
+        assert.equal(await noScript.locator('.feature-card').count(), 5);
+        assert.equal(await noScript.locator('.manifesto-phrase').count(), 5);
         await noScript.locator('.room-spot').first().locator('summary').click();
         assert.ok(await noScript.locator('.room-spot').first().evaluate(spot => spot.open));
         await noScript.close();

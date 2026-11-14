@@ -1,87 +1,100 @@
 ---
-name: Vũ Điệu Rừng Xanh — Indoor Living
-description: A warm editorial guide to choosing indoor plants for a real room.
+name: Vũ Điệu Rừng Xanh — Indoor Living and Community Blog
+description: An airy Floema-inspired botanical reference and living-room guide with an independent community blog.
 colors:
-  paper: "#f5f2ea"
-  ink: "#292d28"
-  muted: "#626b60"
-  primary: "#384936"
-  sage: "#edf0e8"
-  care-ground: "#ece8df"
-  terracotta: "#995239"
-  line: "#dedfd6"
+  paper: "#f2efea"
+  paperWarm: "#ebe7df"
+  paperSoft: "#f8f6f2"
+  hairline: "#e4ded3"
+  white: "#ffffff"
+  ink: "#241f21"
+  inkSecondary: "#524945"
+  muted: "#645a55"
+  forest: "#042d2b"
+  yellow: "#e9e778"
+  coral: "#f76c46"
+  celadon: "#bacfa3"
+  blue: "#85a1c5"
+  kraft: "#c6af88"
+  primary: "#042d2b"
 typography:
   display:
-    fontFamily: "Lora, Georgia, serif"
-    fontSize: "clamp(40px, 4.2vw, 68px)"
-    fontWeight: 400
-    lineHeight: 1.2
-    letterSpacing: "-0.035em"
+    fontFamily: "Be Vietnam Pro, sans-serif"
+    fontSize: "clamp(2.55rem, 5.8vw, 5.25rem)"
+    fontWeight: 500
+    lineHeight: 1.03
+    letterSpacing: "-0.036em"
   body:
     fontFamily: "Be Vietnam Pro, sans-serif"
     fontSize: "16px"
     fontWeight: 400
-    lineHeight: 1.8
+    lineHeight: 1.62
 rounded:
-  control: "4px"
-  disclosure: "4px"
+  control: "12px"
+  card: "6px"
+  chip: "8px"
+  drawer: "14px"
+  row: "16px"
 spacing:
   small: "12px"
   medium: "24px"
-  section: "100px"
+  section: "clamp(68px, 9vw, 136px)"
 components:
   button-primary:
-    backgroundColor: "{colors.primary}"
-    textColor: "#ffffff"
+    backgroundColor: "{colors.forest}"
+    textColor: "{colors.yellow}"
     rounded: "{rounded.control}"
-    padding: "16px 22px"
+    padding: "12px 20px"
 ---
 
 # Landing Design
 
 ## Overview
 
-Scope: `index.php` and its landing-only stylesheet, with the Blog extension described below. The approved landing pairs a minimal, bright room with warm editorial typography and practical plant guidance. Visitors choose plants suitable for their own light and available space. Other internal and admin pages retain their current design.
+Scope: `index.php`, `.site-header` overrides inside `css/landing.css`, and `js/landing.js`, with the existing Blog extension below. The landing page adopts Floema's warm ivory paper palette (`#f2efea`), deep charcoal ink (`#241f21`), deep forest green narrative band (`#042d2b`), and flour-yellow footer (`#e9e778`) while preserving non-commercial Vietnamese indoor-plant guidance and real local imagery. Other internal and admin pages keep their existing stylesheets.
 
 ## Colors
 
-Warm ivory is the page ground, charcoal carries headings, and muted olive carries actions. A warm stone ground separates care guidance; restrained terracotta numbers mark its steps. The finder stays on the page ground between thin rules. Plant foliage supplies the main photographic color. Use the `--room-*` tokens in `css/landing.css`; care-ground and terracotta reflect the existing section and counter declarations.
+Warm ivory (`#f2efea`), warm sand (`#ebe7df`), and soft cream (`#f8f6f2`) alternate cleanly across split panels and architectural sections, framed by `#e4ded3` hairlines. Charcoal ink (`#241f21`) and stone (`#524945`) maintain `>= 4.5:1` contrast on ivory and yellow grounds. Deep forest green (`#042d2b`) anchors primary actions and the narrative showcase band with high-contrast flour yellow (`#e9e778`) text. Category accent pills use `#f76c46`, `#bacfa3`, `#85a1c5`, and `#c6af88` with `#241f21` ink. Source tokens are the `--fl-*` custom properties in `css/landing.css`.
 
 ## Typography
 
-Self-hosted Lora regular carries headings. Existing Be Vietnam Pro carries navigation, body copy and controls. The Lora license is included in `fonts/lora-OFL.txt`. Preserve Vietnamese diacritics. Headings use practical language about choosing plants, care and questions; avoid decorative italic fragments. Body guidance uses 16px text at 1.8 line-height on desktop, with smaller labels and supporting captions.
+Be Vietnam Pro (`500` medium for display and headings, `400/500/600` for body and controls) provides clean geometric letterforms across Vietnamese diacritics. Display type uses tight negative tracking (`-0.036em` to `-0.025em`) and generous architectural line-height (`1.03–1.24`). Catalog counts and indices use `tabular-nums`. Native select controls preserve legible `0.9rem`–`16px` sizing without viewport zoom jumps.
 
 ## Layout
 
-The desktop hero separates left-aligned copy and the room photograph into 36% / 64% columns; text never overlays the photograph. At 701–1050px the split becomes 40% / 60%. Three numbered native disclosures identify plants in the scene. Content uses a 90% container capped at 1296px. The finder filters four editorial starting points by light and placement; links lead to the existing indoor catalog search. Care steps and FAQ follow the finder. A compact text link with the live catalog count closes the page instead of a second hero or large promotional block.
-
-At 700px and below, copy precedes the room image. Plant notes expand below the image. The finder stacks and plants use two columns. Larger layouts retain four columns. Body copy remains readable; native selects use 16px on mobile to avoid input zoom.
+1. **Minimalist Perspective Hero**: Centered `<h1>` surrounded by 18 unwatermarked plant tiles radiating outward along 1-point perspective rays from the center vanishing point (faint & soft-focus near center, sharpening and scaling up toward edges), grounded by a baseline rule with live catalog species count and `#room-scene` scroll anchor. Zero central CTA buttons clutter the headline.
+2. **Annotated Room Scene**: Full-bleed `indoor-room.png` stage with `01` structural rail, `Xem cây trong nhà` CTA orb-pill, bottom-left guide card, and three interactive `details.room-spot` hotspots (`01`–`03`). Below `700px`, opened notes expand cleanly in document flow beneath the photograph.
+3. **Scroll-Lit Manifesto & Blog**: Editorial inset photograph alongside multi-phrase statement (illuminating from `#645a55` to `#241f21` as readers scroll, defaulting to full `#241f21` under reduced motion / no-JS), followed by two curated journal posts.
+4. **Live Light & Position Finder**: Compact GET form predicting matches in place across a 2x2 architectural showcase grid (`#ebe7df` / `#f8f6f2`) before linking to `plant-advisor.php`.
+5. **Dappled Leaf Shadows & Category Directory**: Giant inline typography rows interspersed with upright thumbnails and live database counts over blurred botanical shadow silhouettes.
+6. **Forest Narrative Band**: `#042d2b` surface with `#e9e778` flour-yellow typography, portrait plant inset, advisor summary, and tall right-hand specimen frame.
+7. **Staggered Care Showcase & Closing Invitation**: Three stepped care columns (`tall` / `mid` / `short` aspect ratios) and bold catalog invitation (`collection.php`).
+8. **Flour-Yellow Architectural Footer**: `#e9e778` ground with large botanical mark, 3 navigation columns, colophon, and `1.4px` botanical line-art SVGs.
 
 ## Elevation & Depth
 
-Keep ordinary sections flat. Use soft shadows only to lift scene markers and desktop plant notes. The room photo supplies natural depth. The hero is static: no pointer parallax, marker pulse or entrance animation. Interaction feedback is limited to local hover and focus states.
+Sections stay predominantly flat using hairline borders and value shifts rather than heavy drop shadows. Depth comes from the continuous 1-point perspective radial bloom in the hero, subtle scroll/pointer horizon shift (`--hero-travel`, `--hero-mx`, `--hero-my`), drifting dappled leaf shadows (`--shadow-y`), and desktop `.room-plant-note` cards (`0 20px 44px rgba(36, 31, 33, .2)`). Everything respects `prefers-reduced-motion: reduce` by freezing perspective tiles cleanly around the perimeter and disabling transitions and keyframe animations.
 
 ## Shapes
 
-Rectangular photographs, restrained 4px control corners, circular 44px scene markers and 4px desktop note corners. Avoid enclosing every section in a card.
+UI pills, header links, inputs, and buttons share Floema's signature `12px` radius (`--fl-pill-radius`), category badges use `8px`, and plant specimen/editorial photo cards use sharp `6px` corners (`--fl-card-radius`). Room markers are clean `38px` circular badges with high contrast.
 
 ## Components
 
-- Native `details` provide plant and FAQ disclosures. JavaScript adds exclusive selection, Escape, and outside dismissal for the room.
-- A form filters editorial suggestions locally and announces the result count. Without JavaScript, all four links and native room disclosures remain available.
-- Numbered markers (01–03) use 44px native summary targets and concise plant notes. Desktop notes float beside markers; mobile notes occupy document flow below the image.
-- Keep the closing catalog action a compact text link. Preserve visible keyboard focus and respect reduced-motion preferences for any local state transitions.
+- **Adaptive Sticky Navbar**: Uses shared `includes/navbar.php` DOM (plus landing search icon pill), shifting from ivory to `#042d2b` (`.is-dark`) over `.forest-highlight` and `#e9e778` (`.is-yellow`) over `.floema-footer`.
+- **Room Disclosures**: Native `<details name="room-plants">` with JS exclusive selection, `Escape` dismissal restoring `<summary>` focus, outside click close, and zero horizontal/vertical clipping from `320px` to `1920px`.
+- **Plant Finder**: Native GET form with live client-side preview filter and empty-state recovery, fully usable without JavaScript.
 
 ## Do's and Don'ts
 
-- Preserve the bright room, sparse furniture and visible plants.
-- Keep catalog, blog, account and favorite links functional.
-- Keep suggestions framed as starting points; the site provides plant information and does not sell plants.
-- Do not add sales claims, testimonials, stock metrics or continuous animation.
-- Do not restore a photo-backed text hero, parallax, marker pulses or entrance animation on this landing.
+- Preserve non-commercial Vietnamese editorial tone; never imply e-commerce checkout or delivery.
+- Avoid placing eyebrow/kicker labels directly above section headings.
+- Keep all landing overrides scoped inside `.landing-page` so shared internal/admin pages remain unchanged.
+- Always honor `prefers-reduced-motion: reduce`, keyboard navigation, and live DB / fixture fallbacks.
 
 ## Blog Extension
 
-The user prefers a Reddit-style community blog. `css/blog.css` loads only for `blog.php` and `blog-post.php`: a pale green-gray ground, white post surfaces, deep green actions and Be Vietnam Pro for headings, body text and controls. The landing keeps its own Lora typography. Existing post content and uploaded covers remain authoritative; the shared `blog_cover_url()` helper supplies existing indoor-plant photographs when a cover is absent.
+The user prefers a Reddit-style community blog. `css/blog.css` loads only for `blog.php` and `blog-post.php`: a pale green-gray ground, white post surfaces, deep green actions and Be Vietnam Pro for headings, body text and controls. The landing also uses Be Vietnam Pro, with its own display scale and route-scoped styling. Existing post content and uploaded covers remain authoritative; the shared `blog_cover_url()` helper supplies existing indoor-plant photographs when a cover is absent.
 
 The introduction and existing moving article strip occupy separate desktop columns. Preserve its pause, keyboard, touch and reduced-motion behavior. Posts always form one vertical feed, with author/date metadata first, compact right-hand thumbnails and up/down vote, save and comment controls. A topic sidebar sits to the right above 1050px and follows the feed below that breakpoint. Post surfaces use a 1px border and 12px corners without shadows. Search uses persistent labels and personal views use underlined tabs. Article text stays within 720px, and uploaded detail images use `object-fit: contain`. Use 44px action targets and 16px form text. Do not extend these route-specific styles to admin or other internal pages.

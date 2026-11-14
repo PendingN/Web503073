@@ -61,7 +61,15 @@ function plant_catalog_statistics(): array
     static $statistics = null;
     if ($statistics === null) {
         $rows = db()->query('SELECT category, COUNT(*) AS total FROM plants GROUP BY category ORDER BY category')->fetchAll();
-        $statistics = ['total' => (int) array_sum(array_column($rows, 'total')), 'categories' => array_column($rows, 'category')];
+        $counts = [];
+        foreach ($rows as $row) {
+            $counts[(string) $row['category']] = (int) $row['total'];
+        }
+        $statistics = [
+            'total' => array_sum($counts),
+            'categories' => array_keys($counts),
+            'counts' => $counts,
+        ];
     }
     return $statistics;
 }

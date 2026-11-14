@@ -175,7 +175,23 @@ try {
     check(!str_contains($advisorPage, 'class="advisor-mode ') && str_contains($advisorPage, 'Chọn cách khác'), 'A chosen mode hides the mode buttons and offers a way back.');
     $advisorPage = $guest->request('plant-advisor.php')['body'];
     check(substr_count($advisorPage, 'class="advisor-mode ') === 2 && !str_contains($advisorPage, 'id="advisor-form"'), 'The advisor opens with only the two mode buttons.');
+    check(str_contains($advisorPage, 'id="room-advisor-form"') && str_contains($advisorPage, 'Chưa chọn điều kiện không gian'), 'Unselected plant advisor shows the room form and empty-selection prompt.');
+    check(str_contains($advisorPage, 'class="advisor-entertainment"') && str_contains($advisorPage, 'Góc tham khảo &amp; giải trí')
+        && strpos($advisorPage, 'id="room-results"') < strpos($advisorPage, 'class="advisor-entertainment"'), 'Entertainment options appear in a secondary section below room results.');
     check(str_contains($advisorPage, 'id="lac-que"') && str_contains($advisorPage, 'data-que-result aria-live="polite" hidden'), 'The fortune draw waits for a shake.');
+    $landingPrefilled = $guest->request('index.php?light=low&position=shelf');
+    check($landingPrefilled['status'] === 200 && str_contains($landingPrefilled['body'], '<option value="low" selected>')
+        && str_contains($landingPrefilled['body'], '<option value="shelf" selected>'), 'Landing finder preserves light and position query selections.');
+    $roomAdvisor = $guest->request('plant-advisor.php?light=low&position=shelf');
+    $roomBody = $roomAdvisor['body'];
+    check($roomAdvisor['status'] === 200 && str_contains($roomBody, '<option value="low" selected>') && str_contains($roomBody, '<option value="shelf" selected>'), 'Room advisor preserves selected light and position.');
+    $roomResultsStart = strpos($roomBody, 'id="room-results"');
+    $entertainmentStart = strpos($roomBody, 'class="advisor-entertainment"');
+    check($roomResultsStart !== false && $entertainmentStart !== false && $roomResultsStart < $entertainmentStart, 'Room results section precedes the secondary entertainment section.');
+    $roomResultsHtml = substr($roomBody, $roomResultsStart, $entertainmentStart - $roomResultsStart);
+    check(str_contains($roomResultsHtml, '6 cây phù hợp với góc nhà bạn') && str_contains($roomResultsHtml, 'Cây Lưỡi Hổ Mini') && str_contains($roomResultsHtml, 'class="advisor-reason"')
+        && !str_contains($roomResultsHtml, 'Cây Kim Tiền') && !str_contains($roomResultsHtml, 'Cây Sen Đá')
+        && !str_contains($roomBody, 'id="advisor-form"') && !str_contains($roomResultsHtml, 'Cung ') && !str_contains($roomResultsHtml, 'Mệnh '), 'Room advisor displays matching plants and reasons without requiring zodiac or spiritual mode.');
     $fortunePage = $guest->request('plant-advisor.php?lac=1')['body'];
     check(preg_match('/class="que-result-tag"[^>]*>Quẻ [^<]+ · [^<]+</u', $fortunePage) === 1 && str_contains($fortunePage, 'plant-detail.php?id=') && str_contains($fortunePage, '<dt>Hợp mệnh</dt>') && str_contains($fortunePage, '<b>Tưới nước:</b>'), 'Shaking without JavaScript draws a plant with its facts on the server.');
     check(str_contains($guest->request('plant-advisor.php?mode=spiritual')['body'], 'Mệnh Hỏa'), 'Each mode keeps its own results.');
@@ -210,6 +226,18 @@ try {
     $backToCollection = $prefix . '/collection.php?search=' . rawurlencode('Trầu Bà');
     $detailPage = $guest->request('plant-detail.php?id=21&return_to=' . rawurlencode($backToCollection));
     check(str_contains($detailPage['body'], 'class="back-link" href="' . htmlspecialchars($backToCollection, ENT_QUOTES, 'UTF-8') . '"'), 'Plant detail must preserve collection search on the back link.');
+    $backToAdvisor = $prefix . '/plant-advisor.php?light=low&position=shelf#room-results';
+    $detail22 = $guest->request('plant-detail.php?id=22&return_to=' . rawurlencode($backToAdvisor));
+    $detail22Body = $detail22['body'];
+    check($detail22['status'] === 200 && str_contains($detail22Body, 'class="back-link" href="' . htmlspecialchars($backToAdvisor, ENT_QUOTES, 'UTF-8') . '">Quay lại gợi ý chọn cây</a>'), 'Plant detail must label the back link for plant-advisor returns.');
+    $copyPos = strpos($detail22Body, 'class="detail-copy"');
+    $favPos = strpos($detail22Body, 'class="favorite-form"');
+    $imagePos = strpos($detail22Body, 'class="detail-image"');
+    $carePos = strpos($detail22Body, 'class="care-box"');
+    check($copyPos !== false && $favPos !== false && $imagePos !== false && $carePos !== false
+        && $copyPos < $favPos && $favPos < $imagePos && $imagePos < $carePos, 'Plant detail must order header/copy and favorite button before image and care guide.');
+    check(str_contains($detail22Body, 'class="care-list care-list--grid"') && str_contains($detail22Body, 'class="care-item care-item--card"')
+        && str_contains($detail22Body, 'Ánh sáng:</b>') && str_contains($detail22Body, 'Tưới nước:</b>'), 'Plant detail 22 must render structured care cards.');
     $aliceToken = $guest->token('profile.php');
     check($guest->request('actions/user-action.php', ['csrf_token' => $aliceToken, 'user_id' => $admin['id'], 'operation' => 'block'])['status'] === 403, 'Ordinary user accessed user management.');
     check($guest->request('actions/favorite-action.php', ['csrf_token' => $aliceToken, 'plant_id' => 99999])['status'] === 404, 'Unknown favorite was accepted.');
@@ -319,7 +347,10 @@ try {
     $newPlant = db()->query("SELECT * FROM plants WHERE name = 'Cây thử nghiệm'")->fetch();
     check($newPlant !== false && str_starts_with($newPlant['image'], 'plants/') && is_file(dirname(__DIR__) . '/images/' . $newPlant['image']), 'Plant create with image failed.');
     $plantId = (int) ($newPlant['id'] ?? 0);
-    check($plantId > 0 && $adminBrowser->request('plant-detail.php?id=' . $plantId)['status'] === 200, 'New plant page failed to open.');
+    $newPlantDetail = $plantId > 0 ? $adminBrowser->request('plant-detail.php?id=' . $plantId) : ['status' => 0, 'body' => ''];
+    check($plantId > 0 && $newPlantDetail['status'] === 200, 'New plant page failed to open.');
+    check(str_contains($newPlantDetail['body'], 'class="care-item care-item--plain"') && !str_contains($newPlantDetail['body'], 'care-list--grid')
+        && !str_contains($newPlantDetail['body'], 'Ánh sáng:</b>'), 'Plain-text care must render cleanly without inventing categories.');
     check(str_contains($adminBrowser->request('admin-plants.php?pq=' . rawurlencode('Cây thử'))['body'], 'Cây thử nghiệm'), 'Admin plant search failed.');
     $plantEdit = ['csrf_token' => $adminToken, 'operation' => 'update', 'plant_id' => $plantId, 'name' => 'Cây thử đã sửa',
         'category' => 'Cây thử', 'description' => 'Mô tả đã được cập nhật cho cây.', 'care' => 'Chăm sóc đã được cập nhật.'];

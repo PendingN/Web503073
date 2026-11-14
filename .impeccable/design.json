@@ -1,25 +1,25 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-14T00:29:32.098331+00:00",
+  "generatedAt": "2026-11-14T06:03:35.863554+00:00",
   "title": "Vũ Điệu Rừng Xanh — Indoor Living and Community Blog",
   "extensions": {
     "shadows": [
       {
-        "name": "marker",
-        "value": "0 3px 14px #292d2824",
-        "purpose": "Lift room markers above the photograph."
-      },
-      {
         "name": "plant-note",
-        "value": "0 12px 42px #292d2830",
+        "value": "0 20px 44px rgba(36, 31, 33, .2)",
         "purpose": "Desktop plant disclosures."
       }
     ],
     "motion": [
       {
+        "name": "landing-perspective-bloom",
+        "value": "18s linear infinite radial perspective keyframe + scroll --hero-travel and pointer --hero-mx/--hero-my",
+        "purpose": "18 tiles emerge softly blurred and faint from the center vanishing point behind h1, accelerating and scaling outward along perspective rays. Reduced motion parks outer tiles in a static halo."
+      },
+      {
         "name": "landing-state",
         "value": ".2s ease",
-        "purpose": "Local button and marker color feedback; the landing hero has no entrance animation, marker pulses or pointer parallax."
+        "purpose": "Local control, adaptive navbar, manifesto illumination, and disclosure feedback; reduced motion disables transitions."
       },
       {
         "name": "blog-article-loop",
@@ -33,7 +33,7 @@
         "value": "700px"
       },
       {
-        "name": "landing-compact-hero",
+        "name": "landing-compact-scene",
         "value": "1050px"
       },
       {
@@ -55,7 +55,7 @@
     ],
     "typographyMeta": {
       "display": {
-        "purpose": "Lora is reserved for the landing page. Community Blog headings and controls use Be Vietnam Pro."
+        "purpose": "Be Vietnam Pro carries centered landing display type and editorial section headings; Blog retains its independent scale."
       }
     }
   },
@@ -64,9 +64,9 @@
       "name": "Landing Primary Button",
       "kind": "button",
       "refersTo": "button-primary",
-      "description": "The landing's direct action, with 4px corners and a 52px minimum height.",
-      "html": "<button class=\"ds-room-button\" type=\"button\">Tìm cây phù hợp</button>",
-      "css": ".ds-room-button { display: inline-flex; align-items: center; justify-content: center; gap: 20px; min-height: 52px; padding: 16px 22px; border: 0; border-radius: 4px; background: var(--room-green, #384936); color: #fff; font: 500 12px/1.5 'Be Vietnam Pro', sans-serif; cursor: pointer; transition: background .2s ease; } .ds-room-button:hover { background: #213e2a; } .ds-room-button:focus-visible { outline: 2px solid #384936; outline-offset: 5px; }"
+      "description": "Floema 12px-radius deep forest action button with flour-yellow ink.",
+      "html": "<button class=\"ds-room-button\" type=\"button\">Gợi ý cây cho tôi</button>",
+      "css": ".ds-room-button { display: inline-flex; align-items: center; justify-content: center; gap: 9px; height: 46px; padding: 0 20px; border: 1px solid transparent; border-radius: 12px; background: var(--fl-forest, #042d2b); color: var(--fl-yellow, #e9e778); font: 600 0.9rem 'Be Vietnam Pro', sans-serif; cursor: pointer; transition: background-color .2s ease; } .ds-room-button:hover { background: #241f21; } .ds-room-button:focus-visible { outline: 2px solid #042d2b; outline-offset: 3px; }"
     },
     {
       "name": "Blog Primary Button",
@@ -99,9 +99,9 @@
     {
       "name": "Room Plant Note",
       "kind": "card",
-      "description": "Numbered room annotations open 4px-corner desktop notes with a soft shadow; mobile notes expand below the photograph without elevation.",
-      "html": "<article class=\"ds-plant-note\"><h2>Bàng Singapore</h2><p>Chọn cây theo ánh sáng và vị trí trong phòng.</p><a href=\"#plant\">Xem chi tiết cây</a></article>",
-      "css": ".ds-plant-note { max-width: 270px; padding: 23px; border-radius: 4px; background: var(--room-paper, #f5f2ea); color: var(--room-ink, #292d28); box-shadow: 0 12px 42px #292d2830; } .ds-plant-note h2 { margin: 0 0 10px; font: 400 20px/1.4 Lora, Georgia, serif; } .ds-plant-note p { margin: 0 0 14px; color: var(--room-muted, #626b60); font: 400 12px/1.8 'Be Vietnam Pro', sans-serif; } .ds-plant-note a { display: inline-flex; padding-block: 5px; color: var(--room-green, #384936); font: 600 12px 'Be Vietnam Pro', sans-serif; text-decoration: none; } .ds-plant-note a:hover { text-decoration: underline; text-underline-offset: 5px; } .ds-plant-note a:focus-visible { outline: 2px solid #384936; outline-offset: 5px; }"
+      "description": "Numbered room annotations open 12px-radius desktop notes; mobile notes expand below the photograph in document flow.",
+      "html": "<article class=\"ds-plant-note\"><h3>Bàng Singapore</h3><p>Lá to, dáng cao. Một điểm nhấn tự nhiên cho góc phòng nhiều ánh sáng.</p><a href=\"#plant\">Tìm hiểu cây này</a></article>",
+      "css": ".ds-plant-note { width: min(296px, 42vw); padding: 18px 20px; border-radius: 12px; background: #ffffff; color: #241f21; border: 1px solid rgba(36, 31, 33, .14); box-shadow: 0 20px 44px rgba(36, 31, 33, .2); } .ds-plant-note h3 { margin: 0 0 6px; font: 600 1.05rem/1.35 'Be Vietnam Pro', sans-serif; } .ds-plant-note p { margin: 0 0 10px; color: #524945; font: 400 0.87rem/1.5 'Be Vietnam Pro', sans-serif; } .ds-plant-note a { display: inline-flex; align-items: center; gap: 8px; color: #042d2b; font: 600 0.86rem 'Be Vietnam Pro', sans-serif; text-decoration: none; border-bottom: 1px solid rgba(4, 45, 43, .32); } .ds-plant-note a:focus-visible { outline: 2px solid #042d2b; outline-offset: 3px; }"
     },
     {
       "name": "Community Vote Controls",
@@ -112,18 +112,18 @@
     }
   ],
   "narrative": {
-    "northStar": "A warm editorial guide to a bright room",
-    "overview": "The landing separates editorial copy from the room photograph in a 36% / 64% desktop hero. Warm ivory, charcoal, olive and restrained terracotta support practical plant selection, numbered room annotations, care guidance and a compact closing catalog link. The hero has no parallax, pulse or entrance animation. The existing Community Blog retains its independent design and behavior.",
+    "northStar": "An airy Floema-inspired botanical invitation to indoor living",
+    "overview": "Warm ivory (#f2efea), deep forest green (#042d2b), flour yellow (#e9e778) and 12px pill geometry adapt Floema's architectural rhythm to Vietnamese plant discovery. A 1-point perspective minimalist hero leads to an annotated living room, scroll-lit manifesto with curated blog cards, a 2x2 live plant finder, dappled leaf-shadow categories, forest narrative band, staggered care pillars and a line-art yellow footer. The Community Blog retains its independent design and behavior.",
     "dos": [
-      "Preserve the bright room, sparse furniture and visible plants.",
-      "Keep catalog, blog, account and favorite links functional.",
-      "Keep suggestions framed as starting points; the site provides plant information and does not sell plants.",
-      "Use practical landing headings, numbered room annotations and a compact closing catalog text link."
+      "Preserve non-commercial plant guidance, live catalog counts and category pills.",
+      "Keep catalog, advisor, blog, account and favorite links functional.",
+      "Preserve native scrolling, adaptive navbar contrast and reduced-motion fallbacks.",
+      "Scope all Floema landing overrides inside .landing-page."
     ],
     "donts": [
-      "Do not add sales claims, testimonials, stock metrics or continuous animation.",
-      "Do not extend these route-specific styles to admin or other internal pages.",
-      "Do not overlay landing hero text on the photograph or restore parallax, marker pulses or entrance animation."
+      "Do not add sales claims, testimonials, stock metrics or eyebrow headings.",
+      "Do not extend landing styles to internal, blog or admin pages.",
+      "Do not let radial hero tiles cover the central headline or break keyboard access."
     ]
   }
 }
