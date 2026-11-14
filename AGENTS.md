@@ -26,7 +26,7 @@ Use four spaces, `declare(strict_types=1);` in PHP entry points, procedural PHP,
 
 For admin UI changes, run `npm run build:css` and `node tests/admin-ui.cjs`. The Node check covers menu interactions and compiled assets; it does not verify browser layout.
 
-Run syntax checks and `C:\xampp\php\php.exe tests/run.php` after backend changes. The standalone PHP runner creates a disposable database and web server, checks account, catalog, favorite, profile, and admin flows through HTTP, and removes test resources. Set `DB_SETUP_USER` and `DB_SETUP_PASSWORD` to a non-root CLI database account before running it; MySQL must be running and PHP curl must be enabled. No coverage target is configured. Check affected layouts and normal, empty, and invalid states manually in a browser.
+Run syntax checks and `C:\xampp\php\php.exe tests/run.php` after backend changes. For plant advisor changes also run `C:\xampp\php\php.exe tests/plant-advisor.php`, which needs no database or API key. The standalone PHP runner creates a disposable database and web server, checks account, catalog, favorite, profile, and admin flows through HTTP, and removes test resources. Set `DB_SETUP_USER` and `DB_SETUP_PASSWORD` to a non-root CLI database account before running it; MySQL must be running and PHP curl must be enabled. No coverage target is configured. Check affected layouts and normal, empty, and invalid states manually in a browser.
 
 ## Commits and Pull Requests
 
@@ -34,4 +34,4 @@ Recent commits use short imperative summaries, sometimes with prefixes such as `
 
 ## Security and Configuration
 
-Never commit real credentials; use the ignored `config/database.local.php` or `DB_*` environment variables. The application must use a dedicated non-root database user with a non-empty password; setup commands use separate `DB_SETUP_USER` and `DB_SETUP_PASSWORD` credentials. Use prepared statements, preserve CSRF checks, and use `safe_return_url()` for redirects. Require login for private pages and admin access for user management. Public registration must never assign administrator privileges; blocking must invalidate existing sessions.
+Never commit real credentials; use the ignored `config/database.local.php` or `DB_*` environment variables, and `config/ai.local.php` or `DEEPSEEK_*` variables for the plant advisor's DeepSeek key. Tests must never call the real AI. The application must use a dedicated non-root database user with a non-empty password; setup commands use separate `DB_SETUP_USER` and `DB_SETUP_PASSWORD` credentials. Use prepared statements, preserve CSRF checks, and use `safe_return_url()` for redirects. Require login for private pages and admin access for user management. Public registration must never assign administrator privileges; blocking must invalidate existing sessions.

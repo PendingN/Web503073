@@ -64,12 +64,8 @@
             empty.hidden = count > 0;
             status.textContent = count + ' gợi ý cho góc nhà của bạn. Mở từng cây để tìm hiểu thêm.';
         };
-        finder.hidden = false;
+        // Changing a select previews matches here; submitting opens the full advisor.
         finder.elements.light.addEventListener('change', filterPlants);
         finder.elements.position.addEventListener('change', filterPlants);
-        finder.addEventListener('submit', function (event) {
-            event.preventDefault();
-            filterPlants();
-        });
     }
 })();

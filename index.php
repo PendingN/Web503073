@@ -73,7 +73,7 @@ require __DIR__ . '/includes/header.php';
             <h2 id="finder-title">Không gian của bạn.<br><em>Chiếc lá của bạn.</em></h2>
             <p>Góc phòng ngập nắng hay chiếc bàn nhỏ?<br>Bắt đầu từ ánh sáng và nơi bạn muốn đặt cây.</p>
         </div>
-        <form class="finder-form" data-plant-finder hidden>
+        <form class="finder-form" data-plant-finder method="get" action="plant-advisor.php">
             <label for="room-light">Ánh sáng ở góc nhà bạn
                 <select id="room-light" name="light">
                     <option value="all">Chọn ánh sáng</option>

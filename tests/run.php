@@ -133,6 +133,8 @@ try {
     $prefix = $subdirectory ? '/' . rawurlencode(basename(dirname(__DIR__))) : '';
     $documentRoot = $subdirectory ? dirname(dirname(__DIR__)) : dirname(__DIR__);
     $base = 'http://' . $address . $prefix;
+    // Never call the real AI from tests; the advisor must answer from its rules.
+    putenv('DEEPSEEK_API_KEY=');
     $webProcess = proc_open([PHP_BINARY, '-S', $address, '-t', $documentRoot, 'server-router.php'], [0 => ['pipe', 'r'], 1 => ['file', $log, 'a'], 2 => ['file', $log, 'a']], $webPipes, dirname(__DIR__));
     if (!is_resource($webProcess)) {
         throw new RuntimeException('Cannot start test web server.');
@@ -146,7 +148,7 @@ try {
         usleep(100000);
     }
     $guest = new TestBrowser($base);
-    foreach (['index.php', 'dashboard.php', 'collection.php', 'plant-detail.php?id=22', 'blog.php', 'blog-post.php?slug=bat-dau-mot-goc-xanh-tu-dau', 'login.php', 'register.php'] as $path) {
+    foreach (['index.php', 'dashboard.php', 'collection.php', 'plant-detail.php?id=22', 'plant-advisor.php', 'blog.php', 'blog-post.php?slug=bat-dau-mot-goc-xanh-tu-dau', 'login.php', 'register.php'] as $path) {
         check($guest->request($path)['status'] === 200, 'Public route failed: ' . $path);
     }
     foreach (['favorites.php', 'profile.php', 'admin.php', 'admin-dashboard.php'] as $path) {
@@ -158,10 +160,35 @@ try {
     check(str_contains($guest->request('collection.php?search=tr%E1%BA%A7u')['body'], 'Trầu'), 'Vietnamese plant search failed.');
     check(str_contains($guest->request('collection.php?search=%25')['body'], '0 kết quả'), 'LIKE wildcards must be treated literally.');
     check(str_contains($guest->request('collection.php?search=' . rawurlencode("' OR 1=1 --"))['body'], '0 kết quả'), 'SQL search input is not literal.');
+    $advisorData = ['mode' => 'spiritual', 'birth_day' => '25', 'birth_month' => '1', 'birth_year' => '1996', 'direction' => 'dong', 'wish' => 'tai-loc', 'habit' => 'busy', 'light' => 'low', 'position' => 'shelf', 'note' => '<b>Nhà có mèo</b>'];
+    check($guest->request('actions/plant-advice-action.php', $advisorData)['status'] === 403, 'Plant advice requires a CSRF token.');
+    $response = $guest->request('actions/plant-advice-action.php', ['csrf_token' => $guest->token('plant-advisor.php?mode=spiritual')] + $advisorData);
+    check($response['status'] === 303 && ($response['headers']['location'] ?? '') === $prefix . '/plant-advisor.php?mode=spiritual#advisor-results', 'Plant advice must redirect to its results.');
+    $advisorPage = $guest->request('plant-advisor.php?mode=spiritual')['body'];
+    check(str_contains($advisorPage, 'Mệnh Hỏa') && str_contains($advisorPage, 'Ất Hợi') && str_contains($advisorPage, 'Gợi ý theo nguyên tắc ngũ hành') && str_contains($advisorPage, 'class="advisor-reason"'), 'Spiritual advice must show rule-based picks without an API key.');
+    check(str_contains($advisorPage, '&lt;b&gt;Nhà có mèo&lt;/b&gt;') && !str_contains($advisorPage, '<b>Nhà có mèo</b>'), 'Advisor notes must be escaped.');
+    $zodiacData = ['mode' => 'zodiac', 'birth_day' => '15', 'birth_month' => '8'] + $advisorData;
+    $response = $guest->request('actions/plant-advice-action.php', ['csrf_token' => $guest->token('plant-advisor.php?mode=spiritual')] + $zodiacData);
+    check(str_ends_with($response['headers']['location'] ?? '', '?mode=zodiac#advisor-results'), 'Zodiac advice must redirect to its results.');
+    $advisorPage = $guest->request('plant-advisor.php?mode=zodiac')['body'];
+    check(str_contains($advisorPage, 'Cung Sư Tử') && str_contains($advisorPage, 'Gợi ý theo cung hoàng đạo'), 'The zodiac mode shows its results.');
+    check(!str_contains($advisorPage, 'class="advisor-mode ') && str_contains($advisorPage, 'Chọn cách khác'), 'A chosen mode hides the mode buttons and offers a way back.');
+    $advisorPage = $guest->request('plant-advisor.php')['body'];
+    check(substr_count($advisorPage, 'class="advisor-mode ') === 2 && !str_contains($advisorPage, 'id="advisor-form"'), 'The advisor opens with only the two mode buttons.');
+    check(str_contains($advisorPage, 'id="lac-que"') && str_contains($advisorPage, 'data-que-result aria-live="polite" hidden'), 'The fortune draw waits for a shake.');
+    $fortunePage = $guest->request('plant-advisor.php?lac=1')['body'];
+    check(preg_match('/class="que-result-tag"[^>]*>Quẻ [^<]+ · [^<]+</u', $fortunePage) === 1 && str_contains($fortunePage, 'plant-detail.php?id=') && str_contains($fortunePage, '<dt>Hợp mệnh</dt>') && str_contains($fortunePage, '<b>Tưới nước:</b>'), 'Shaking without JavaScript draws a plant with its facts on the server.');
+    check(str_contains($guest->request('plant-advisor.php?mode=spiritual')['body'], 'Mệnh Hỏa'), 'Each mode keeps its own results.');
+    $response = $guest->request('actions/plant-advice-action.php', ['csrf_token' => $guest->token('plant-advisor.php?mode=spiritual'), 'birth_year' => '1800'] + $advisorData);
+    check(str_ends_with($response['headers']['location'] ?? '', '?mode=spiritual#advisor-form'), 'Invalid advice requests return to the form.');
+    $advisorPage = $guest->request('plant-advisor.php?mode=spiritual')['body'];
+    check(str_contains($advisorPage, 'aria-invalid="true"') && str_contains($advisorPage, 'value="1800"'), 'Advisor errors must keep input and mark fields.');
+    check(!str_contains($guest->request('plant-advisor.php?mode=spiritual')['body'], 'aria-invalid="true"'), 'Advisor errors show once.');
+    check(str_contains($guest->request('plant-advisor.php?mode=zodiac&light=bright&position=floor')['body'], '<option value="bright" selected>'), 'The landing finder prefills the advisor.');
     $category = 'Cây trong nhà';
     $expected = count(list_plants('', $category));
     check(str_contains($guest->request('collection.php?category=' . rawurlencode($category))['body'], $expected . ' kết quả'), 'Category filter failed.');
-    foreach (['favorite-action.php', 'profile-action.php', 'user-action.php', 'blog-action.php', 'logout.php'] as $handler) {
+    foreach (['favorite-action.php', 'plant-advice-action.php', 'profile-action.php', 'user-action.php', 'blog-action.php', 'logout.php'] as $handler) {
         check($guest->request('actions/' . $handler)['status'] === 405, 'GET must not mutate: ' . $handler);
         check($guest->request('actions/' . $handler, [])['status'] === 403, 'Missing CSRF accepted: ' . $handler);
     }
