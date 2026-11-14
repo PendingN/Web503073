@@ -15,6 +15,15 @@ $backLabel = match ($returnPage) {
 if ($plant === null) {
     http_response_code(404);
 }
+// Kích thước thật của ảnh: khung ảnh không được phóng to vượt quá ảnh gốc (tránh mờ).
+$imageWidth = 900;
+$imageHeight = 1200;
+if ($plant !== null) {
+    $imageSize = @getimagesize(__DIR__ . '/images/' . basename((string) $plant['image']));
+    if (is_array($imageSize) && $imageSize[0] > 0 && $imageSize[1] > 0) {
+        [$imageWidth, $imageHeight] = $imageSize;
+    }
+}
 $pageTitle = $plant === null ? 'Không tìm thấy cây' : $plant['name'];
 $bodyClass = 'detail-page';
 $activePage = 'collection';
@@ -32,7 +41,7 @@ require __DIR__ . '/includes/navbar.php';
     <main id="main-content" class="detail-main" tabindex="-1">
         <a class="back-link" href="<?= e($returnTo) ?>"><?= e($backLabel) ?></a>
         <article class="plant-detail">
-            <div class="detail-image"><img src="<?= e(image_url($plant['image'])) ?>" alt="<?= e($plant['name']) ?>" width="900" height="1200" decoding="async" fetchpriority="high"></div>
+            <div class="detail-image" style="--img-w: <?= (int) $imageWidth ?>px; --img-ratio: <?= (int) $imageWidth ?> / <?= (int) $imageHeight ?>;"><img src="<?= e(image_url($plant['image'])) ?>" alt="<?= e($plant['name']) ?>" width="<?= (int) $imageWidth ?>" height="<?= (int) $imageHeight ?>" decoding="async" fetchpriority="high"></div>
             <div class="detail-copy">
                 <p class="plant-category"><?= e($plant['category']) ?></p>
                 <h1><?= e($plant['name']) ?></h1>
