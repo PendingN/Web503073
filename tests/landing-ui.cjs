@@ -73,18 +73,15 @@ const { chromium } = require('playwright');
         await page.locator('#room-title').click();
         assert.equal(await page.locator('.room-spot[open]').count(), 0);
 
-        // Room conditions must produce useful, reversible results without navigation.
+        // Changing room conditions previews matches in place; the button opens the advisor.
         await page.selectOption('#room-light', 'low');
         await page.selectOption('#room-position', 'shelf');
-        await page.locator('[data-plant-finder] button').click();
         assert.deepEqual(await page.locator('.plant-pick:visible h3').allTextContents(), ['Lưỡi Hổ', 'Kim Tiền']);
         assert.match(await page.locator('[data-finder-status]').innerText(), /^2 gợi ý/);
         await page.selectOption('#room-light', 'bright');
-        await page.locator('[data-plant-finder] button').click();
         assert.deepEqual(await page.locator('.plant-pick:visible h3').allTextContents(), ['Lưỡi Hổ']);
         await page.selectOption('#room-light', 'all');
         await page.selectOption('#room-position', 'all');
-        await page.locator('[data-plant-finder] button').click();
         assert.equal(await page.locator('.plant-pick:visible').count(), 4);
         assert.equal(page.url(), base);
 
@@ -92,12 +89,19 @@ const { chromium } = require('playwright');
         const lightValues = await page.locator('.plant-pick').evaluateAll(plants => plants.map(plant => plant.dataset.light));
         await page.locator('.plant-pick').evaluateAll(plants => plants.forEach(plant => { plant.dataset.light = ''; }));
         await page.selectOption('#room-light', 'low');
-        await page.locator('[data-plant-finder] button').click();
         assert.ok(await page.locator('[data-finder-empty]').isVisible());
         await page.locator('.plant-pick').evaluateAll((plants, values) => plants.forEach((plant, i) => { plant.dataset.light = values[i]; }), lightValues);
         await page.selectOption('#room-light', 'all');
-        await page.locator('[data-plant-finder] button').click();
         assert.equal(await page.locator('[data-finder-empty]').isVisible(), false);
+        await page.selectOption('#room-light', 'low');
+        await page.selectOption('#room-position', 'shelf');
+        await Promise.all([page.waitForURL(/plant-advisor\.php/), page.locator('[data-plant-finder] button').click()]);
+        const advisorUrl = new URL(page.url());
+        assert.equal(advisorUrl.searchParams.get('light'), 'low');
+        assert.equal(advisorUrl.searchParams.get('position'), 'shelf');
+        await page.goBack();
+        await page.selectOption('#room-light', 'all');
+        await page.selectOption('#room-position', 'all');
         for (const href of await page.locator('.plant-pick > a, .room-plant-note a').evaluateAll(links => links.map(link => link.href))) {
             const url = new URL(href);
             assert.equal(url.searchParams.get('category'), 'Cây trong nhà');
@@ -147,13 +151,13 @@ const { chromium } = require('playwright');
         assert.equal(await reduced.locator('.room-scene').evaluate(scene => scene.style.getPropertyValue('--room-x')), '');
         await reduced.close();
         const noScript = await newPage({ javaScriptEnabled: false, viewport: { width: 390, height: 844 } });
-        assert.equal(await noScript.locator('[data-plant-finder]').isVisible(), false);
+        assert.ok(await noScript.locator('[data-plant-finder]').isVisible(), 'The finder must still open the advisor without JavaScript.');
         assert.equal(await noScript.locator('.plant-pick:visible').count(), 4);
         await noScript.locator('.room-spot').first().locator('summary').click();
         assert.ok(await noScript.locator('.room-spot').first().evaluate(spot => spot.open));
         await noScript.close();
         assert.deepEqual(errors, [], 'No JavaScript errors.');
-        console.log(`PASS: landing interactions, filters, keyboard, mobile menu, reduced motion, no-JS fallback, assets, and six widths. Mode: ${fixture ? 'template fixture; no live database' : 'live HTTP'}. Screenshots: ${output}`);
+        console.log(`PASS: landing interactions, filters, advisor link, keyboard, mobile menu, reduced motion, no-JS fallback, assets, and six widths. Mode: ${fixture ? 'template fixture; no live database' : 'live HTTP'}. Screenshots: ${output}`);
     } catch (error) {
         if (page) await page.screenshot({ path: path.join(output, 'failure.png'), fullPage: true });
         throw error;

@@ -216,6 +216,7 @@ C:/xampp/php/php.exe -S 127.0.0.1:8090 -t .
 | <code>dashboard.php</code> | Tổng quan sau khi đăng nhập | Công khai / tùy nội dung |
 | <code>collection.php?search=...&category=...</code> | Tìm kiếm và lọc cây | Công khai |
 | <code>plant-detail.php?id=22</code> | Chi tiết một cây | Công khai |
+| <code>plant-advisor.php?mode=zodiac</code> / <code>?mode=spiritual</code> | Gợi ý chọn cây theo 12 cung hoàng đạo (Chiêm tinh học) hoặc ngày sinh âm lịch, mệnh và hướng góc nhà (Một chút tâm linh) | Công khai |
 | <code>register.php</code> | Đăng ký thành viên | Công khai |
 | <code>login.php</code> | Đăng nhập | Công khai |
 | <code>favorites.php</code> | Danh sách cây yêu thích | Cần đăng nhập |
@@ -227,12 +228,38 @@ C:/xampp/php/php.exe -S 127.0.0.1:8090 -t .
 | <code>blog.php?view=mine</code> / <code>?view=saved</code> | Bài của tôi / Bài đã lưu | Cần đăng nhập |
 | <code>blog-post.php?slug=...</code> | Chi tiết bài viết | Công khai |
 | <code>actions/favorite-action.php</code> | Thêm/xóa yêu thích | POST + CSRF + đăng nhập |
+| <code>actions/plant-advice-action.php</code> | Tạo gợi ý chọn cây | POST + CSRF |
 | <code>actions/profile-action.php</code> | Cập nhật cá nhân | POST + CSRF + đăng nhập |
 | <code>actions/user-action.php</code> | Sửa/khóa/mở khóa user | POST + CSRF + admin |
 | <code>actions/blog-action.php</code> | Đăng/sửa/xóa bài, bình chọn, lưu và bình luận | POST + CSRF + đăng nhập |
 | <code>actions/logout.php</code> | Đăng xuất | POST + CSRF |
 
 Các ID không hợp lệ trả <code>404</code>. Request GET tới handler thay đổi dữ liệu trả <code>405</code>; request POST thiếu CSRF token trả <code>403</code>.
+
+
+### Gợi ý chọn cây và DeepSeek API
+
+Trang <code>plant-advisor.php</code> (mục **Gợi ý chọn cây** trong thanh bên Bộ sưu tập; nút **Gợi ý cây cho tôi** ở trang chủ cũng dẫn tới đây) có hai chế độ:
+
+- **Chiêm tinh học**: từ ngày và tháng sinh suy ra cung hoàng đạo và nhóm Lửa/Đất/Khí/Nước.
+- **Một chút tâm linh**: đổi ngày sinh sang âm lịch (giờ Việt Nam, đã tính trước/sau Tết), suy ra Can Chi, mệnh nạp âm, hành hợp/khắc và hành của hướng góc nhà.
+
+Dưới hai nút là khối **Lắc quẻ cây xanh**: rút ngẫu nhiên một trong 5 quẻ (Tài lộc, Bình an, Tình duyên, Sự nghiệp, Gia đạo) rồi một cây hợp quẻ đó, không gọi AI. Quẻ và lời quẻ nằm trong <code>includes/fortune-sticks.php</code>; khi trình duyệt tắt JavaScript, nút dẫn tới <code>plant-advisor.php?lac=1</code> để server rút quẻ.
+
+Cả hai chế độ đều hỏi ánh sáng, vị trí và thói quen chăm cây, nên cây được gợi ý luôn sống được ở góc đó. Thuộc tính phong thủy và cung hoàng đạo của từng cây nằm trong <code>data/plant-fengshui.php</code>; cây do admin thêm mới mà chưa có ghi chú ở đây sẽ không được gợi ý theo luật.
+
+Khi có API key, website gọi DeepSeek để chọn cây và viết lời giải thích. AI chỉ được chọn trong danh mục; câu trả lời được kiểm tra lại (ID có thật, hợp ánh sáng, tối đa 4 cây) và lưu cache 7 ngày trong <code>.runtime/plant-advice</code>. Mỗi phiên được gọi AI 6 lần mỗi 10 phút, mỗi IP 30 lần mỗi giờ. Nếu chưa cấu hình key, AI lỗi hoặc vượt giới hạn, trang tự dùng gợi ý theo luật.
+
+Cấu hình key (file <code>config/ai.local.php</code> bị Git bỏ qua):
+
+~~~powershell
+Copy-Item config/ai.local.example.php config/ai.local.php
+# Mở config/ai.local.php và dán API key vào 'api_key'
+~~~
+
+Biến môi trường <code>DEEPSEEK_API_KEY</code>, <code>DEEPSEEK_MODEL</code>, <code>DEEPSEEK_BASE_URL</code>, <code>DEEPSEEK_TIMEOUT</code> được ưu tiên hơn file; đặt <code>DEEPSEEK_API_KEY</code> rỗng để tắt AI.
+
+Ảnh nền hai nút chế độ là <code>images/advisor/zodiac-sky.svg</code> và <code>images/advisor/five-elements.svg</code>. Muốn dùng ảnh chụp, lưu ảnh có bản quyền phù hợp thành <code>images/advisor/zodiac.jpg</code> hoặc <code>images/advisor/spiritual.jpg</code> (cũng nhận <code>.webp</code>, <code>.png</code>); trang sẽ tự dùng ảnh đó.
 
 
 ### Blog: cách dùng và cấu trúc
@@ -330,7 +357,14 @@ Bộ test kiểm tra các luồng:
 - khóa/mở khóa user, phân trang admin;
 - setup lặp lại không ghi đè dữ liệu cũ;
 - blog: đăng/sửa/xóa, phân quyền, tìm kiếm, phân trang, bình chọn/lưu qua phiên đăng nhập, bình luận, XSS và dữ liệu liên quan sau khi xóa bài;
+- gợi ý chọn cây: CSRF, hai chế độ, giữ kết quả theo chế độ, báo lỗi nhập liệu và escape ghi chú (server test luôn tắt AI);
 - lỗi database trả response an toàn.
+
+Test riêng cho gợi ý chọn cây, không cần database hay API key (lịch âm, cung hoàng đạo, ngũ hành, kiểm tra câu trả lời AI, cache và giới hạn):
+
+~~~powershell
+C:/xampp/php/php.exe tests/plant-advisor.php
+~~~
 
 Kết quả thành công có dạng:
 
