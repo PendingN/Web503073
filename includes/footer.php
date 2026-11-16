@@ -5,7 +5,7 @@ $pageScripts = $pageScripts ?? [];
 ?>
 <?php if ($showSiteFooter): ?>
     <footer class="site-footer">
-        <span>Vũ Điệu Rừng Xanh</span>
+        <span>Là Lá La</span>
         <span><?= e($footerTagline) ?></span>
     </footer>
 <?php endif; ?>

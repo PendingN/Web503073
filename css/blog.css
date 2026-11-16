@@ -33,7 +33,7 @@
 .blog-page .feed-hero { grid-template-columns: 43% 57%; align-items: center; min-height: 0; padding: 4px 0 56px; border-bottom-color: #dce3dc; }
 .blog-page .feed-hero:not(:has(.feed-ticker-viewport)) { grid-template-columns: minmax(0, 1fr); min-height: 0; padding-bottom: 20px; }
 .blog-page .feed-hero-copy { width: auto; padding-right: 28px; }
-.blog-page .feed-hero h1 { color: #243b30; font-family: 'Lora', Georgia, serif; font-size: clamp(2rem, 3.4vw, 2.75rem); font-weight: 400; line-height: 1.18; letter-spacing: -0.025em; text-wrap: balance; }
+.blog-page .feed-hero h1 { color: #243b30; font-family: 'Fraunces', 'Lora', Georgia, serif; font-variation-settings: "SOFT" 100, "WONK" 1; font-size: clamp(2rem, 3.4vw, 2.75rem); font-weight: 700; line-height: 1.15; letter-spacing: -0.025em; text-wrap: balance; }
 .blog-page .feed-hero h1 em { color: #34533c; font-style: italic; }
 .blog-page .feed-hero-lead { max-width: 36ch; margin-top: 14px; color: #52604f; font-size: 13px; text-wrap: pretty; }
 .blog-page .feed-hero::after { display: none; }
@@ -142,7 +142,7 @@
 .blog-post-page .post-meta { flex-wrap: wrap; gap: 10px 24px; font-size: 12px; font-weight: 400; letter-spacing: 0; text-transform: none; }
 .blog-post-page .post-meta span:first-child { color: #34533c; }
 .blog-post-page .post-meta :is(span, time) { color: #596251; }
-.blog-post-page .blog-post-header h1 { margin: 18px 0; color: #243b30; font-family: 'Lora', Georgia, serif; font-size: clamp(1.85rem, 3.2vw, 2.5rem); font-weight: 400; line-height: 1.25; letter-spacing: -0.02em; text-wrap: balance; }
+.blog-post-page .blog-post-header h1 { margin: 18px 0; color: #243b30; font-family: 'Fraunces', 'Lora', Georgia, serif; font-variation-settings: "SOFT" 100, "WONK" 1; font-size: clamp(1.85rem, 3.2vw, 2.5rem); font-weight: 700; line-height: 1.22; letter-spacing: -0.02em; text-wrap: balance; }
 .blog-post-page .blog-post-header p { max-width: 70ch; color: #52604f; font-size: 15px; line-height: 1.9; text-wrap: pretty; }
 .blog-post-page .blog-post-art { max-width: 720px; min-height: 0; height: auto; margin: 0 auto 28px; overflow: hidden; border: 0; border-radius: 12px; background: transparent; }
 .blog-post-page .blog-post-art .blog-cover { display: block; width: auto; max-width: 100%; max-height: 480px; height: auto; margin-inline: auto; border: 1px solid #dce3dc; border-radius: 12px; object-fit: contain; }

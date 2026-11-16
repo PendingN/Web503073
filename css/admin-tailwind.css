@@ -11,7 +11,8 @@
 
 /* Layout and palette adapted from TailwindAdmin; see licenses/tailwindadmin-mit.txt. */
 @theme {
-    --font-sans: "Be Vietnam Pro", sans-serif;
+    --font-sans: "Plus Jakarta Sans", "Be Vietnam Pro", sans-serif;
+    --font-display: "Fraunces", "Lora", Georgia, serif;
     --color-primary: #5d87ff;
     --color-primary-dark: #385fcd;
     --color-ink: #2a3547;
@@ -29,6 +30,10 @@
     body {
         @apply bg-soft font-sans text-ink antialiased;
         caret-color: var(--color-primary-dark);
+    }
+    h1, h2, h3 {
+        font-family: var(--font-display);
+        font-variation-settings: "SOFT" 100, "WONK" 1;
     }
     ::selection {
         background-color: color-mix(in srgb, var(--color-primary) 22%, #ffffff);

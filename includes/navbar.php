@@ -10,9 +10,9 @@ $hasCustomSkipLink = in_array($bodyClass ?? '', ['landing-page', 'blog-page', 'b
 <a class="skip-link" href="#main-content">Đến nội dung chính</a>
 <?php endif; ?>
 <header class="navbar site-header">
-    <a class="brand-link" href="index.php" aria-label="Vũ Điệu Rừng Xanh — Trang chủ">
+    <a class="brand-link" href="index.php" aria-label="Là Lá La — Trang chủ">
         <svg class="room-brand-leaf" viewBox="0 0 32 40" fill="none" aria-hidden="true"><path d="M6 35C6 20 24 18 25 4c9 15 1 28-11 25M6 35C2 25 2 17 8 12c1 9 10 10 6 17M6 35c5-10 13-15 16-20"/></svg>
-        <span>VŨ ĐIỆU<br>RỪNG XANH</span>
+        <span>Là Lá La</span>
     </a>
     <nav aria-label="Điều hướng chính" id="site-menu" class="nav-center">
         <a class="nav-link<?= $activePage === 'home' ? ' active' : '' ?>" <?= $activePage === 'home' ? 'aria-current="page"' : '' ?> href="index.php">Trang chủ</a>
@@ -25,7 +25,6 @@ $hasCustomSkipLink = in_array($bodyClass ?? '', ['landing-page', 'blog-page', 'b
         <?php if ($navbarUser === null): ?>
         <a href="<?= e($loginTarget) ?>" class="btn-contact"><?= e($loginLabel) ?></a>
         <?php else: ?>
-        <a href="favorites.php" class="nav-favorites-link">Yêu thích</a>
         <form class="inline-logout-form" method="post" action="actions/logout.php">
             <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
             <button type="submit" class="nav-logout-btn">Đăng xuất</button>

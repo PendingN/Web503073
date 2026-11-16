@@ -5,7 +5,7 @@
         <span class="dashboard-logo-mark" aria-hidden="true">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 4 13V6s3 0 6 3 7 3 7 3v1a7 7 0 0 1-6 7Z"/><path d="M4 6s2 6 8 14"/></svg>
         </span>
-        <span class="dashboard-brand">VŨ ĐIỆU RỪNG XANH</span>
+        <span class="dashboard-brand">LÀ LÁ LA</span>
     </a>
     <?php endif; ?>
     <nav aria-label="Điều hướng không gian xanh">

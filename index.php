@@ -4,103 +4,109 @@ declare(strict_types=1);
 require_once __DIR__ . '/includes/init.php';
 require_once __DIR__ . '/includes/blog-images.php';
 $catalog = plant_catalog_statistics();
+$collectionPlants = list_plants();
+if ($collectionPlants === []) {
+    require __DIR__ . '/data/plants.php';
+    $collectionPlants = $plants ?? [];
+}
+
+$indoorPicks = array_values(array_filter($collectionPlants, static fn (array $plant): bool => ($plant['category'] ?? '') === 'Cây trong nhà'));
+$deskPicks = array_values(array_filter($collectionPlants, static fn (array $plant): bool => ($plant['category'] ?? '') !== 'Cây trong nhà'));
+$interleavedPlants = [];
+$maxGroupCount = max(count($indoorPicks), count($deskPicks));
+for ($i = 0; $i < $maxGroupCount; $i++) {
+    if (isset($deskPicks[$i])) {
+        $interleavedPlants[] = $deskPicks[$i];
+    }
+    if (isset($indoorPicks[$i])) {
+        $interleavedPlants[] = $indoorPicks[$i];
+    }
+}
+if ($interleavedPlants === []) {
+    $interleavedPlants = $collectionPlants;
+}
+
+$heroWallColumns = [];
+$wallColumnCount = 7;
+$wallRowsPerColumn = 5;
+$plantPoolCount = count($interleavedPlants);
+if ($plantPoolCount > 0) {
+    $cursor = 0;
+    for ($col = 0; $col < $wallColumnCount; $col++) {
+        $columnItems = [];
+        for ($row = 0; $row < $wallRowsPerColumn; $row++) {
+            $columnItems[] = $interleavedPlants[($cursor + ($col * 3)) % $plantPoolCount];
+            $cursor++;
+        }
+        $heroWallColumns[] = $columnItems;
+    }
+}
+
 $latestPosts = latest_blog_posts(6);
 $editorialPosts = array_values(array_filter($latestPosts, static function (array $post): bool {
     return strncmp((string) ($post['slug'] ?? ''), 'bai-viet-', 9) !== 0;
 }));
-$recentPosts = array_slice($editorialPosts !== [] ? $editorialPosts : $latestPosts, 0, 2);
+$blogShowcasePosts = array_slice($editorialPosts !== [] ? $editorialPosts : $latestPosts, 0, 4);
+if (count($blogShowcasePosts) < 4 && count($latestPosts) > count($blogShowcasePosts)) {
+    $seenSlugs = array_column($blogShowcasePosts, 'slug');
+    foreach ($latestPosts as $candidatePost) {
+        $candidateSlug = (string) ($candidatePost['slug'] ?? '');
+        if (!in_array($candidateSlug, $seenSlugs, true)) {
+            $blogShowcasePosts[] = $candidatePost;
+            $seenSlugs[] = $candidateSlug;
+        }
+        if (count($blogShowcasePosts) >= 4) {
+            break;
+        }
+    }
+}
+$marqueePlants = $interleavedPlants !== [] ? $interleavedPlants : $collectionPlants;
 
-// Core site features highlighted in the horizontal feature showcase.
-$webFeatures = [
+// Core site features highlighted in the 4-card section right below the hero.
+$lalalaOfferings = [
     [
-        'type' => 'advisor-ui',
-        'title' => 'Gợi ý cây theo ánh sáng.',
-        'description' => 'Chọn mức sáng và vị trí đặt để nhận ngay danh sách giống cây dễ chăm, phù hợp đúng không gian sống của bạn.',
-        'href' => 'plant-advisor.php',
-        'aria' => 'Mở công cụ gợi ý chọn cây theo ánh sáng và vị trí',
-    ],
-    [
-        'type' => 'elements-art',
-        'title' => 'Ngũ hành, Hoàng đạo & Lắc quẻ.',
-        'description' => 'Khám phá loài cây hợp bản mệnh ngũ hành, xem lịch âm hoặc rút một quẻ cây xanh thư giãn mỗi ngày.',
-        'href' => 'plant-advisor.php?mode=elements',
-        'aria' => 'Khám phá gợi ý theo ngũ hành, cung hoàng đạo và lắc quẻ',
-    ],
-    [
-        'type' => 'catalog-photo',
-        'title' => 'Thư viện ' . (int) $catalog['total'] . ' loài cây xanh.',
-        'description' => 'Tìm nhanh theo tên hoặc 5 nhóm cây kèm ghi chú tưới nước, đất trồng, ánh sáng và độ ẩm chi tiết.',
+        'icon' => 'pot-hand',
+        'title' => 'Bộ sưu tập cây xanh',
+        'description' => 'Tra cứu ' . (int) $catalog['total'] . ' loài cây trong nhà và để bàn kèm ghi chú ánh sáng, lượng nước và đất trồng chi tiết.',
         'href' => 'collection.php',
-        'aria' => 'Mở thư viện bộ sưu tập cây xanh',
-        'image' => 'anh21.jpg',
-        'alt' => 'Lá xanh tươi tốt của cây Trầu Bà Thanh Xuân trong thư viện cây xanh',
+        'aria' => 'Mở bộ sưu tập cây xanh',
     ],
     [
-        'type' => 'blog-type',
-        'title' => 'Blog chia sẻ kinh nghiệm.',
-        'description' => 'Đọc ghi chép chăm cây thực tế từ cộng đồng, lưu lại bài viết hữu ích và tự đăng câu chuyện xanh của bạn.',
+        'icon' => 'hands-sprout',
+        'title' => 'Gợi ý chọn cây',
+        'description' => 'Chọn giống cây hợp ánh sáng, góc nhà hoặc khám phá gợi ý ngũ hành, hoàng đạo và lắc quẻ mỗi ngày.',
+        'href' => 'plant-advisor.php',
+        'aria' => 'Mở công cụ gợi ý chọn cây',
+    ],
+    [
+        'icon' => 'leaf-pair',
+        'title' => 'Blog cộng đồng',
+        'description' => 'Đọc ghi chép chăm cây thực tế từ mọi người, lưu lại bài viết hữu ích và chia sẻ câu chuyện xanh của bạn.',
         'href' => 'blog.php',
         'aria' => 'Mở blog cộng đồng yêu cây',
     ],
     [
-        'type' => 'favorites-studio',
-        'title' => 'Lưu cây yêu thích & Hồ sơ.',
-        'description' => 'Đánh dấu những loài cây muốn trồng, theo dõi danh sách riêng và quản lý khu vườn cá nhân gọn gàng.',
+        'icon' => 'two-pots',
+        'title' => 'Góc vườn yêu thích',
+        'description' => 'Đánh dấu những loài cây bạn muốn trồng, theo dõi danh sách riêng và quản lý khu vườn cá nhân gọn gàng.',
         'href' => 'favorites.php',
-        'aria' => 'Xem danh sách cây yêu thích và trang cá nhân',
+        'aria' => 'Xem danh sách cây yêu thích',
     ],
-];
-
-// Eighteen distinct, unwatermarked local photos radiating from the hero vanishing point.
-$heroTiles = [
-    ['image' => 'anh21.jpg', 'variant' => '1', 'tone' => 'plain'],
-    ['image' => 'anh48.jpg', 'variant' => '2', 'tone' => 'coral'],
-    ['image' => 'anh57.jpg', 'variant' => '3', 'tone' => 'plain'],
-    ['image' => 'anh27.jpg', 'variant' => '4', 'tone' => 'celadon'],
-    ['image' => 'anh22.jpg', 'variant' => '5', 'tone' => 'plain'],
-    ['image' => 'anh23.jpg', 'variant' => '6', 'tone' => 'ivory'],
-    ['image' => 'anh47.jpg', 'variant' => '7', 'tone' => 'plain'],
-    ['image' => 'anh49.jpg', 'variant' => '8', 'tone' => 'kraft'],
-    ['image' => 'anh28.jpg', 'variant' => '9', 'tone' => 'plain'],
-    ['image' => 'anh25.jpg', 'variant' => '10', 'tone' => 'celadon'],
-    ['image' => 'anh58.jpg', 'variant' => '11', 'tone' => 'plain'],
-    ['image' => 'anh29.jpg', 'variant' => '12', 'tone' => 'plain'],
-    ['image' => 'anh30.jpg', 'variant' => '13', 'tone' => 'ivory'],
-    ['image' => 'anh35.jpg', 'variant' => '14', 'tone' => 'plain'],
-    ['image' => 'anh46.jpg', 'variant' => '15', 'tone' => 'coral'],
-    ['image' => 'anh51.jpg', 'variant' => '16', 'tone' => 'plain'],
-    ['image' => 'anh54.jpg', 'variant' => '17', 'tone' => 'celadon'],
-    ['image' => 'anh59.jpg', 'variant' => '18', 'tone' => 'kraft'],
-];
-
-$categoryCounts = $catalog['counts'] ?? [
-    'Cây trong nhà' => 10,
-    'Cây để bàn' => 19,
 ];
 
 $collectionDirectory = [
     [
         'name' => 'Cây trong nhà',
         'label' => 'Trong nhà',
-        'image' => 'anh57.jpg',
-        'frames' => ['anh57.jpg', 'anh21.jpg', 'anh22.jpg', 'anh23.jpg', 'anh24.jpg'],
-        'layout' => 'after-name',
-        'icon' => '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
     ],
     [
         'name' => 'Cây để bàn',
         'label' => 'Để bàn',
-        'image' => 'anh47.jpg',
-        'frames' => ['anh47.jpg', 'anh46.jpg', 'anh48.jpg', 'anh49.jpg', 'anh51.jpg'],
-        'layout' => 'before-name',
-        'icon' => '<path d="M7 13h10l-1.5 8h-7z"/><path d="M12 13V7"/><path d="M12 9c0-3 2.5-5 5.5-5 0 3-2.5 5-5.5 5"/><path d="M12 10c0-2.5-2-4.5-5-4.5 0 2.5 2 4.5 5 4.5"/>',
     ],
 ];
 
-$indoorUrl = 'collection.php?category=' . rawurlencode('Cây trong nhà');
-
 $pageTitle = '';
-$pageDescription = 'Một góc nhà, một chút xanh. Khám phá cây trong nhà và tìm chiếc lá phù hợp với ánh sáng, không gian sống của bạn.';
+$pageDescription = 'Là Lá La — Thư viện cây xanh trong nhà và để bàn. Khám phá bộ sưu tập cây cảnh, ghi chú ánh sáng, cách tưới và cảm hứng sống xanh.';
 $bodyClass = 'landing-page';
 $activePage = 'home';
 $showSiteFooter = false;
@@ -111,403 +117,224 @@ require __DIR__ . '/includes/header.php';
 <?php require __DIR__ . '/includes/navbar.php'; ?>
 
 <main id="main-content">
-    <section class="room-hero" aria-labelledby="room-title" data-nav-section="light">
-        <div class="hero-gallery" aria-hidden="true">
-            <?php foreach ($heroTiles as $tile): ?>
-                <div class="hero-tile hero-tile--<?= e($tile['variant']) ?> hero-tile--tone-<?= e($tile['tone']) ?>">
-                    <img src="<?= e(image_url($tile['image'])) ?>" alt="" width="300" height="380">
-                </div>
-            <?php endforeach; ?>
-        </div>
-        <div class="room-copy">
-            <h1 id="room-title">Dành một góc<br>cho màu xanh.</h1>
-        </div>
-        <div class="hero-baseline">
-            <span>Một góc nhà. Một chút xanh.</span>
-            <a href="#room-scene">Cuộn để khám phá <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16m-6-6 6 6 6-6"/></svg></a>
-            <span><?= (int) $catalog['total'] ?> loài cây để tìm hiểu</span>
-        </div>
-    </section>
-
-    <section class="room-scene" id="room-scene" aria-labelledby="scene-title" data-nav-section="light">
-        <div class="room-stage">
-            <img class="room-image" src="<?= e(image_url('indoor-room.png')) ?>" alt="Góc phòng sáng với ghế vải, bàn gỗ và ba chậu Bàng Singapore, Trầu Bà Thanh Xuân, Lưỡi Hổ bên cửa sổ" width="1586" height="992" fetchpriority="high">
-
-            <div class="room-scene-rail" aria-hidden="true">
-                <span class="room-scene-index">01</span>
-                <span class="room-scene-rule"></span>
-                <span class="room-scene-sub">Không gian sống</span>
-            </div>
-
-            <div class="room-scene-copy">
-                <h2 id="scene-title">Một chiếc lá.<br>Một góc nhà khác.</h2>
-                <p>Chọn số trên ảnh để xem ánh sáng và cách chăm từng loài cây trong phòng.</p>
-                <div class="room-scene-actions">
-                    <a class="floema-cta" href="<?= e($indoorUrl) ?>">
-                        <span class="floema-cta-orb" aria-hidden="true">
-                            <svg viewBox="0 0 24 24"><path d="M5 19C5 11 13 9 19 5c-1 8-5 14-14 14Z"/><path d="M5 19c4-4 8-7 11-10"/></svg>
-                        </span>
-                        <span class="floema-cta-label">Xem cây trong nhà</span>
+    <section class="lalala-hero" aria-labelledby="lalala-hero-title" data-nav-section="light">
+        <div class="lalala-hero-inner landing-content">
+            <div class="lalala-hero-copy">
+                <h1 id="lalala-hero-title">Là Lá La,<br>chọn xanh cho nhà</h1>
+                <p class="lalala-hero-desc">
+                    Lá Lá La mang một chút xanh dịu dàng vào không gian sống, nơi mỗi chiếc lá, mỗi chồi non đều kể một câu chuyện nhỏ về thiên nhiên, để bạn tìm thấy niềm vui và sự bình yên trong từng khoảnh khắc chăm sóc cây.
+                </p>
+                <div class="lalala-hero-actions">
+                    <a class="lalala-btn lalala-btn--primary" href="collection.php">Khám phá bộ sưu tập</a>
+                    <a class="lalala-btn lalala-btn--secondary" href="#lalala-features">
+                        <span>Xem giới thiệu</span>
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 5v14m-6-6 6 6 6-6"/></svg>
                     </a>
-                    <span class="fl-pill fl-pill--coral">
-                        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
-                        3 cây mẫu
-                    </span>
                 </div>
             </div>
-
-            <details class="room-spot room-spot--fig" name="room-plants">
-                <summary aria-label="Tìm hiểu cây Bàng Singapore"><span aria-hidden="true">01</span></summary>
-                <div class="room-plant-note">
-                    <h3>Bàng Singapore</h3>
-                    <p>Lá to, dáng cao. Một điểm nhấn tự nhiên cho góc phòng nhiều ánh sáng.</p>
-                    <span>Gần cửa sổ · Tưới khi mặt đất khô</span>
-                    <a href="<?= e($indoorUrl . '&search=' . rawurlencode('Bàng Singapore')) ?>">Tìm hiểu cây này <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg></a>
-                </div>
-            </details>
-            <details class="room-spot room-spot--philodendron" name="room-plants">
-                <summary aria-label="Tìm hiểu cây Trầu Bà Thanh Xuân"><span aria-hidden="true">02</span></summary>
-                <div class="room-plant-note">
-                    <h3>Trầu Bà Thanh Xuân</h3>
-                    <p>Những đường xẻ lá đầy cá tính, làm góc đọc sách thêm mềm mại và sống động.</p>
-                    <span>Ánh sáng gián tiếp · Tránh nắng gắt</span>
-                    <a href="<?= e($indoorUrl . '&search=' . rawurlencode('Trầu Bà Thanh Xuân')) ?>">Tìm hiểu cây này <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg></a>
-                </div>
-            </details>
-            <details class="room-spot room-spot--snake" name="room-plants">
-                <summary aria-label="Tìm hiểu cây Lưỡi Hổ"><span aria-hidden="true">03</span></summary>
-                <div class="room-plant-note">
-                    <h3>Lưỡi Hổ</h3>
-                    <p>Vài chiếc lá thẳng, một chậu cây gọn. Dành cho góc nhỏ và nhịp sống bận rộn.</p>
-                    <span>Chịu ít sáng · Để đất khô giữa các lần tưới</span>
-                    <a href="<?= e($indoorUrl . '&search=' . rawurlencode('Lưỡi Hổ')) ?>">Tìm hiểu cây này <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg></a>
-                </div>
-            </details>
-
-            <a class="room-guide-card" href="#find-plant">
-                <div class="room-guide-meta">
-                    <strong>Cẩm nang<br>góc nhà</strong>
-                    <span>Tìm theo ánh sáng <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 4v16m-6-6 6 6 6-6"/></svg></span>
-                </div>
-                <div class="room-guide-thumb" aria-hidden="true">
-                    <img src="<?= e(image_url('anh47.jpg')) ?>" alt="" width="120" height="144">
-                </div>
-            </a>
         </div>
-        <p class="room-hint">Chọn số trên ảnh để tìm hiểu từng cây.</p>
+
+        <div class="lalala-wall-stage">
+            <div class="lalala-wall">
+                <?php foreach ($heroWallColumns as $colIndex => $columnPlants):
+                    $isBackgroundCol = $colIndex < 3;
+                ?>
+                    <div class="lalala-wall-col lalala-wall-col--<?= $colIndex + 1 ?>"<?= $isBackgroundCol ? ' aria-hidden="true"' : '' ?>>
+                        <?php foreach ($columnPlants as $plant):
+                            $plantId = (int) ($plant['id'] ?? 0);
+                            $plantName = (string) ($plant['name'] ?? 'Cây xanh');
+                            $plantImage = (string) ($plant['image'] ?? 'anh21.jpg');
+                        ?>
+                            <?php if ($isBackgroundCol || $plantId <= 0): ?>
+                                <div class="lalala-card lalala-card--bg">
+                                    <img src="<?= e(image_url($plantImage)) ?>" alt="" width="300" height="300" loading="eager">
+                                </div>
+                            <?php else: ?>
+                                <a class="lalala-card" href="plant-detail.php?id=<?= $plantId ?>" aria-label="<?= e('Xem chi tiết ' . $plantName) ?>">
+                                    <img src="<?= e(image_url($plantImage)) ?>" alt="<?= e($plantName) ?>" width="300" height="300" loading="eager">
+                                    <span class="lalala-card-label"><?= e($plantName) ?></span>
+                                </a>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        <div class="lalala-hero-veil" aria-hidden="true"></div>
     </section>
 
-    <section class="manifesto-section" aria-labelledby="manifesto-label" data-nav-section="light">
-        <div class="leaf-shadow-field leaf-shadow-field--manifesto" aria-hidden="true">
-            <svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
-                <g opacity="0.54">
-                    <path d="M-60 -40 C160 15 360 95 495 255 C345 295 150 265 -60 165 Z"/>
-                    <path d="M510 15 C645 65 765 155 835 285 C695 275 575 190 510 15 Z"/>
-                    <path d="M720 555 C855 510 990 545 1085 645 C950 710 805 675 720 555 Z"/>
-                    <path d="M1160 -30 C1305 60 1420 190 1495 335 L1495 -30 Z"/>
-                    <path d="M1180 675 C1290 615 1410 615 1500 665 L1500 940 L1065 940 C1085 820 1125 730 1180 675 Z"/>
-                </g>
-                <g opacity="0.92">
-                    <path d="M-45 195 C130 240 285 325 445 455 L425 474 C270 348 115 268 -50 222 Z"/>
-                    <path d="M78 218 C44 108 108 22 208 -2 C232 96 175 182 78 218 Z"/>
-                    <path d="M198 272 C195 162 272 86 382 74 C388 176 310 254 198 272 Z"/>
-                    <path d="M148 266 C52 292 -12 375 -22 480 C82 465 145 380 148 266 Z"/>
-                    <path d="M278 345 C190 390 144 484 158 585 C255 548 302 455 278 345 Z"/>
-                    <path d="M408 448 C488 402 580 410 658 464 C584 530 488 524 408 448 Z"/>
-                    <path d="M625 26 C695 92 752 178 765 272 C672 248 612 162 625 26 Z"/>
-                    <path d="M792 65 C875 112 938 188 965 278 C868 272 802 192 792 65 Z"/>
-                    <path d="M565 735 C662 678 768 688 852 762 C760 825 650 812 565 735 Z"/>
-                    <path d="M695 820 C795 765 905 780 992 865 C892 922 780 902 695 820 Z"/>
-                    <path d="M88 690 C190 645 298 665 385 745 C288 798 175 778 88 690 Z"/>
-                    <path d="M25 815 C140 760 272 782 365 875 C242 925 115 900 25 815 Z"/>
-                    <path d="M1495 160 C1350 212 1225 295 1132 410 L1152 424 C1242 315 1362 234 1500 185 Z"/>
-                    <path d="M1382 202 C1322 108 1235 55 1134 62 C1168 158 1260 216 1382 202 Z"/>
-                    <path d="M1270 264 C1198 184 1100 150 1005 174 C1054 260 1158 296 1270 264 Z"/>
-                    <path d="M1342 242 C1416 315 1445 410 1420 512 C1330 456 1304 356 1342 242 Z"/>
-                    <path d="M1192 346 C1114 368 1058 426 1038 512 C1128 504 1188 442 1192 346 Z"/>
-                </g>
-            </svg>
+    <section class="lalala-offerings" id="lalala-features" aria-labelledby="lalala-offerings-title" data-nav-section="light">
+        <div class="landing-content">
+            <header class="lalala-offerings-head">
+                <p class="lalala-offerings-kicker">OPEN TO NATURE</p>
+                <h2 id="lalala-offerings-title">LÀ LÁ LA có gì?</h2>
+            </header>
+            <div class="lalala-offerings-grid">
+                <?php foreach ($lalalaOfferings as $offering): ?>
+                    <a class="lalala-offering-card" href="<?= e($offering['href']) ?>" aria-label="<?= e($offering['aria']) ?>">
+                        <span class="lalala-offering-icon" aria-hidden="true">
+                            <?php if ($offering['icon'] === 'pot-hand'): ?>
+                                <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M24 22V12"/><path d="M24 15c0-4.5 3.5-7 7.5-7 0 4.5-3.5 7-7.5 7Z"/><path d="M24 17c0-3.8-3-6-6.5-6 0 3.8 3 6 6.5 6Z"/><path d="M18 22h12l-1.5 8h-9L18 22Z"/><path d="M11 33h8l4 2.5h9a2.5 2.5 0 0 1 0 5H19l-8-3.5v-4Z"/></svg>
+                            <?php elseif ($offering['icon'] === 'hands-sprout'): ?>
+                                <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M24 25V13"/><path d="M24 17c0-4.5 3.8-7 7.5-7 0 4.5-3.5 7-7.5 7Z"/><path d="M24 18c0-4.5-3.8-7-7.5-7 0 4.5 3.5 7 7.5 7Z"/><path d="M10 23v9c0 3 2.5 5 6 6l5 2"/><path d="M15 26v6c0 2 1.8 3.5 4.5 4.5"/><path d="M38 23v9c0 3-2.5 5-6 6l-5 2"/><path d="M33 26v6c0 2-1.8 3.5-4.5 4.5"/></svg>
+                            <?php elseif ($offering['icon'] === 'leaf-pair'): ?>
+                                <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="18.5" cy="21" rx="7.5" ry="11" transform="rotate(-18 18.5 21)"/><path d="M15.5 11.5c2 5.5 2.5 13 6 19"/><ellipse cx="29.5" cy="27" rx="7.5" ry="11" transform="rotate(24 29.5 27)"/><path d="M33 17.5c-2.5 5.5-4 13-7 19"/></svg>
+                            <?php else: ?>
+                                <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 26h14l-1.8 11H12.8L11 26Z"/><path d="M18 26V11"/><path d="M18 25l-5-11 4 4"/><path d="M18 25l5-12-4 5"/><path d="M28 30h10l-1.3 7H29.3L28 30Z"/><path d="M33 30v-8"/><path d="M33 25c0-3 2.5-5 5-5 0 3-2.5 5-5 5Z"/><path d="M33 26c0-2.5-2-4.2-4.5-4.2 0 2.5 2 4.2 4.5 4.2Z"/></svg>
+                            <?php endif; ?>
+                        </span>
+                        <h3><?= e($offering['title']) ?></h3>
+                        <p><?= e($offering['description']) ?></p>
+                    </a>
+                <?php endforeach; ?>
+            </div>
         </div>
-        <div class="manifesto-inner landing-content">
-        <div class="manifesto-main">
-            <div id="manifesto-label" class="manifesto-brand">Vũ Điệu Rừng Xanh<br>Cẩm nang cây sống</div>
-            <p class="manifesto-copy" data-manifesto-copy>
-                <span class="manifesto-inset"><img src="<?= e(image_url('anh27.jpg')) ?>" alt="Chậu cây Ngũ Gia Bì xanh tốt trong chậu đất nung đặt trên bàn gỗ" width="320" height="400"></span><span class="manifesto-phrase is-lit">Một chậu cây đặt đúng góc sáng</span>
-                <span class="manifesto-phrase">có thể làm dịu lại cả nhịp sống trong nhà.</span>
-                <span class="manifesto-phrase">Từ tán lá lớn nơi phòng khách đến chiếc chậu nhỏ trên bàn làm việc,</span>
-                <span class="manifesto-phrase">mỗi loài đều có nhịp thở và nhu cầu ánh sáng riêng —</span>
-                <span class="manifesto-phrase">chúng tôi lưu giữ đặc điểm, cách tưới và câu chuyện chăm cây để bạn chọn đúng sắc xanh cho không gian sống.</span>
-            </p>
+    </section>
+
+    <section class="lalala-needs" id="plant-needs" aria-labelledby="lalala-needs-title" data-nav-section="light">
+        <div class="landing-content">
+            <header class="lalala-needs-head">
+                <h2 id="lalala-needs-title">Những thứ mà cây cần</h2>
+            </header>
         </div>
 
-        <aside class="manifesto-journal" aria-label="Bài viết mới từ Blog">
-            <div class="journal-header-row">
-                <a class="journal-more-link" href="blog.php">Bài viết mới <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg></a>
-            </div>
-            <div class="journal-grid">
-                <?php if ($recentPosts !== []): ?>
-                    <?php foreach ($recentPosts as $post):
-                        $cover = blog_cover_url($post);
-                        $dateLabel = !empty($post['created_at']) ? date('d/m/Y', strtotime((string) $post['created_at'])) : '';
-                    ?>
-                    <article class="journal-card">
-                        <a href="blog-post.php?slug=<?= e(rawurlencode((string) $post['slug'])) ?>">
-                            <div class="journal-card-media">
-                                <img src="<?= e(asset_url($cover)) ?>" alt="<?= e((string) $post['title']) ?>" width="360" height="440">
-                            </div>
-                            <h3><?= e((string) $post['title']) ?></h3>
-                            <?php if ($dateLabel !== ''): ?><time datetime="<?= e(substr((string) $post['created_at'], 0, 10)) ?>"><?= e($dateLabel) ?></time><?php endif; ?>
-                        </a>
+        <div class="lalala-needs-stage">
+            <div class="lalala-needs-grid landing-content">
+                <div class="lalala-needs-col lalala-needs-col--left">
+                    <article class="lalala-need-card lalala-need-card--dark lalala-need-card--inward">
+                        <h3>Ánh sáng</h3>
+                        <p>Ánh sáng tán xạ dịu nhẹ giúp lá xanh mướt và quang hợp đều mỗi ngày.</p>
                     </article>
+                    <article class="lalala-need-card lalala-need-card--light lalala-need-card--outward">
+                        <h3>Nước &amp; Độ ẩm</h3>
+                        <p>Tưới khi lớp đất mặt vừa se khô, giữ ẩm thoáng để rễ luôn khỏe.</p>
+                    </article>
+                </div>
+
+                <div class="lalala-needs-center">
+                    <img src="<?= e(image_url('plant-needs-hero.png')) ?>" alt="Chậu cây Monstera xanh tươi tượng trưng cho các yếu tố chăm sóc cây" width="617" height="947">
+                </div>
+
+                <div class="lalala-needs-col lalala-needs-col--right">
+                    <article class="lalala-need-card lalala-need-card--light lalala-need-card--outward">
+                        <h3>Nhiệt độ</h3>
+                        <p>Mức nhiệt ổn định 18–28°C, tránh gió lạnh lùa hay nắng trưa gắt.</p>
+                    </article>
+                    <article class="lalala-need-card lalala-need-card--dark lalala-need-card--inward">
+                        <h3>Đất &amp; Dinh dưỡng</h3>
+                        <p>Giá thể tơi xốp thoát nước nhanh, bổ sung dinh dưỡng định kỳ vừa đủ.</p>
+                    </article>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="lalala-marquee-section" id="plant-carousel" aria-labelledby="lalala-marquee-title" data-nav-section="light">
+        <div class="lalala-marquee-head landing-content">
+            <div>
+                <p class="lalala-section-kicker">BỘ SƯU TẬP HIỆN CÓ</p>
+                <h2 id="lalala-marquee-title">Các loài cây trong Là Lá La</h2>
+            </div>
+            <div class="lalala-marquee-actions">
+                <a class="lalala-btn lalala-btn--primary" href="collection.php">
+                    <span>Khám phá Bộ sưu tập</span>
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg>
+                </a>
+            </div>
+        </div>
+
+        <div class="lalala-marquee-viewport" data-marquee-viewport>
+            <div class="lalala-marquee-track">
+                <?php for ($loop = 0; $loop < 2; $loop++):
+                    $isClone = $loop === 1;
+                ?>
+                    <div class="lalala-marquee-group"<?= $isClone ? ' aria-hidden="true"' : '' ?>>
+                        <?php foreach ($marqueePlants as $plant):
+                            $plantId = (int) ($plant['id'] ?? 0);
+                            $plantName = (string) ($plant['name'] ?? 'Cây xanh');
+                            $plantImg = (string) ($plant['image'] ?? 'anh21.jpg');
+                        ?>
+                            <a class="lalala-marquee-card" href="plant-detail.php?id=<?= $plantId ?>"<?= $isClone ? ' tabindex="-1"' : ' aria-label="' . e($plantName) . '"' ?>>
+                                <div class="lalala-marquee-media">
+                                    <img src="<?= e(image_url($plantImg)) ?>" alt="<?= $isClone ? '' : e($plantName) ?>" width="260" height="300" loading="lazy">
+                                </div>
+                            </a>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endfor; ?>
+            </div>
+        </div>
+    </section>
+
+    <section class="lalala-blog-intro" id="blog-showcase" aria-labelledby="lalala-blog-title" data-nav-section="light">
+        <div class="landing-content">
+            <div class="lalala-blog-head">
+                <div>
+                    <p class="lalala-section-kicker">CỘNG ĐỒNG LÀ LÁ LA</p>
+                    <h2 id="lalala-blog-title">Blog chia sẻ kinh nghiệm</h2>
+                </div>
+                <div class="lalala-blog-actions">
+                    <a class="lalala-btn lalala-btn--secondary" href="blog-editor.php">Viết bài chia sẻ</a>
+                    <a class="lalala-btn lalala-btn--primary" href="blog.php">Khám phá Blog</a>
+                </div>
+            </div>
+
+            <div class="lalala-blog-grid">
+                <?php if ($blogShowcasePosts !== []): ?>
+                    <?php foreach ($blogShowcasePosts as $post):
+                        $cover = blog_cover_url($post);
+                        $postTag = trim((string) ($post['tag'] ?? 'Chăm cây'));
+                        $postExcerpt = trim((string) ($post['excerpt'] ?? 'Ghi chép chăm cây thực tế và cảm hứng sống xanh từ cộng đồng Là Lá La.'));
+                        $postAuthor = trim((string) ($post['author'] ?? 'Là Lá La'));
+                    ?>
+                    <a class="lalala-blog-card" href="blog-post.php?slug=<?= e(rawurlencode((string) $post['slug'])) ?>">
+                        <div class="lalala-blog-card-media">
+                            <img src="<?= e(asset_url($cover)) ?>" alt="<?= e((string) $post['title']) ?>" width="420" height="280" loading="lazy">
+                        </div>
+                        <div class="lalala-blog-card-body">
+                            <span class="lalala-blog-tag"><?= e($postTag) ?></span>
+                            <h3><?= e((string) $post['title']) ?></h3>
+                            <p><?= e(mb_strimwidth($postExcerpt, 0, 108, '…', 'UTF-8')) ?></p>
+                        </div>
+                        <div class="lalala-blog-card-author">
+                            <span class="lalala-blog-avatar" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12a4.2 4.2 0 1 0-4.2-4.2A4.2 4.2 0 0 0 12 12Zm0 2.2c-4.1 0-7.5 2.1-7.5 4.8V21h15v-2c0-2.7-3.4-4.8-7.5-4.8Z"/></svg>
+                            </span>
+                            <span><?= e($postAuthor) ?></span>
+                        </div>
+                    </a>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <article class="journal-card">
-                        <a href="blog.php">
-                            <div class="journal-card-media">
-                                <img src="<?= e(image_url('anh57.jpg')) ?>" alt="Góc đọc bài viết chăm sóc cây xanh" width="360" height="440">
-                            </div>
-                            <h3>Khám phá góc chia sẻ kinh nghiệm chăm cây</h3>
-                        </a>
-                    </article>
-                <?php endif; ?>
-            </div>
-        </aside>
-        </div>
-    </section>
-
-    <section class="feature-showcase" id="web-features" aria-labelledby="features-title" data-nav-section="light" data-feature-showcase>
-        <div class="leaf-shadow-field leaf-shadow-field--features" aria-hidden="true">
-            <svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
-                <g opacity="0.56">
-                    <path d="M-40 -30 C130 25 280 105 395 235 C255 260 95 215 -40 115 Z"/>
-                    <path d="M840 -40 C990 20 1155 105 1285 245 C1115 270 945 210 840 -40 Z"/>
-                    <path d="M-50 280 C95 250 230 305 325 410 C205 465 75 435 -50 355 Z"/>
-                    <path d="M580 650 C760 605 950 645 1095 768 C920 852 720 820 580 650 Z"/>
-                </g>
-                <g opacity="0.92">
-                    <path d="M140 28 C215 95 270 175 295 268 C202 245 140 162 140 28 Z"/>
-                    <path d="M312 18 C395 68 462 145 492 238 C392 235 322 152 312 18 Z"/>
-                    <path d="M535 10 C618 68 682 150 708 242 C608 228 545 142 535 10 Z"/>
-                    <path d="M688 52 C772 95 838 165 868 255 C772 248 705 170 688 52 Z"/>
-                    <path d="M1485 105 C1305 138 1148 205 1008 308 L1026 328 C1162 228 1315 162 1490 132 Z"/>
-                    <path d="M1365 135 C1285 48 1180 12 1075 32 C1130 126 1242 166 1365 135 Z"/>
-                    <path d="M1225 184 C1138 116 1032 100 935 140 C1002 220 1116 238 1225 184 Z"/>
-                    <path d="M1395 160 C1458 245 1474 348 1434 448 C1352 384 1344 275 1395 160 Z"/>
-                    <path d="M1110 246 C1030 260 968 312 930 392 C1020 395 1090 342 1110 246 Z"/>
-                    <path d="M-40 620 C85 570 215 555 340 580 L335 602 C215 578 90 594 -35 644 Z"/>
-                    <path d="M58 588 C32 490 68 395 150 342 C192 432 155 528 58 588 Z"/>
-                    <path d="M175 568 C185 470 245 398 338 372 C355 468 292 545 175 568 Z"/>
-                    <path d="M132 602 C58 648 20 725 30 818 C118 785 158 702 132 602 Z"/>
-                    <path d="M265 588 C288 675 352 742 445 772 C432 678 368 608 265 588 Z"/>
-                    <path d="M510 778 C605 718 712 728 795 802 C702 862 595 848 510 778 Z"/>
-                    <path d="M775 790 C870 728 982 740 1068 818 C972 878 862 864 775 790 Z"/>
-                    <path d="M1180 780 C1270 708 1385 692 1485 735 C1408 820 1295 838 1180 780 Z"/>
-                </g>
-            </svg>
-        </div>
-        <div class="feature-head landing-content">
-            <h2 id="features-title">Công cụ dành cho góc xanh của bạn.</h2>
-            <div class="feature-controls" aria-label="Điều hướng các tính năng trang web">
-                <button class="feature-nav-btn" type="button" data-feature-prev aria-label="Tính năng trước" disabled>
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6 9 12l6 6"/></svg>
-                </button>
-                <button class="feature-nav-btn" type="button" data-feature-next aria-label="Tính năng tiếp theo">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
-                </button>
-            </div>
-        </div>
-
-        <div class="feature-track" data-feature-track tabindex="0" role="region" aria-label="Giới thiệu các tính năng chính của trang web">
-            <?php foreach ($webFeatures as $feature): ?>
-            <article class="feature-card">
-                <a class="feature-card-link" href="<?= e($feature['href']) ?>" aria-label="<?= e($feature['aria']) ?>">
-                    <div class="feature-card-visual feature-card-visual--<?= e($feature['type']) ?>" aria-hidden="true">
-                        <?php if ($feature['type'] === 'advisor-ui'): ?>
-                            <div class="feature-ui-stage">
-                                <span class="feature-ui-eyebrow">Gợi ý thông minh</span>
-                                <div class="feature-ui-chips">
-                                    <span class="feature-ui-chip is-selected">Sáng dịu nhẹ</span>
-                                    <span class="feature-ui-chip">Ít sáng</span>
-                                    <span class="feature-ui-chip is-selected">Bàn &amp; kệ</span>
-                                </div>
-                                <div class="feature-ui-result">
-                                    <span class="feature-ui-dot"></span>
-                                    <div>
-                                        <strong>Trầu Bà &amp; Lưỡi Hổ</strong>
-                                        <span>Ưu tiên giống dễ chăm</span>
-                                    </div>
-                                </div>
-                            </div>
-                        <?php elseif ($feature['type'] === 'elements-art'): ?>
-                            <img class="feature-elements-svg" src="<?= e(image_url('advisor/five-elements.svg')) ?>" alt="" width="800" height="500">
-                        <?php elseif ($feature['type'] === 'catalog-photo'): ?>
-                            <img class="feature-photo-img" src="<?= e(image_url($feature['image'])) ?>" alt="" width="600" height="750">
-                        <?php elseif ($feature['type'] === 'blog-type'): ?>
-                            <div class="feature-type-stage">
-                                <span class="feature-type-halo feature-type-halo--top"></span>
-                                <span class="feature-type-words">Chăm cây<br>Mẹo hay<br>Sống xanh</span>
-                                <span class="feature-type-halo feature-type-halo--bottom"></span>
-                            </div>
-                        <?php else: ?>
-                            <div class="feature-favorites-stage">
-                                <img class="feature-fav-photo feature-fav-photo--left" src="<?= e(image_url('anh47.jpg')) ?>" alt="" width="240" height="300">
-                                <img class="feature-fav-photo feature-fav-photo--right" src="<?= e(image_url('anh57.jpg')) ?>" alt="" width="240" height="300">
-                                <span class="feature-fav-heart">
-                                    <svg viewBox="0 0 24 24"><path d="M12 20.5s-7-4.5-9-8.8C1.2 8.2 3.7 5 7 5c2 0 3.7 1.1 5 2.9C13.3 6.1 15 5 17 5c3.3 0 5.8 3.2 4 6.7-2 4.3-9 8.8-9 8.8Z"/></svg>
-                                </span>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                    <p class="feature-card-copy"><strong><?= e($feature['title']) ?></strong> <?= e($feature['description']) ?></p>
-                </a>
-            </article>
-            <?php endforeach; ?>
-        </div>
-    </section>
-
-    <section class="collections-overview" aria-labelledby="collections-title" data-nav-section="light">
-        <div class="leaf-shadow-field" aria-hidden="true">
-            <svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
-                <g class="leaf-shadow-branch leaf-shadow-branch--1">
-                    <path d="M-80 120 C160 60 360 190 540 120 C420 260 220 310 -40 240 Z"/>
-                    <path d="M120 20 C260 140 340 300 440 430 C270 390 120 280 40 90 Z"/>
-                    <path d="M290 60 C470 110 610 210 730 330 C540 340 380 240 250 110 Z"/>
-                </g>
-                <g class="leaf-shadow-branch leaf-shadow-branch--2">
-                    <path d="M1520 240 C1240 190 1050 320 870 290 C990 420 1210 470 1490 380 Z"/>
-                    <path d="M1360 460 C1140 490 960 610 810 760 C1020 740 1230 630 1430 520 Z"/>
-                    <path d="M460 540 C650 480 810 560 930 670 C730 710 540 660 390 580 Z"/>
-                </g>
-            </svg>
-        </div>
-        <div class="collections-inner">
-            <h2 id="collections-title" class="collections-heading">Các nhóm cây</h2>
-            <nav class="collections-list" aria-label="Danh mục các nhóm cây">
-                <?php foreach ($collectionDirectory as $cat):
-                    $catCount = (int) ($categoryCounts[$cat['name']] ?? 0);
-                    $countText = '(' . str_pad((string) $catCount, 2, '0', STR_PAD_LEFT) . ')';
-                    $catUrl = 'collection.php?category=' . rawurlencode($cat['name']);
-                    $catFrames = $cat['frames'] ?? [$cat['image']];
-                    $renderThumb = static function (array $frames): string {
-                        $html = '<span class="collection-thumb" aria-hidden="true">';
-                        foreach ($frames as $frameImg) {
-                            $html .= '<img src="' . e(image_url((string) $frameImg)) . '" alt="" width="212" height="96" decoding="sync">';
-                        }
-                        $html .= '</span>';
-                        return $html;
-                    };
-                ?>
-                <a class="collection-row collection-row--<?= e($cat['layout']) ?>" href="<?= e($catUrl) ?>" aria-label="<?= e($cat['name']) ?> (<?= (int) $catCount ?>)">
-                    <?php if ($cat['layout'] === 'before-name'): ?>
-                        <?= $renderThumb($catFrames) ?>
-                        <span class="collection-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><?= $cat['icon'] ?></svg></span>
-                        <span class="collection-name"><?= e($cat['label']) ?></span>
-                        <span class="collection-count" aria-hidden="true"><?= e($countText) ?></span>
-                    <?php elseif ($cat['layout'] === 'after-name'): ?>
-                        <span class="collection-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><?= $cat['icon'] ?></svg></span>
-                        <span class="collection-name"><?= e($cat['label']) ?></span>
-                        <?= $renderThumb($catFrames) ?>
-                        <span class="collection-count" aria-hidden="true"><?= e($countText) ?></span>
-                    <?php else: ?>
-                        <span class="collection-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><?= $cat['icon'] ?></svg></span>
-                        <span class="collection-name"><?= e($cat['label']) ?></span>
-                        <span class="collection-count" aria-hidden="true"><?= e($countText) ?></span>
-                        <?= $renderThumb($catFrames) ?>
-                    <?php endif; ?>
-                </a>
-                <?php endforeach; ?>
-            </nav>
-        </div>
-    </section>
-
-    <section class="forest-highlight" aria-labelledby="forest-title" data-nav-section="dark">
-        <div class="forest-grid">
-            <div class="forest-profile">
-                <div class="forest-mini-photo">
-                    <img src="<?= e(image_url('anh47.jpg')) ?>" alt="Chậu Sen Đá nhỏ trong chậu gốm tối màu dưới ánh sáng ấm" width="320" height="320">
-                </div>
-                <div>
-                    <h2 id="forest-title">Góc tư vấn<br>chọn cây</h2>
-                    <p>Theo ánh sáng &amp; không gian</p>
-                </div>
-            </div>
-            <div class="forest-story">
-                <p>Vũ Điệu Rừng Xanh tổng hợp thông tin thực tế về <?= (int) $catalog['total'] ?> loài cây gồm cây trong nhà và cây để bàn, giúp bạn tra cứu nhanh nhu cầu nắng, nước tưới và độ ẩm.</p>
-                <p>Nếu chưa biết bắt đầu từ chậu nào, công cụ gợi ý sẽ kết hợp ánh sáng, vị trí đặt cây cùng các bài chia sẻ từ cộng đồng để thu hẹp lựa chọn phù hợp nhất cho bạn.</p>
-                <a class="forest-link" href="plant-advisor.php">Mở công cụ gợi ý cây <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg></a>
-            </div>
-            <div class="forest-feature-photo">
-                <img src="<?= e(image_url('anh22.jpg')) ?>" alt="Cây Lưỡi Hổ xanh viền vàng nổi bật trên nền gỗ sẫm màu" width="760" height="920">
-            </div>
-        </div>
-    </section>
-
-    <section class="bottom-showcase" id="first-steps" aria-labelledby="beginnings-title" data-nav-section="light">
-        <div class="leaf-shadow-field leaf-shadow-field--bottom" aria-hidden="true">
-            <svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
-                <g class="leaf-shadow-branch leaf-shadow-branch--3">
-                    <path d="M160 760 C340 620 560 560 760 610 C610 740 420 820 190 830 Z"/>
-                    <path d="M680 680 C880 540 1120 520 1320 620 C1140 730 920 770 710 740 Z"/>
-                    <path d="M1020 260 C1180 220 1340 280 1480 390 C1280 410 1110 360 990 300 Z"/>
-                </g>
-            </svg>
-        </div>
-
-        <div class="care-pillars landing-content">
-            <h2 id="beginnings-title" class="sr-only">Ba bước quan sát trước lần tưới đầu tiên</h2>
-            <article class="care-pillar care-pillar--tall">
-                <div class="care-pillar-media">
-                    <img src="<?= e(image_url('anh21.jpg')) ?>" alt="Chậu cây Trầu Bà Thanh Xuân đặt trong góc phòng sáng" width="600" height="440">
-                </div>
-                <div class="care-pillar-copy">
-                    <h3>Để ý vệt nắng</h3>
-                    <p>Quan sát góc nhà vào nhiều khung giờ trong ngày để biết ánh sáng mạnh, dịu hay ít sáng tự nhiên.</p>
-                </div>
-            </article>
-            <article class="care-pillar care-pillar--mid">
-                <div class="care-pillar-media">
-                    <img src="<?= e(image_url('anh58.jpg')) ?>" alt="Cây Trường Sinh lá tròn xanh mướt trong chậu tre mộc mạc" width="600" height="360">
-                </div>
-                <div class="care-pillar-copy">
-                    <h3>Chọn cây, chọn chậu</h3>
-                    <p>Đọc kỹ dáng cây và kích thước tán. Ưu tiên chậu có lỗ thoát nước và hài hòa với không gian sẵn có.</p>
-                </div>
-            </article>
-            <article class="care-pillar care-pillar--short">
-                <div class="care-pillar-media">
-                    <img src="<?= e(image_url('anh49.jpg')) ?>" alt="Chậu Hương Thảo bọc giấy kraft mộc mạc" width="600" height="240">
-                </div>
-                <div class="care-pillar-copy">
-                    <h3>Chạm vào đất trước</h3>
-                    <p>Kiểm tra độ ẩm của lớp đất mặt và đọc ghi chú từng loài thay vì tưới nước theo thói quen cố định.</p>
-                </div>
-            </article>
-        </div>
-
-        <div class="room-invitation landing-content">
-            <p class="invitation-title">Góc xanh của bạn<br>bắt đầu từ đây.</p>
-            <div class="invitation-side">
-                <p>Tra cứu <?= (int) $catalog['total'] ?> loài cây trong kho dữ liệu, lưu lại giống cây yêu thích hoặc đọc chia sẻ từ cộng đồng.</p>
-                <div class="invitation-actions">
-                    <a class="invitation-pill" href="collection.php">
-                        <span>Khám phá bộ sưu tập · <?= (int) $catalog['total'] ?> loài cây</span>
-                        <span class="invitation-pill-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" width="17" height="17"><path d="M4 12h15m-6-6 6 6-6 6"/></svg></span>
+                    <a class="lalala-blog-card" href="blog.php">
+                        <div class="lalala-blog-card-media">
+                            <img src="<?= e(image_url('anh57.jpg')) ?>" alt="Cây xanh trong nhà" width="420" height="280" loading="lazy">
+                        </div>
+                        <div class="lalala-blog-card-body">
+                            <span class="lalala-blog-tag">Chăm cây</span>
+                            <h3>Khám phá các bài viết từ cộng đồng yêu cây</h3>
+                            <p>Đọc mẹo hay hằng ngày và chia sẻ câu chuyện xanh của riêng bạn.</p>
+                        </div>
+                        <div class="lalala-blog-card-author">
+                            <span class="lalala-blog-avatar" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12a4.2 4.2 0 1 0-4.2-4.2A4.2 4.2 0 0 0 12 12Zm0 2.2c-4.1 0-7.5 2.1-7.5 4.8V21h15v-2c0-2.7-3.4-4.8-7.5-4.8Z"/></svg>
+                            </span>
+                            <span>Là Lá La</span>
+                        </div>
                     </a>
-                    <a class="room-text-link" href="blog.php">Đọc câu chuyện chăm cây <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg></a>
-                </div>
+                <?php endif; ?>
             </div>
         </div>
     </section>
 </main>
 
-<footer class="floema-footer" data-nav-section="yellow">
+<footer class="floema-footer" data-nav-section="dark">
     <div class="floema-footer-grid">
         <div class="floema-footer-mark">
-            <a class="floema-footer-brand" href="index.php" aria-label="Vũ Điệu Rừng Xanh — Về đầu trang">
+            <a class="floema-footer-brand" href="index.php" aria-label="Là Lá La — Về đầu trang">
                 <svg class="floema-footer-emblem" viewBox="0 0 120 150" fill="none" aria-hidden="true">
                     <path d="M22 136C22 78 90 68 96 12c34 58 6 110-44 96M22 136C8 98 8 66 32 46c4 36 38 40 24 68M22 136c19-38 50-58 62-78"/>
                 </svg>
-                <span>VŨ ĐIỆU<br>RỪNG XANH<sup>®</sup></span>
+                <span>LÀ LÁ LA<sup>®</sup></span>
             </a>
         </div>
 

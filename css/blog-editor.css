@@ -1,7 +1,7 @@
 /* Shared reading styles keep preview and published articles aligned. */
 .block-article { color: #243b30; font-size: 17px; line-height: 1.95; overflow-wrap: anywhere; }
 .block-article p { margin: 0 0 1.3em; color: #243b30; white-space: pre-wrap; text-wrap: pretty; }
-.block-article h2, .block-article h3, .editor-head h1, .editor-header h1, #editor-preview h1 { font-family: 'Lora', Georgia, serif; line-height: 1.4; margin: 1.8em 0 .65em; text-wrap: balance; }
+.block-article h2, .block-article h3, .editor-head h1, .editor-header h1, #editor-preview h1 { font-family: 'Fraunces', 'Lora', Georgia, serif; font-variation-settings: "SOFT" 100, "WONK" 1; line-height: 1.35; margin: 1.8em 0 .65em; text-wrap: balance; }
 .block-article h2 { font-size: 1.75em; }
 .block-article h3 { font-size: 1.35em; }
 .block-article figure { margin: 2em 0; contain: layout style; }
@@ -32,7 +32,7 @@
 .editor-layout { display: grid; grid-template-columns: minmax(0, 1fr) 250px; gap: 40px; align-items: start; }
 .editor-paper { min-width: 0; background: #ffffff; padding: 40px 48px; }
 .editor-label { display: block; font-size: 13px; color: #586452; margin-bottom: 10px; }
-#editor-title { display: block; width: 100%; border: none; border-bottom: 1px solid var(--editor-line); padding: 10px 0 24px; color: #243b30; background: transparent; font: 400 clamp(26px, 3vw, 42px)/1.4 'Lora', Georgia, serif; }
+#editor-title { display: block; width: 100%; border: none; border-bottom: 1px solid var(--editor-line); padding: 10px 0 24px; color: #243b30; background: transparent; font: 700 clamp(26px, 3vw, 42px)/1.35 'Fraunces', 'Lora', Georgia, serif; font-variation-settings: "SOFT" 100, "WONK" 1; }
 #editor-title::placeholder { color: #65715f; opacity: 1; }
 .editor-toolbar { display: flex; flex-wrap: wrap; gap: 6px; position: sticky; top: 0; z-index: 2; background: #ffffff; padding: 16px 0; border-bottom: 1px solid var(--editor-line); }
 .editor-toolbar button { font-size: 13px; }
@@ -42,7 +42,7 @@
 .block-controls button { min-height: 36px; padding: 6px 10px; font-size: 12px; background: transparent; }
 .block-text { min-height: 48px; padding: 8px 4px; line-height: 1.95; font-size: 17px; white-space: pre-wrap; overflow-wrap: anywhere; caret-color: #34533c; }
 .block-text:empty::before { content: attr(data-placeholder); color: #65715f; pointer-events: none; }
-.block-text.block-h2, .block-text.block-h3 { font-family: 'Lora', Georgia, serif; font-size: 28px; line-height: 1.5; }
+.block-text.block-h2, .block-text.block-h3 { font-family: 'Fraunces', 'Lora', Georgia, serif; font-variation-settings: "SOFT" 100, "WONK" 1; font-size: 28px; line-height: 1.45; }
 .block-text.block-h3 { font-size: 23px; }
 .block-text.block-quote { background: #edf0e8; padding: 20px; font-style: italic; }
 .editor-block img { display: block; max-width: 100%; max-height: 500px; margin: 12px auto; object-fit: contain; }
@@ -60,7 +60,7 @@
 .editor-hint { color: #586452; font-size: 12px; line-height: 1.8; margin: 16px 0; text-wrap: pretty; }
 .editor-notice { padding: 16px 20px; background: #edf0e8; color: #243b30; line-height: 1.7; margin: 16px 0; overflow-wrap: anywhere; text-wrap: pretty; }
 #editor-preview { max-width: 820px; margin: auto; }
-#editor-preview h1 { margin: 0 0 .65em; font-family: 'Lora', Georgia, serif; font-weight: 400; font-size: clamp(1.85rem, 3.2vw, 2.5rem); line-height: 1.25; letter-spacing: -0.02em; text-wrap: balance; overflow-wrap: anywhere; }
+#editor-preview h1 { margin: 0 0 .65em; font-family: 'Fraunces', 'Lora', Georgia, serif; font-variation-settings: "SOFT" 100, "WONK" 1; font-weight: 700; font-size: clamp(1.85rem, 3.2vw, 2.5rem); line-height: 1.22; letter-spacing: -0.02em; text-wrap: balance; overflow-wrap: anywhere; }
 @media (max-width: 1000px) { .editor-layout { grid-template-columns: minmax(0, 1fr) 210px; gap: 24px; } .editor-paper { padding: 28px; } }
 @media (max-width: 760px) {
     .editor-shell { padding: 0 12px 40px; }

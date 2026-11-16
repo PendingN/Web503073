@@ -33,7 +33,8 @@ function count_blog_posts(): int
 
 function latest_blog_posts(): array
 {
-    return db()->query('SELECT p.slug, p.title, p.tag, p.image_path, p.created_at FROM blog_posts p WHERE 1 = 1'
+    return db()->query("SELECT p.slug, p.title, p.tag, p.excerpt, p.image_path, p.created_at, COALESCE(u.name, 'Là Lá La') AS author"
+        . ' FROM blog_posts p LEFT JOIN users u ON u.id = p.user_id WHERE 1 = 1'
         . visible_blog_condition() . ' ORDER BY p.created_at DESC, p.id DESC LIMIT 5')->fetchAll();
 }
 

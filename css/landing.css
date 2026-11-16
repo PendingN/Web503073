@@ -1,29 +1,30 @@
 /* Floema-inspired editorial landing styles scoped strictly to .landing-page */
 
 .landing-page {
-    --fl-ivory-50: #f2efea;
-    --fl-ivory-100: #ebe7df;
-    --fl-ivory-200: #e4ded3;
-    --fl-ivory-soft: #f8f6f2;
+    --fl-ivory-50: #f4f5e9;
+    --fl-ivory-100: #eaedd8;
+    --fl-ivory-200: #dde2c8;
+    --fl-ivory-soft: #f8f9f0;
     --fl-white: #ffffff;
-    --fl-ink: #241f21;
-    --fl-ink-700: #524945;
-    --fl-ink-muted: #645a55;
-    --fl-forest: #042d2b;
-    --fl-yellow: #e9e778;
+    --fl-ink: #183022;
+    --fl-ink-700: #394f40;
+    --fl-ink-muted: #526857;
+    --fl-forest: #183022;
+    --fl-yellow: #b5c97a;
     --fl-coral: #f76c46;
-    --fl-celadon: #bacfa3;
+    --fl-celadon: #b5c97a;
     --fl-blue: #85a1c5;
     --fl-kraft: #c6af88;
-    --fl-hairline: rgba(36, 31, 33, .13);
+    --fl-hairline: rgba(24, 48, 34, .12);
     --fl-pill-radius: 12px;
     --fl-card-radius: 6px;
     --fl-header-height: 82px;
+    --fl-display-font: 'Fraunces', 'Lora', Georgia, serif;
     background: var(--fl-ivory-50);
     color: var(--fl-ink);
-    font-family: var(--brand-font, 'Be Vietnam Pro', sans-serif);
+    font-family: var(--brand-font, 'Plus Jakarta Sans', 'Be Vietnam Pro', sans-serif);
     caret-color: var(--fl-forest);
-    scrollbar-color: rgba(36, 31, 33, .32) var(--fl-ivory-50);
+    scrollbar-color: rgba(24, 48, 34, .32) var(--fl-ivory-50);
     overflow-x: clip;
 }
 
@@ -137,7 +138,827 @@
    Shared Site Header Harmony (inherits css/style.css)
    ========================================================= */
 .landing-page .site-header {
-    border-bottom: 1px solid var(--brand-border);
+    background: #f4f5e9;
+    border-bottom: 1px solid rgba(24, 48, 34, .1);
+}
+
+.landing-page .brand-link,
+.landing-page .nav-link,
+.landing-page .nav-logout-btn {
+    color: #183022;
+}
+
+.landing-page .nav-link:after {
+    background: #183022;
+}
+
+.landing-page .btn-contact {
+    background: #183022;
+    color: #f4f5e9;
+}
+
+.landing-page .btn-contact:hover,
+.landing-page .btn-contact:focus {
+    background: #234230;
+    color: #ffffff;
+}
+
+.landing-page .brand-link {
+    font-size: 0.95rem;
+    letter-spacing: 0.02em;
+}
+
+/* =========================================================
+   Section 0: Là Lá La Collection Collage Hero
+   ========================================================= */
+.lalala-hero {
+    position: relative;
+    min-height: clamp(580px, calc(100svh - 82px), 780px);
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    background: #f4f5e9;
+    border-bottom: 1px solid var(--fl-hairline);
+}
+
+.lalala-hero-inner {
+    position: relative;
+    z-index: 4;
+    padding-block: clamp(48px, 7vh, 84px);
+    pointer-events: none;
+}
+
+.lalala-hero-copy {
+    max-width: 470px;
+    pointer-events: auto;
+}
+
+.lalala-hero-copy h1 {
+    margin: 0 0 18px;
+    font-family: var(--fl-display-font);
+    font-variation-settings: "SOFT" 100, "WONK" 1;
+    font-style: normal;
+    font-weight: 700;
+    font-size: clamp(2.65rem, 5vw, 4.35rem);
+    line-height: 1.06;
+    letter-spacing: -0.025em;
+    color: #183022;
+}
+
+.lalala-hero-desc {
+    margin: 0 0 28px;
+    max-width: 44ch;
+    font-size: clamp(0.98rem, 1.15vw, 1.06rem);
+    line-height: 1.62;
+    color: #394f40;
+}
+
+.lalala-hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+}
+
+.lalala-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 46px;
+    padding: 12px 20px;
+    border-radius: 999px;
+    font-size: 0.92rem;
+    font-weight: 600;
+    line-height: 1.2;
+    text-decoration: none;
+    transition: transform .18s ease, background-color .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+
+.lalala-btn--primary {
+    background: #183022;
+    color: #f4f5e9;
+    border: 1px solid #183022;
+    box-shadow: 0 6px 18px rgba(24, 48, 34, .18);
+}
+
+.lalala-btn--primary:hover {
+    background: #234230;
+    border-color: #234230;
+    color: var(--fl-white);
+    transform: translateY(-1px);
+    box-shadow: 0 10px 24px rgba(24, 48, 34, .24);
+}
+
+.lalala-btn--secondary {
+    background: #b5c97a;
+    color: #183022;
+    border: 1px solid rgba(24, 48, 34, .14);
+    box-shadow: 0 2px 8px rgba(24, 48, 34, .06);
+}
+
+.lalala-btn--secondary:hover {
+    background: #c4d68d;
+    border-color: rgba(24, 48, 34, .24);
+    transform: translateY(-1px);
+}
+
+.lalala-wall-stage {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.lalala-wall {
+    position: absolute;
+    top: 50%;
+    left: -1%;
+    width: 112%;
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 18px;
+    align-items: center;
+    transform: translateY(-50%) rotate(-7deg);
+    transform-origin: center center;
+}
+
+.lalala-wall-col {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.lalala-wall-col--1 { transform: translateY(18px); pointer-events: none; }
+.lalala-wall-col--2 { transform: translateY(-46px); pointer-events: none; }
+.lalala-wall-col--3 { transform: translateY(26px); pointer-events: none; }
+.lalala-wall-col--4 { transform: translateY(-60px); }
+.lalala-wall-col--5 { transform: translateY(14px); }
+.lalala-wall-col--6 { transform: translateY(-42px); }
+.lalala-wall-col--7 { transform: translateY(24px); }
+
+.lalala-card {
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 1 / 1.04;
+    border-radius: 18px;
+    overflow: hidden;
+    background: var(--fl-ivory-100);
+    border: 1px solid rgba(36, 31, 33, .06);
+    box-shadow: 0 12px 28px rgba(36, 31, 33, .08);
+    text-decoration: none;
+    transition: transform .24s cubic-bezier(.22, .61, .36, 1), box-shadow .24s ease;
+}
+
+.lalala-card:nth-child(even) {
+    aspect-ratio: 10 / 9;
+}
+
+.lalala-card img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform .35s ease;
+}
+
+.lalala-card-label {
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    padding: 6px 10px;
+    border-radius: 9px;
+    background: rgba(249, 248, 245, .92);
+    backdrop-filter: blur(8px);
+    color: var(--fl-ink);
+    font-size: 0.78rem;
+    font-weight: 600;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity .2s ease, transform .2s ease;
+}
+
+a.lalala-card:hover,
+a.lalala-card:focus-visible {
+    z-index: 3;
+    transform: translateY(-4px) scale(1.025);
+    box-shadow: 0 20px 38px rgba(36, 31, 33, .16);
+}
+
+a.lalala-card:hover img,
+a.lalala-card:focus-visible img {
+    transform: scale(1.04);
+}
+
+a.lalala-card:hover .lalala-card-label,
+a.lalala-card:focus-visible .lalala-card-label {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.lalala-hero-veil {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    background: linear-gradient(
+        96deg,
+        rgba(244, 245, 233, .97) 0%,
+        rgba(244, 245, 233, .94) 30%,
+        rgba(244, 245, 233, .74) 44%,
+        rgba(244, 245, 233, .16) 57%,
+        rgba(244, 245, 233, 0) 68%
+    );
+}
+
+/* =========================================================
+   Section 0B: Là Lá La 4-Card Forest Offerings
+   ========================================================= */
+.lalala-offerings {
+    background: var(--fl-white);
+    padding: clamp(64px, 8vw, 108px) 0;
+    border-bottom: 1px solid var(--fl-hairline);
+}
+
+.lalala-offerings-head {
+    text-align: center;
+    margin-bottom: clamp(36px, 4.5vw, 56px);
+}
+
+.lalala-offerings-kicker {
+    margin: 0 0 10px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #556f4d;
+}
+
+.lalala-offerings-head h2 {
+    margin: 0;
+    font-family: var(--fl-display-font);
+    font-variation-settings: "SOFT" 100, "WONK" 1;
+    font-weight: 700;
+    font-size: clamp(1.85rem, 3.2vw, 2.55rem);
+    line-height: 1.15;
+    letter-spacing: -0.015em;
+    color: #183022;
+}
+
+.lalala-offerings-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(16px, 2vw, 26px);
+}
+
+.lalala-offering-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: clamp(32px, 3.2vw, 44px) clamp(20px, 2vw, 28px);
+    border-radius: 22px;
+    background: #183022;
+    color: #f4f5e9;
+    text-decoration: none;
+    transition: transform .22s ease, background-color .22s ease, box-shadow .22s ease;
+}
+
+.lalala-offering-card:hover,
+.lalala-offering-card:focus-visible {
+    background: #234230;
+    transform: translateY(-4px);
+    box-shadow: 0 16px 32px rgba(24, 48, 34, .2);
+}
+
+.lalala-offering-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 18px;
+    color: #b5c97a;
+}
+
+.lalala-offering-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+.lalala-offering-card h3 {
+    margin: 0 0 12px;
+    font-family: var(--fl-display-font);
+    font-variation-settings: "SOFT" 100, "WONK" 1;
+    font-weight: 700;
+    font-size: 1.16rem;
+    line-height: 1.3;
+    color: var(--fl-white);
+}
+
+.lalala-offering-card p {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.62;
+    color: rgba(244, 245, 233, .88);
+}
+
+@media (max-width: 1024px) {
+    .lalala-offerings-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 580px) {
+    .lalala-offerings-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* =========================================================
+   Section 0C: Plant Needs Centerpiece & Surrounding Cards
+   ========================================================= */
+.lalala-needs {
+    background: #f4f5e9;
+    padding: clamp(64px, 7.5vw, 100px) 0 clamp(72px, 8vw, 112px);
+    border-bottom: 1px solid var(--fl-hairline);
+    overflow: hidden;
+}
+
+.lalala-needs-head {
+    text-align: center;
+    margin-bottom: clamp(28px, 3.5vw, 44px);
+}
+
+.lalala-needs-head h2 {
+    margin: 0;
+    font-family: var(--fl-display-font);
+    font-variation-settings: "SOFT" 100, "WONK" 1;
+    font-weight: 700;
+    font-size: clamp(1.9rem, 3.3vw, 2.65rem);
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: #183022;
+}
+
+.lalala-needs-stage {
+    position: relative;
+}
+
+.lalala-needs-stage::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 76px;
+    bottom: 52px;
+    z-index: 0;
+    pointer-events: none;
+    border-top: 1px solid rgba(124, 139, 110, .14);
+    border-bottom: 1px solid rgba(124, 139, 110, .14);
+    background-size: 68px 68px;
+    background-image:
+        linear-gradient(to right, rgba(124, 139, 110, .14) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(124, 139, 110, .14) 1px, transparent 1px);
+}
+
+.lalala-needs-grid {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: minmax(220px, 1fr) minmax(260px, 390px) minmax(220px, 1fr);
+    align-items: center;
+    gap: clamp(16px, 2vw, 28px);
+}
+
+.lalala-needs-col {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(32px, 4.5vw, 68px);
+    position: relative;
+    z-index: 3;
+}
+
+.lalala-needs-col--left {
+    align-items: flex-start;
+}
+
+.lalala-needs-col--right {
+    align-items: flex-end;
+}
+
+.lalala-needs-col--left .lalala-need-card--inward {
+    margin-left: auto;
+    margin-right: clamp(-38px, -3vw, -16px);
+}
+
+.lalala-needs-col--left .lalala-need-card--outward {
+    margin-right: auto;
+}
+
+.lalala-needs-col--right .lalala-need-card--outward {
+    margin-left: auto;
+    margin-top: -16px;
+}
+
+.lalala-needs-col--right .lalala-need-card--inward {
+    margin-right: auto;
+    margin-left: clamp(-38px, -3vw, -16px);
+    margin-bottom: -12px;
+}
+
+.lalala-needs-center {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.lalala-needs-center img {
+    display: block;
+    width: min(100%, 370px);
+    height: auto;
+    filter: drop-shadow(0 20px 30px rgba(26, 43, 32, .14));
+}
+
+.lalala-need-card {
+    width: 100%;
+    max-width: 285px;
+    padding: 20px 22px;
+    border-radius: 14px;
+    text-align: center;
+    box-shadow: 0 14px 30px rgba(26, 43, 32, .12);
+    transition: transform .22s ease, box-shadow .22s ease;
+}
+
+.lalala-need-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 18px 36px rgba(26, 43, 32, .16);
+}
+
+.lalala-need-card--dark {
+    background: #183022;
+    color: var(--fl-white);
+}
+
+.lalala-need-card--light {
+    background: #b5c97a;
+    color: #183022;
+}
+
+.lalala-need-card h3 {
+    margin: 0 0 8px;
+    font-size: 1.04rem;
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+}
+
+.lalala-need-card--dark h3 {
+    color: var(--fl-white);
+}
+
+.lalala-need-card--light h3 {
+    color: #183022;
+}
+
+.lalala-need-card p {
+    margin: 0;
+    font-size: 0.85rem;
+    line-height: 1.55;
+}
+
+.lalala-need-card--dark p {
+    color: rgba(244, 245, 233, .88);
+}
+
+.lalala-need-card--light p {
+    color: rgba(24, 48, 34, .88);
+}
+
+@media (max-width: 960px) {
+    .lalala-needs-stage::before {
+        top: 120px;
+        bottom: 32px;
+    }
+
+    .lalala-needs-grid {
+        grid-template-columns: 1fr;
+        gap: 24px;
+    }
+
+    .lalala-needs-center {
+        order: -1;
+    }
+
+    .lalala-needs-center img {
+        width: min(74vw, 290px);
+    }
+
+    .lalala-needs-col {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        align-items: stretch;
+    }
+
+    .lalala-needs-col--left .lalala-need-card--inward,
+    .lalala-needs-col--left .lalala-need-card--outward,
+    .lalala-needs-col--right .lalala-need-card--outward,
+    .lalala-needs-col--right .lalala-need-card--inward {
+        margin: 0;
+        max-width: none;
+    }
+}
+
+@media (max-width: 560px) {
+    .lalala-needs-col {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* =========================================================
+   Section 0D: Left-to-Right Collection Plant Marquee
+   ========================================================= */
+.lalala-section-kicker {
+    margin: 0 0 8px;
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #556f4d;
+}
+
+.lalala-marquee-section {
+    background: var(--fl-white);
+    padding: clamp(64px, 7.5vw, 96px) 0 clamp(68px, 8vw, 104px);
+    border-bottom: 1px solid var(--fl-hairline);
+    overflow: hidden;
+}
+
+.lalala-marquee-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px 24px;
+    margin-bottom: clamp(28px, 3.5vw, 42px);
+}
+
+.lalala-marquee-head h2 {
+    margin: 0;
+    font-family: var(--fl-display-font);
+    font-variation-settings: "SOFT" 100, "WONK" 1;
+    font-weight: 700;
+    font-size: clamp(1.8rem, 3.1vw, 2.5rem);
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: var(--fl-ink);
+}
+
+.lalala-marquee-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px 20px;
+}
+
+@keyframes lalala-marquee-ltr {
+    0% {
+        transform: translate3d(-50%, 0, 0);
+    }
+    100% {
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+.lalala-marquee-viewport {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 4%, #000 96%, transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0%, #000 4%, #000 96%, transparent 100%);
+}
+
+.lalala-marquee-track {
+    display: flex;
+    width: max-content;
+    will-change: transform;
+    animation: lalala-marquee-ltr 190s linear infinite;
+}
+
+.lalala-marquee-viewport:hover .lalala-marquee-track,
+.lalala-marquee-viewport:focus-within .lalala-marquee-track,
+.lalala-marquee-section.is-paused .lalala-marquee-track {
+    animation-play-state: paused;
+}
+
+.lalala-marquee-group {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 20px;
+    padding-right: 20px;
+}
+
+.lalala-marquee-card {
+    flex: 0 0 auto;
+    width: clamp(200px, 17.5vw, 244px);
+    display: block;
+    border-radius: 16px;
+    overflow: hidden;
+    background: var(--fl-ivory-100);
+    border: 1px solid rgba(36, 31, 33, .08);
+    box-shadow: 0 8px 22px rgba(36, 31, 33, .06);
+    text-decoration: none;
+    transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+}
+
+.lalala-marquee-card:hover,
+.lalala-marquee-card:focus-visible {
+    transform: translateY(-4px);
+    border-color: rgba(4, 45, 43, .24);
+    box-shadow: 0 16px 32px rgba(36, 31, 33, .12);
+}
+
+.lalala-marquee-media {
+    aspect-ratio: 4 / 4.6;
+    overflow: hidden;
+    background: var(--fl-ivory-100);
+}
+
+.lalala-marquee-media img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform .35s ease;
+}
+
+.lalala-marquee-card:hover .lalala-marquee-media img {
+    transform: scale(1.04);
+}
+
+/* =========================================================
+   Section 0E: 4-Card Editorial Blog Showcase
+   ========================================================= */
+.lalala-blog-intro {
+    background: #f4f5e9;
+    padding: clamp(68px, 8vw, 108px) 0;
+    border-bottom: 1px solid var(--fl-hairline);
+}
+
+.lalala-blog-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px 24px;
+    margin-bottom: clamp(28px, 3.5vw, 44px);
+}
+
+.lalala-blog-head h2 {
+    margin: 0;
+    font-family: var(--fl-display-font);
+    font-variation-settings: "SOFT" 100, "WONK" 1;
+    font-weight: 700;
+    font-size: clamp(1.85rem, 3.1vw, 2.5rem);
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: var(--fl-ink);
+}
+
+.lalala-blog-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+}
+
+.lalala-blog-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(18px, 2vw, 26px);
+}
+
+.lalala-blog-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--fl-white);
+    border: 1px solid rgba(36, 31, 33, .08);
+    border-radius: 6px;
+    overflow: hidden;
+    color: var(--fl-ink);
+    text-decoration: none;
+    box-shadow: 0 4px 18px rgba(36, 31, 33, .04);
+    transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+}
+
+.lalala-blog-card:hover,
+.lalala-blog-card:focus-visible {
+    transform: translateY(-4px);
+    border-color: rgba(4, 45, 43, .2);
+    box-shadow: 0 14px 28px rgba(36, 31, 33, .09);
+}
+
+.lalala-blog-card-media {
+    aspect-ratio: 4 / 2.75;
+    overflow: hidden;
+    background: var(--fl-ivory-100);
+}
+
+.lalala-blog-card-media img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform .35s ease;
+}
+
+.lalala-blog-card:hover .lalala-blog-card-media img {
+    transform: scale(1.03);
+}
+
+.lalala-blog-card-body {
+    padding: 20px 20px 14px;
+    flex: 1 1 auto;
+}
+
+.lalala-blog-tag {
+    display: block;
+    margin-bottom: 10px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #556f4d;
+}
+
+.lalala-blog-card-body h3 {
+    margin: 0 0 10px;
+    font-family: var(--fl-display-font);
+    font-variation-settings: "SOFT" 100, "WONK" 1;
+    font-size: 1.06rem;
+    font-weight: 700;
+    line-height: 1.35;
+    color: #183022;
+}
+
+.lalala-blog-card-body p {
+    margin: 0;
+    font-size: 0.85rem;
+    line-height: 1.56;
+    color: #394f40;
+}
+
+.lalala-blog-card-author {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 20px 20px;
+    margin-top: auto;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #183022;
+}
+
+.lalala-blog-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: #e3ecd4;
+    color: #556f4d;
+    overflow: hidden;
+}
+
+.lalala-blog-avatar svg {
+    width: 20px;
+    height: 20px;
+    margin-top: 4px;
+}
+
+@media (max-width: 1080px) {
+    .lalala-blog-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 580px) {
+    .lalala-blog-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* =========================================================
@@ -256,7 +1077,8 @@
     text-align: center;
 }
 
-.room-copy h1 {
+.room-copy h1,
+.room-copy h2 {
     margin: 0;
     font-size: clamp(2.55rem, 5.8vw, 5.25rem);
     font-weight: 500;
@@ -1616,13 +2438,22 @@
 }
 
 /* =========================================================
-   Section 8: Flour-Yellow Architectural Footer (#e9e778)
+   Section 8: Deep Matcha Forest Architectural Footer
    ========================================================= */
 .floema-footer {
-    background: var(--fl-yellow);
-    color: var(--fl-ink);
+    background-color: #183022;
+    background-image: repeating-linear-gradient(
+        90deg,
+        rgba(255, 255, 255, .024) 0 46px,
+        transparent 46px 92px
+    );
+    color: #f4f5e9;
     padding: clamp(64px, 7.5vw, 100px) clamp(16px, 3vw, 48px) clamp(48px, 6vw, 72px);
-    border-top: 1px solid rgba(36, 31, 33, .16);
+    border-top: 1px solid rgba(181, 201, 122, .22);
+}
+
+.floema-footer :is(a, button):focus-visible {
+    outline-color: #b5c97a;
 }
 
 .floema-footer-grid {
@@ -1638,14 +2469,14 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 16px;
-    color: var(--fl-ink);
+    color: #f4f5e9;
     text-decoration: none;
 }
 
 .floema-footer-emblem {
     width: clamp(68px, 6.8vw, 102px);
     height: auto;
-    stroke: currentColor;
+    stroke: #b5c97a;
     stroke-width: 1.4;
 }
 
@@ -1663,14 +2494,14 @@
 
 .footer-line-art {
     display: block;
-    stroke: rgba(36, 31, 33, .76);
+    stroke: rgba(181, 201, 122, .45);
     stroke-width: 1.4;
     fill: none;
 }
 
 .floema-footer-band--top {
     padding-bottom: clamp(28px, 4vw, 44px);
-    border-bottom: 1px solid rgba(36, 31, 33, .22);
+    border-bottom: 1px solid rgba(244, 245, 233, .16);
 }
 
 .footer-line-art--shelf {
@@ -1692,7 +2523,7 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: var(--fl-ink-700);
+    color: #b5c97a;
 }
 
 .footer-columns ul {
@@ -1705,16 +2536,17 @@
 }
 
 .footer-columns a {
-    color: var(--fl-ink);
+    color: #f4f5e9;
     font-size: 0.92rem;
     font-weight: 500;
     text-decoration: none;
     border-bottom: 1px solid transparent;
-    transition: border-color .18s ease;
+    transition: border-color .18s ease, color .18s ease;
 }
 
 .footer-columns a:hover {
-    border-bottom-color: var(--fl-ink);
+    color: #b5c97a;
+    border-bottom-color: #b5c97a;
 }
 
 .floema-footer-band--bottom {
@@ -1756,13 +2588,14 @@
     font-size: clamp(1.1rem, 1.8vw, 1.45rem);
     font-weight: 500;
     letter-spacing: -0.02em;
-    color: var(--fl-ink);
+    color: #f4f5e9;
     text-decoration: none;
-    border-bottom: 1px solid rgba(36, 31, 33, .28);
+    border-bottom: 1px solid rgba(181, 201, 122, .35);
 }
 
 .footer-big-links a:hover {
-    border-bottom-color: var(--fl-ink);
+    color: #b5c97a;
+    border-bottom-color: #b5c97a;
 }
 
 .footer-colophon {
@@ -1775,7 +2608,7 @@
     margin: 0 0 4px;
     font-size: 0.84rem;
     line-height: 1.5;
-    color: var(--fl-ink-700);
+    color: rgba(244, 245, 233, .76);
 }
 
 /* =========================================================
@@ -1826,6 +2659,33 @@
 }
 
 @media (max-width: 1000px) {
+    .lalala-wall {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        width: 122%;
+        left: -4%;
+        gap: 14px;
+    }
+
+    .lalala-wall-col {
+        gap: 14px;
+    }
+
+    .lalala-wall-col--1,
+    .lalala-wall-col--7 {
+        display: none;
+    }
+
+    .lalala-hero-veil {
+        background: linear-gradient(
+            98deg,
+            rgba(244, 245, 233, .97) 0%,
+            rgba(244, 245, 233, .94) 40%,
+            rgba(244, 245, 233, .78) 56%,
+            rgba(244, 245, 233, .18) 72%,
+            rgba(244, 245, 233, 0) 82%
+        );
+    }
+
     .feature-card {
         flex-basis: clamp(248px, 39vw, 320px);
     }
@@ -1890,6 +2750,74 @@
 }
 
 @media (max-width: 700px) {
+    .lalala-hero {
+        min-height: auto;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .lalala-hero-inner {
+        padding-block: 32px 22px;
+    }
+
+    .lalala-hero-copy {
+        max-width: none;
+    }
+
+    .lalala-hero-copy h1 {
+        font-size: clamp(2.15rem, 9.5vw, 2.85rem);
+        margin-bottom: 14px;
+    }
+
+    .lalala-hero-desc {
+        margin-bottom: 20px;
+        font-size: 0.96rem;
+    }
+
+    .lalala-wall-stage {
+        position: relative;
+        inset: auto;
+        height: 300px;
+        width: 100%;
+    }
+
+    .lalala-wall {
+        width: 118%;
+        left: -9%;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+        transform: translateY(-48%) rotate(-6deg);
+    }
+
+    .lalala-wall-col {
+        gap: 12px;
+    }
+
+    .lalala-wall-col--1,
+    .lalala-wall-col--2,
+    .lalala-wall-col--3 {
+        display: none;
+    }
+
+    .lalala-wall-col--7 {
+        display: flex;
+    }
+
+    .lalala-card {
+        border-radius: 14px;
+    }
+
+    .lalala-hero-veil {
+        top: auto;
+        height: 300px;
+        background: linear-gradient(
+            180deg,
+            rgba(244, 245, 233, .94) 0%,
+            rgba(244, 245, 233, .28) 28%,
+            rgba(244, 245, 233, 0) 50%
+        );
+    }
+
     .landing-page .site-header {
         padding-inline: 12px;
     }
@@ -2071,6 +2999,31 @@
         opacity: 1;
         filter: none;
         transform: translate3d(calc(-50% + var(--rx) * 41vw), calc(-50% + var(--ry) * 36vh), 0) scale(0.92) !important;
+    }
+
+    a.lalala-card:hover,
+    a.lalala-card:focus-visible {
+        transform: none !important;
+    }
+
+    a.lalala-card:hover img,
+    a.lalala-card:focus-visible img {
+        transform: none !important;
+    }
+
+    .lalala-marquee-viewport {
+        overflow-x: auto;
+        -webkit-mask-image: none;
+        mask-image: none;
+    }
+
+    .lalala-marquee-track {
+        animation: none !important;
+        padding-inline: clamp(16px, 3vw, 48px);
+    }
+
+    .lalala-marquee-group[aria-hidden="true"] {
+        display: none;
     }
 
     .hero-tile--15,

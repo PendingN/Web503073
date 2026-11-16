@@ -9,9 +9,9 @@
   --so-fs-name: 44px; --so-fs-name-m: 26px; --so-fs-price: 16px; --so-fs-meta: 12px; --so-name-case: none;
   --so-m-bg: var(--paper, #faf9f6); --so-m-tx: var(--brand-ink, #243b30); --so-m-bbg: var(--brand, #34533c); --so-m-btx: #fff;
   --so-fs-mname: 48px; --so-morph: 850ms;
-  --font-heading--family: var(--brand-font, 'Be Vietnam Pro', sans-serif);
-  --font-body--family: var(--brand-font, 'Be Vietnam Pro', sans-serif);
-  font-family: var(--brand-font, 'Be Vietnam Pro', sans-serif);
+  --font-heading--family: var(--display-font, 'Fraunces', 'Lora', Georgia, serif);
+  --font-body--family: var(--brand-font, 'Plus Jakarta Sans', 'Be Vietnam Pro', sans-serif);
+  font-family: var(--brand-font, 'Plus Jakarta Sans', 'Be Vietnam Pro', sans-serif);
 }
 .favorite-orbit { margin-bottom: 28px; border: 1px solid var(--brand-border, #dedfd6); border-radius: 28px; }
 .favorite-orbit[hidden], .favorite-orbit .so-buy[hidden] { display: none; }
