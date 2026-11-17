@@ -194,7 +194,7 @@ require __DIR__ . '/includes/header.php';
     <section class="lalala-needs" id="plant-needs" aria-labelledby="lalala-needs-title" data-nav-section="light">
         <div class="landing-content">
             <header class="lalala-needs-head">
-                <h2 id="lalala-needs-title">Những thứ mà cây cần</h2>
+                <h2 id="lalala-needs-title">Những vấn đề cây đang gặp phải</h2>
             </header>
         </div>
 
@@ -202,27 +202,27 @@ require __DIR__ . '/includes/header.php';
             <div class="lalala-needs-grid landing-content">
                 <div class="lalala-needs-col lalala-needs-col--left">
                     <article class="lalala-need-card lalala-need-card--dark lalala-need-card--inward">
-                        <h3>Ánh sáng</h3>
-                        <p>Ánh sáng tán xạ dịu nhẹ giúp lá xanh mướt và quang hợp đều mỗi ngày.</p>
+                        <h3>Vàng lá &amp; úng rễ</h3>
+                        <p>Tưới quá tay hoặc chậu bí nước khiến lá gốc mềm vàng và rễ dễ thối nhũn.</p>
                     </article>
                     <article class="lalala-need-card lalala-need-card--light lalala-need-card--outward">
-                        <h3>Nước &amp; Độ ẩm</h3>
-                        <p>Tưới khi lớp đất mặt vừa se khô, giữ ẩm thoáng để rễ luôn khỏe.</p>
+                        <h3>Cháy mép &amp; khô đầu lá</h3>
+                        <p>Nắng gắt chiếu trực tiếp hoặc phòng máy lạnh quá khô làm lá sạm viền.</p>
                     </article>
                 </div>
 
                 <div class="lalala-needs-center">
-                    <img src="<?= e(image_url('plant-needs-hero.png')) ?>" alt="Chậu cây Monstera xanh tươi tượng trưng cho các yếu tố chăm sóc cây" width="617" height="947">
+                    <img src="<?= e(image_url('plant-needs-hero.png')) ?>" alt="Chậu cây Monstera minh họa những vấn đề cây thường gặp" width="617" height="947">
                 </div>
 
                 <div class="lalala-needs-col lalala-needs-col--right">
                     <article class="lalala-need-card lalala-need-card--light lalala-need-card--outward">
-                        <h3>Nhiệt độ</h3>
-                        <p>Mức nhiệt ổn định 18–28°C, tránh gió lạnh lùa hay nắng trưa gắt.</p>
+                        <h3>Thiếu sáng, cây vươn còi</h3>
+                        <p>Đặt xa cửa sổ khiến thân vươn dài yếu ớt, lá nhạt màu và thưa dần.</p>
                     </article>
                     <article class="lalala-need-card lalala-need-card--dark lalala-need-card--inward">
-                        <h3>Đất &amp; Dinh dưỡng</h3>
-                        <p>Giá thể tơi xốp thoát nước nhanh, bổ sung dinh dưỡng định kỳ vừa đủ.</p>
+                        <h3>Rệp sáp &amp; nấm phấn</h3>
+                        <p>Góc trồng thiếu thoáng khí dễ xuất hiện rệp trắng dưới tán lá và nấm thân.</p>
                     </article>
                 </div>
             </div>

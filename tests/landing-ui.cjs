@@ -80,7 +80,7 @@ const { chromium } = require('playwright');
         assert.ok(await page.locator('.lalala-offerings').isVisible());
         assert.equal(await page.locator('.lalala-need-card').count(), 4);
         assert.ok(await page.locator('.lalala-needs').isVisible());
-        assert.ok((await page.locator('.lalala-needs h2').textContent()).includes('Những thứ mà cây cần'));
+        assert.ok((await page.locator('.lalala-needs h2').textContent()).includes('Những vấn đề cây đang gặp phải'));
         assert.ok(await page.locator('.lalala-marquee-section').isVisible());
         assert.equal(await page.locator('[data-marquee-toggle]').count(), 0);
         assert.ok((await page.locator('.lalala-marquee-section .lalala-btn--primary').textContent()).includes('Khám phá Bộ sưu tập'));
