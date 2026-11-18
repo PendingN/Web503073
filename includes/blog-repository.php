@@ -120,14 +120,3 @@ function list_blog_comments(int $postId, int $page): array
     $statement->execute([$postId]);
     return ['comments' => $statement->fetchAll(), 'page' => $page, 'pages' => $pages];
 }
-
-// Per-user counters for the dashboard overview cards.
-function user_blog_statistics(int $userId): array
-{
-    $statement = db()->prepare('SELECT'
-        . ' (SELECT COUNT(*) FROM blog_saves s JOIN blog_posts p ON p.id = s.post_id WHERE s.user_id = :saved_user' . visible_blog_condition() . ') AS saved,'
-        . ' (SELECT COUNT(*) FROM blog_posts p WHERE p.user_id = :author' . visible_blog_condition() . ') AS posts,'
-        . ' (SELECT COUNT(*) FROM blog_comments c WHERE c.user_id = :commenter) AS comments');
-    $statement->execute(['saved_user' => $userId, 'author' => $userId, 'commenter' => $userId]);
-    return array_map('intval', $statement->fetch() ?: ['saved' => 0, 'posts' => 0, 'comments' => 0]);
-}

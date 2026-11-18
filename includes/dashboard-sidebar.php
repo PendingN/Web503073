@@ -1,4 +1,4 @@
-<?php $dashboardActive = $dashboardActive ?? 'overview'; ?>
+<?php $dashboardActive = $dashboardActive ?? 'collection'; ?>
 <aside class="dashboard-sidebar">
     <?php if (empty($hasSiteHeader)): ?>
     <a class="dashboard-logo" href="index.php">
@@ -9,10 +9,6 @@
     </a>
     <?php endif; ?>
     <nav aria-label="Điều hướng không gian xanh">
-        <a class="dashboard-nav-link<?= $dashboardActive === 'overview' ? ' is-active' : '' ?>" <?= $dashboardActive === 'overview' ? 'aria-current="page"' : '' ?> href="dashboard.php">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 9.5 9-6.5 9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Z"/><path d="M9 21v-9h6v9"/></svg>
-            Tổng quan
-        </a>
         <a class="dashboard-nav-link<?= $dashboardActive === 'advisor' ? ' is-active' : '' ?>" <?= $dashboardActive === 'advisor' ? 'aria-current="page"' : '' ?> href="plant-advisor.php">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/><circle cx="12" cy="12" r="3"/></svg>
             Gợi ý chọn cây

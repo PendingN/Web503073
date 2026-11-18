@@ -212,7 +212,7 @@ set_exception_handler(static function (Throwable $exception): void {
 $viewer = current_user();
 if ($viewer !== null && ($_SERVER['REQUEST_METHOD'] ?? '') === 'GET') {
     $viewedPage = basename($_SERVER['SCRIPT_NAME'] ?? '');
-    $activityPages = ['index.php' => 'Trang chủ', 'dashboard.php' => 'Tổng quan bộ sưu tập', 'collection.php' => 'Bộ sưu tập',
+    $activityPages = ['index.php' => 'Trang chủ', 'collection.php' => 'Bộ sưu tập',
         'plant-advisor.php' => 'Gợi ý chọn cây', 'favorites.php' => 'Cây yêu thích', 'profile.php' => 'Trang cá nhân', 'plant-detail.php' => 'Chi tiết cây',
         'blog.php' => 'Blog', 'blog-post.php' => 'Chi tiết bài viết', 'admin.php' => 'Quản lý tài khoản',
         'admin-dashboard.php' => 'Tổng quan quản trị', 'admin-posts.php' => 'Quản trị bài viết', 'admin-plants.php' => 'Quản lý cây'];

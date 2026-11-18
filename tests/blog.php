@@ -43,7 +43,6 @@ check(str_contains($reader->request('blog.php?search=' . rawurlencode('Kinh nghi
 foreach (['%', '_', "' OR 1=1 --"] as $query) {
     check(str_contains($reader->request('blog.php?search=' . rawurlencode($query))['body'], '0 kết quả'), 'Blog search must treat input literally.');
 }
-check(str_contains($reader->request('dashboard.php')['body'], '<strong>8</strong>'), 'Dashboard blog count must use the database.');
 $bobToken = $blockedLogin->token('blog-editor.php');
 $bobAction = ['csrf_token' => $bobToken, 'slug' => $slug];
 foreach (['update', 'delete'] as $operation) {
