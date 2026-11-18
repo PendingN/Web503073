@@ -375,7 +375,7 @@ require __DIR__ . '/includes/header.php';
                                 <li><a href="favorites.php">Cây yêu thích</a></li>
                                 <li><a href="profile.php">Trang cá nhân</a></li>
                             <?php endif; ?>
-                            <li><a href="dashboard.php">Tổng quan vườn</a></li>
+                            <li><a href="collection.php">Bộ sưu tập cây</a></li>
                         </ul>
                     </div>
                 </div>

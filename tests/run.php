@@ -148,7 +148,7 @@ try {
         usleep(100000);
     }
     $guest = new TestBrowser($base);
-    foreach (['index.php', 'dashboard.php', 'collection.php', 'plant-detail.php?id=22', 'plant-advisor.php', 'blog.php', 'blog-post.php?slug=bat-dau-mot-goc-xanh-tu-dau', 'login.php', 'register.php'] as $path) {
+    foreach (['index.php', 'collection.php', 'plant-detail.php?id=22', 'plant-advisor.php', 'blog.php', 'blog-post.php?slug=bat-dau-mot-goc-xanh-tu-dau', 'login.php', 'register.php'] as $path) {
         check($guest->request($path)['status'] === 200, 'Public route failed: ' . $path);
     }
     foreach (['favorites.php', 'profile.php', 'admin.php', 'admin-dashboard.php'] as $path) {

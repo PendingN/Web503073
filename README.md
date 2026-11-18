@@ -213,7 +213,7 @@ C:/xampp/php/php.exe -S 127.0.0.1:8090 -t .
 | Route | Chức năng | Quyền |
 |---|---|---|
 | <code>index.php</code> | Trang chủ và cây nổi bật | Công khai |
-| <code>dashboard.php</code> | Tổng quan sau khi đăng nhập | Công khai / tùy nội dung |
+| <code>dashboard.php</code> | Chuyển hướng sang <code>collection.php</code> (trang tổng quan đã bỏ) | Công khai |
 | <code>collection.php?search=...&category=...</code> | Tìm kiếm và lọc cây | Công khai |
 | <code>plant-detail.php?id=22</code> | Chi tiết một cây | Công khai |
 | <code>plant-advisor.php?mode=zodiac</code> / <code>?mode=spiritual</code> | Gợi ý chọn cây theo 12 cung hoàng đạo (Chiêm tinh học) hoặc ngày sinh âm lịch, mệnh và hướng góc nhà (Một chút tâm linh) | Công khai |

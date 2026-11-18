@@ -9,7 +9,6 @@ $returnTo = safe_return_url($_GET['return_to'] ?? null, 'collection.php');
 $returnPage = basename((string) parse_url($returnTo, PHP_URL_PATH));
 $backLabel = match ($returnPage) {
     'favorites.php' => 'Quay lại cây yêu thích',
-    'dashboard.php' => 'Quay lại tổng quan',
     'plant-advisor.php' => 'Quay lại gợi ý chọn cây',
     default => 'Quay lại bộ sưu tập',
 };
