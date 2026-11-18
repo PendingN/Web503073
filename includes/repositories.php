@@ -16,7 +16,17 @@ function plant_light_keywords(string $light): array
     };
 }
 
-function list_plants(string $search = '', string $category = '', string $light = ''): array
+// Whitelisted ORDER BY clauses for the collection sort menu. Add 'rating' here once plants have ratings.
+function plant_sort_options(): array
+{
+    return [
+        '' => ['label' => 'Mặc định', 'order' => 'category, id'],
+        'name_asc' => ['label' => 'Tên A → Z', 'order' => 'name ASC, id'],
+        'name_desc' => ['label' => 'Tên Z → A', 'order' => 'name DESC, id'],
+    ];
+}
+
+function list_plants(string $search = '', string $category = '', string $light = '', string $sort = ''): array
 {
     $sql = 'SELECT id, name, category, description, care, image FROM plants WHERE 1 = 1';
     $parameters = [];
@@ -44,7 +54,9 @@ function list_plants(string $search = '', string $category = '', string $light =
         }
         $sql .= ' AND (' . implode(' OR ', $clauses) . ')';
     }
-    $statement = db()->prepare($sql . ' ORDER BY category, id');
+    $sortOptions = plant_sort_options();
+    $order = ($sortOptions[$sort] ?? $sortOptions[''])['order'];
+    $statement = db()->prepare($sql . ' ORDER BY ' . $order);
     $statement->execute($parameters);
     return $statement->fetchAll();
 }

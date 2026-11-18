@@ -13,6 +13,7 @@ $flashMessage = take_flash();
 $pageStyles = ['css/shoe-orbit.css', 'css/favorite-orbit.css'];
 $pageScripts = ['js/favorite-orbit.js', 'js/shoe-orbit.js'];
 require __DIR__ . '/includes/header.php';
+$hideNavLogout = true;
 require __DIR__ . '/includes/navbar.php';
 ?>
 
@@ -25,7 +26,6 @@ require __DIR__ . '/includes/navbar.php';
             <header>
                 <div>
                     <h1>Cây yêu thích</h1>
-                    <p class="lead">Những cây bạn đã lưu.</p>
                 </div>
             </header>
             <?php require __DIR__ . '/includes/favorite-orbit.php'; ?>

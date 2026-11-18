@@ -24,7 +24,7 @@ $hasCustomSkipLink = in_array($bodyClass ?? '', ['landing-page', 'blog-page', 'b
     <div class="nav-right">
         <?php if ($navbarUser === null): ?>
         <a href="<?= e($loginTarget) ?>" class="btn-contact"><?= e($loginLabel) ?></a>
-        <?php else: ?>
+        <?php elseif (empty($hideNavLogout)): ?>
         <form class="inline-logout-form" method="post" action="actions/logout.php">
             <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
             <button type="submit" class="nav-logout-btn">Đăng xuất</button>
