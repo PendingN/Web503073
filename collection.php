@@ -9,10 +9,23 @@ $light = trim(request_string($_GET, 'light'));
 if (!in_array($light, ['bright', 'indirect', 'low'], true)) {
     $light = '';
 }
+$sortOptions = plant_sort_options();
+$sort = trim(request_string($_GET, 'sort'));
+if (!array_key_exists($sort, $sortOptions)) {
+    $sort = '';
+}
 $catalog = plant_catalog_statistics();
 $categories = $catalog['categories'];
 
-$filteredPlants = list_plants($search, $category, $light);
+$filteredPlants = list_plants($search, $category, $light, $sort);
+$suggestReturn = safe_return_url(current_request_url());
+$searchSuggestions = array_map(static fn (array $plant): array => [
+    'name' => $plant['name'],
+    'category' => $plant['category'],
+    'image' => image_url($plant['image']),
+    'url' => 'plant-detail.php?' . http_build_query(['id' => (int) $plant['id'], 'return_to' => $suggestReturn]),
+], list_plants());
+$pageScripts = ['js/search-suggest.js'];
 
 $pageTitle = 'Bộ sưu tập';
 $bodyClass = 'dashboard-page';
@@ -20,6 +33,7 @@ $dashboardActive = 'collection';
 $activePage = 'collection';
 $flashMessage = take_flash();
 require __DIR__ . '/includes/header.php';
+$hideNavLogout = true;
 require __DIR__ . '/includes/navbar.php';
 ?>
 
@@ -31,38 +45,30 @@ require __DIR__ . '/includes/navbar.php';
             <header>
                 <div>
                     <h1>Bộ sưu tập</h1>
-                    <p class="lead">Khám phá <?= (int) $catalog['total'] ?> giống cây xanh phù hợp với không gian của bạn.</p>
                 </div>
             </header>
 
-            <form class="filter-panel" method="get" action="collection.php">
-                <label for="plant-search">Tìm kiếm
-                    <input id="plant-search" type="search" name="search" value="<?= e($search) ?>" placeholder="Tên hoặc mô tả cây">
-                </label>
-                <label for="plant-category">Nhóm cây
-                    <select id="plant-category" name="category" data-auto-submit>
-                        <option value="">Tất cả nhóm cây</option>
-                        <?php foreach ($categories as $item): ?>
-                            <option value="<?= e($item) ?>"<?= $category === $item ? ' selected' : '' ?>><?= e($item) ?></option>
+            <form class="catalog-toolbar" method="get" action="collection.php" role="search" id="results">
+                <div class="catalog-search" data-search-suggest="<?= e(json_encode($searchSuggestions, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) ?>">
+                    <label class="sr-only" for="plant-search">Tìm kiếm cây</label>
+                    <input id="plant-search" type="search" name="search" value="<?= e($search) ?>" placeholder="Tìm tên hoặc mô tả cây" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="plant-search-list">
+                    <ul class="search-suggest" id="plant-search-list" role="listbox" aria-label="Gợi ý cây" hidden></ul>
+                    <button type="submit" aria-label="Tìm kiếm">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                    </button>
+                </div>
+                <?php if ($search !== '' || $category !== '' || $light !== '' || $sort !== ''): ?><a class="catalog-reset" href="collection.php">Xóa lọc</a><?php endif; ?>
+                <div class="catalog-sort">
+                    <label class="catalog-label" for="plant-sort">Sắp xếp:</label>
+                    <select id="plant-sort" name="sort" data-auto-submit>
+                        <?php foreach ($sortOptions as $value => $option): ?>
+                            <option value="<?= e($value) ?>"<?= $sort === $value ? ' selected' : '' ?>><?= e($option['label']) ?></option>
                         <?php endforeach; ?>
+                        <option value="rating" disabled>Đánh giá cao nhất (sắp có)</option>
                     </select>
-                </label>
-                <label for="plant-light">Ánh sáng
-                    <select id="plant-light" name="light" data-auto-submit>
-                        <option value="">Tất cả mức sáng</option>
-                        <option value="bright"<?= $light === 'bright' ? ' selected' : '' ?>>Nhiều ánh sáng</option>
-                        <option value="indirect"<?= $light === 'indirect' ? ' selected' : '' ?>>Ánh sáng tán xạ</option>
-                        <option value="low"<?= $light === 'low' ? ' selected' : '' ?>>Ít sáng / chịu bóng</option>
-                    </select>
-                </label>
-                <button type="submit">Lọc kết quả</button>
-                <?php if ($search !== '' || $category !== '' || $light !== ''): ?><a class="btn-outline-brand" href="collection.php">Xóa bộ lọc</a><?php endif; ?>
+                    <span class="catalog-count" aria-live="polite"><?= count($filteredPlants) ?> sản phẩm</span>
+                </div>
             </form>
-
-            <div class="section-heading" id="results">
-                <h2><?= count($filteredPlants) ?> kết quả</h2>
-                <span class="sample-label"><?= current_user() ? 'Bấm tim để lưu cây' : 'Đăng nhập để lưu cây' ?></span>
-            </div>
 
             <?php if ($filteredPlants === []): ?>
                 <div class="empty-state">

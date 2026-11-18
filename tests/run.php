@@ -158,8 +158,8 @@ try {
     check($guest->request('plant-detail.php?id[]=22')['status'] === 404, 'Array plant ID must be rejected.');
     check($guest->request('plant-detail.php?id=99999')['status'] === 404, 'Missing plants must return 404.');
     check(str_contains($guest->request('collection.php?search=tr%E1%BA%A7u')['body'], 'Trầu'), 'Vietnamese plant search failed.');
-    check(str_contains($guest->request('collection.php?search=%25')['body'], '0 kết quả'), 'LIKE wildcards must be treated literally.');
-    check(str_contains($guest->request('collection.php?search=' . rawurlencode("' OR 1=1 --"))['body'], '0 kết quả'), 'SQL search input is not literal.');
+    check(str_contains($guest->request('collection.php?search=%25')['body'], '0 sản phẩm'), 'LIKE wildcards must be treated literally.');
+    check(str_contains($guest->request('collection.php?search=' . rawurlencode("' OR 1=1 --"))['body'], '0 sản phẩm'), 'SQL search input is not literal.');
     $advisorData = ['mode' => 'spiritual', 'birth_day' => '25', 'birth_month' => '1', 'birth_year' => '1996', 'direction' => 'dong', 'wish' => 'tai-loc', 'habit' => 'busy', 'light' => 'low', 'position' => 'shelf', 'note' => '<b>Nhà có mèo</b>'];
     check($guest->request('actions/plant-advice-action.php', $advisorData)['status'] === 403, 'Plant advice requires a CSRF token.');
     $response = $guest->request('actions/plant-advice-action.php', ['csrf_token' => $guest->token('plant-advisor.php?mode=spiritual')] + $advisorData);
@@ -190,7 +190,7 @@ try {
     check(str_contains($guest->request('plant-advisor.php?mode=zodiac&light=bright&position=floor')['body'], '<option value="bright" selected>'), 'The landing finder prefills the advisor.');
     $category = 'Cây trong nhà';
     $expected = count(list_plants('', $category));
-    check(str_contains($guest->request('collection.php?category=' . rawurlencode($category))['body'], $expected . ' kết quả'), 'Category filter failed.');
+    check(str_contains($guest->request('collection.php?category=' . rawurlencode($category))['body'], $expected . ' sản phẩm'), 'Category filter failed.');
     foreach (['favorite-action.php', 'plant-advice-action.php', 'profile-action.php', 'user-action.php', 'blog-action.php', 'logout.php'] as $handler) {
         check($guest->request('actions/' . $handler)['status'] === 405, 'GET must not mutate: ' . $handler);
         check($guest->request('actions/' . $handler, [])['status'] === 403, 'Missing CSRF accepted: ' . $handler);

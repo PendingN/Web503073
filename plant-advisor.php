@@ -155,6 +155,7 @@ $pageScripts = ['js/plant-advisor.js'];
 $dashboardActive = 'advisor';
 $activePage = 'collection';
 require __DIR__ . '/includes/header.php';
+$hideNavLogout = true;
 require __DIR__ . '/includes/navbar.php';
 ?>
 
