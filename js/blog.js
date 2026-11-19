@@ -44,40 +44,6 @@
         });
     }
 
-    function initSpotlightParallax() {
-        var targets = Array.from(document.querySelectorAll('[data-mono-parallax]'));
-        if (!targets.length) {
-            return;
-        }
-
-        var ticking = false;
-        function update() {
-            ticking = false;
-            var vh = window.innerHeight || 900;
-            targets.forEach(function (el) {
-                var rect = el.getBoundingClientRect();
-                if (rect.bottom < -60 || rect.top > vh + 60) {
-                    return;
-                }
-                var center = rect.top + rect.height * 0.5;
-                var normalized = (center - vh * 0.5) / (vh * 0.65);
-                var clamped = Math.max(-1, Math.min(1, normalized));
-                el.style.setProperty('--mono-scroll-shift', (clamped * 14).toFixed(2) + 'px');
-            });
-        }
-
-        function onScroll() {
-            if (!ticking) {
-                ticking = true;
-                window.requestAnimationFrame(update);
-            }
-        }
-
-        window.addEventListener('scroll', onScroll, { passive: true });
-        window.addEventListener('resize', onScroll, { passive: true });
-        update();
-    }
-
     function initReadingProgress() {
         var bar = document.querySelector('[data-reading-progress]');
         var article = document.querySelector('[data-reading-article]');
@@ -111,7 +77,6 @@
 
     function init() {
         initPlateReveals();
-        initSpotlightParallax();
         initReadingProgress();
     }
 

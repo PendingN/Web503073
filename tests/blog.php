@@ -12,16 +12,17 @@ check(str_contains($feedPage, 'class="mono-masthead"')
     && !str_contains($feedPage, 'feed-ticker-card')
     && !str_contains($feedPage, 'feed-post-actions')
     && !str_contains($feedPage, 'data-reaction'), 'Blog feed must render the Vietnamese Botanical Monograph masthead and clean cards without ticker or reaction bars.');
-check(substr_count($feedPage, 'class="post-card feed-post"') === 6
-    && str_contains($feedPage, 'Bắt đầu một góc xanh từ đâu?'), 'Feed must render the current page article cards.');
+check(substr_count($feedPage, 'class="post-card feed-post') === 7
+    && str_contains($feedPage, 'Bắt đầu một góc xanh từ đâu?'), 'Front page must show all seven posts once: lead, three recent, and the list that continues after them.');
+check(!str_contains($feedPage, 'class="pagination"') && !str_contains($feedPage, 'mono-spotlight'), 'A single page of posts must not render pagination or a spotlight band.');
 $secondPage = $reader->request('blog.php?page=2')['body'];
-check(substr_count($secondPage, 'class="post-card feed-post"') === 1, 'Feed must follow pagination.');
+check(substr_count($secondPage, 'class="post-card feed-post') === 7, 'A page past the end must clamp to the last page.');
 $searchPage = $reader->request('blog.php?search=' . rawurlencode('Tạo một nhịp sống chậm cùng cây'))['body'];
 check(substr_count($searchPage, 'class="post-card feed-post"') === 1, 'Feed must follow the current search.');
 $emptySearchPage = $reader->request('blog.php?search=no-matching-post-98347')['body'];
 check(substr_count($emptySearchPage, 'class="post-card feed-post"') === 0
     && !str_contains($emptySearchPage, 'class="recent-grid"'), 'Empty searches must not show unrelated articles.');
-check(str_contains($reader->request('blog.php?page=2')['body'], 'Tạo một nhịp sống chậm cùng cây'), 'Last seeded post is missing.');
+check(str_contains($feedPage, 'Tạo một nhịp sống chậm cùng cây'), 'Last seeded post is missing.');
 check($reader->request('blog-post.php?slug[]=bad')['status'] === 404, 'Array slug must return 404.');
 check($reader->request('blog-post.php?slug=missing')['status'] === 404, 'Missing post must return 404.');
 check($reader->request('blog.php?view=saved')['status'] === 303, 'Saved posts must require login.');

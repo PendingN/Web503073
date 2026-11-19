@@ -165,7 +165,10 @@
                                     setReaction(voteButton, active, true);
                                     voteButton.value = active ? '0' : String(value);
                                     var count = voteButton.querySelector('[data-vote-count]');
-                                    if (count) count.textContent = value === 1 ? result.likes : result.dislikes;
+                                    if (count) {
+                                        count.textContent = value === 1 ? result.likes : result.dislikes;
+                                        count.dataset.count = count.textContent;
+                                    }
                                 });
                             } else {
                                 var saveButton = other.querySelector('button');

@@ -80,19 +80,17 @@ const { chromium } = require('playwright');
                     h1Text: h1 ? h1.textContent.trim() : '',
                     bg: bodyStyle.backgroundColor,
                     hasSpread: !!document.querySelector('.mono-opening-spread'),
-                    hasSpotlight: !!document.querySelector('.mono-spotlight-card'),
                     smallInputs: [...document.querySelectorAll('.blog-search input:not([type="hidden"]), .blog-search select')].some(input => parseFloat(getComputedStyle(input).fontSize) < 16)
                 };
             });
 
             assert.equal(layout.overflow, false, 'No horizontal overflow at ' + width);
-            assert.equal(layout.totalPostCount, 6, 'Page 1 renders all 6 posts at ' + width);
-            assert.equal(layout.uniquePostCount, 6, 'Page 1 has zero duplicate posts at ' + width);
+            assert.equal(layout.totalPostCount, 7, 'Page 1 renders all 7 posts at ' + width);
+            assert.equal(layout.uniquePostCount, 7, 'Page 1 has zero duplicate posts at ' + width);
             assert.ok(layout.minTopicHeight >= 44, 'Topic pills meet 44px touch target at ' + width);
             assert.equal(layout.h1Text, 'Sổ Tay Thực Vật', 'Vietnamese monograph title renders.');
             assert.equal(layout.bg, 'rgb(246, 247, 244)', 'Archival rag paper ground renders.');
             assert.equal(layout.hasSpread, true, 'Opening spread renders on default first page.');
-            assert.equal(layout.hasSpotlight, true, 'Spotlight folio renders on default first page.');
             assert.equal(layout.images, true, 'All blog photographs loaded cleanly at ' + width);
             assert.equal(layout.fontBody, true, 'Be Vietnam Pro loaded.');
             assert.equal(layout.fontDisplay, true, 'Literata loaded.');
@@ -133,13 +131,11 @@ const { chromium } = require('playwright');
         assert.equal(await page.getByLabel('Sắp xếp').inputValue(), 'popular');
         assert.ok((await page.locator('.feed-post h3 a').allTextContents()).includes(firstTitle));
         assert.equal(await page.locator('.mono-opening-spread').count(), 0, 'Opening spread hides during filtered search.');
-        assert.equal(await page.locator('.mono-spotlight-card').count(), 0, 'Spotlight hides during filtered search.');
         assert.equal(new URL(page.url()).hash, '#blog-content');
 
         await page.goto(base + 'blog.php?search=__no_blog_matches_9c37a__');
         assert.equal(await page.locator('.feed-post').count(), 0);
         assert.equal(await page.locator('.mono-opening-spread').count(), 0);
-        assert.equal(await page.locator('.mono-spotlight-card').count(), 0);
         await page.screenshot({ path: path.join(output, 'empty-search.png'), fullPage: true });
         await page.getByRole('link', { name: 'Xem tất cả bài viết' }).click();
         assert.ok(await page.locator('.feed-post').count());
@@ -202,12 +198,12 @@ const { chromium } = require('playwright');
         for (const width of [320, 390, 1440]) {
             await composerPage.setViewportSize({ width, height: 900 });
             await composerPage.goto(base + 'blog.php');
-            const writeLink = composerPage.locator('.blog-write-link');
+            const writeLink = composerPage.locator('.mono-contribute-actions .btn-brand');
             assert.equal(await writeLink.getAttribute('href'), 'blog-editor.php');
             assert.equal(await composerPage.locator('.feed-composer').count(), 0);
             assert.equal(await composerPage.locator('.blog-form').count(), 0);
             assert.equal(await composerPage.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
-            await composerPage.locator('.all-section-head').screenshot({ path: path.join(output, 'composer-' + width + '.png') });
+            await composerPage.locator('.mono-contribute-band').screenshot({ path: path.join(output, 'composer-' + width + '.png') });
         }
 
         const editorFixture = spawnSync(php, ['-r', `

@@ -63,8 +63,13 @@ function list_admin_posts(string $search, string $tag, int $page): array
     return ['posts' => $statement->fetchAll(), 'total' => $total, 'page' => $page, 'pages' => $pages];
 }
 
-function list_blog_posts(string $search, string $sort, string $view, int $userId, int $page): array
+/**
+ * Lists one page of posts. `$skip` leaves out the newest posts that the caller already
+ * shows elsewhere (the blog front page's lead story), so the paged list continues after them.
+ */
+function list_blog_posts(string $search, string $sort, string $view, int $userId, int $page, int $skip = 0): array
 {
+    $skip = max(0, $skip);
     $where = ' WHERE 1 = 1' . visible_blog_condition();
     $parameters = [];
     if ($search !== '') {
@@ -81,10 +86,10 @@ function list_blog_posts(string $search, string $sort, string $view, int $userId
     $statement = db()->prepare('SELECT COUNT(*) FROM blog_posts p' . $where);
     $statement->execute($parameters);
     $total = (int) $statement->fetchColumn();
-    $pages = max(1, (int) ceil($total / 6));
+    $pages = max(1, (int) ceil(max(0, $total - $skip) / 6));
     $page = min(max(1, $page), $pages);
     $order = $sort === 'popular' ? 'score DESC, p.created_at DESC, p.id DESC' : 'p.created_at DESC, p.id DESC';
-    $statement = db()->prepare(blog_post_select($userId) . $where . ' ORDER BY ' . $order . ' LIMIT 6 OFFSET ' . (($page - 1) * 6));
+    $statement = db()->prepare(blog_post_select($userId) . $where . ' ORDER BY ' . $order . ' LIMIT 6 OFFSET ' . ($skip + ($page - 1) * 6));
     $statement->execute($parameters);
     return ['posts' => $statement->fetchAll(), 'total' => $total, 'page' => $page, 'pages' => $pages];
 }
