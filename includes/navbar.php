@@ -4,7 +4,9 @@ $loginTarget = 'login.php';
 $loginLabel = 'Đăng nhập';
 $navbarUser = current_user();
 $hasSiteHeader = true;
-$hasCustomSkipLink = in_array($bodyClass ?? '', ['landing-page', 'blog-page', 'blog-post-page'], true);
+$bodyClasses = preg_split('/\s+/', trim($bodyClass ?? '')) ?: [];
+$hasCustomSkipLink = (bool) array_intersect($bodyClasses, ['landing-page', 'blog-page', 'blog-post-page']);
+$isBlogHeader = (bool) array_intersect($bodyClasses, ['blog-page', 'blog-post-page']);
 ?>
 <?php if (!$hasCustomSkipLink): ?>
 <a class="skip-link" href="#main-content">Đến nội dung chính</a>
@@ -19,9 +21,13 @@ $hasCustomSkipLink = in_array($bodyClass ?? '', ['landing-page', 'blog-page', 'b
         <a class="nav-link<?= $activePage === 'collection' ? ' active' : '' ?>" <?= $activePage === 'collection' ? 'aria-current="page"' : '' ?> href="collection.php">Bộ sưu tập</a>
         <a class="nav-link<?= $activePage === 'blog' ? ' active' : '' ?>" <?= $activePage === 'blog' ? 'aria-current="page"' : '' ?> href="blog.php">Blog</a>
         <a class="nav-link<?= $activePage === 'profile' ? ' active' : '' ?>" <?= $activePage === 'profile' ? 'aria-current="page"' : '' ?> href="profile.php">Trang cá nhân</a>
+        <?php if ($isBlogHeader): ?><a class="nav-link nav-link--mobile-write" href="blog-editor.php">Viết bài mới</a><?php endif; ?>
         <?php if (is_admin()): ?><a class="nav-link<?= $activePage === 'admin' ? ' active' : '' ?>" <?= $activePage === 'admin' ? 'aria-current="page"' : '' ?> href="admin-dashboard.php">Quản trị</a><?php endif; ?>
     </nav>
     <div class="nav-right">
+        <?php if ($isBlogHeader): ?>
+        <a href="blog-editor.php" class="nav-blog-write">Viết bài mới</a>
+        <?php endif; ?>
         <?php if ($navbarUser === null): ?>
         <a href="<?= e($loginTarget) ?>" class="btn-contact"><?= e($loginLabel) ?></a>
         <?php else: ?>

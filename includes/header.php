@@ -4,6 +4,7 @@ $pageDescription = $pageDescription ?? 'Cùng thiên nhiên tạo nên những g
 $bodyClass = $bodyClass ?? '';
 $pageStyles = $pageStyles ?? [];
 $fullTitle = $pageTitle === '' ? 'Là Lá La' : $pageTitle . ' | Là Lá La';
+$isBlogThemePage = (bool) array_intersect(preg_split('/\s+/', trim($bodyClass)) ?: [], ['blog-page', 'blog-post-page']);
 ?>
 <!doctype html>
 <html lang="vi">
@@ -15,7 +16,7 @@ $fullTitle = $pageTitle === '' ? 'Là Lá La' : $pageTitle . ' | Là Lá La';
     <link rel="stylesheet" href="<?= e(asset_url('css/fonts.css')) ?>">
     <link rel="stylesheet" href="<?= e(asset_url($bodyClass === 'admin-page' ? 'css/admin.css' : 'css/style.css')) ?>">
     <?php if ($bodyClass === 'landing-page'): ?><link rel="stylesheet" href="<?= e(asset_url('css/landing.css')) ?>"><?php endif; ?>
-    <?php if (in_array($bodyClass, ['blog-page', 'blog-post-page'], true)): ?><link rel="stylesheet" href="<?= e(asset_url('css/blog.css')) ?>"><?php endif; ?>
+    <?php if ($isBlogThemePage): ?><link rel="stylesheet" href="<?= e(asset_url('css/blog.css')) ?>"><?php endif; ?>
     <?php foreach ($pageStyles as $pageStyle): ?><link rel="stylesheet" href="<?= e(asset_url($pageStyle)) ?>">
     <?php endforeach; ?>
 </head>

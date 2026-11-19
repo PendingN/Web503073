@@ -13,6 +13,7 @@ $pageScripts = $pageScripts ?? [];
 <?php endforeach; ?>
 <script src="<?= e(asset_url(($bodyClass ?? '') === 'admin-page' ? 'js/admin.js' : 'js/main.js')) ?>" defer></script>
 <?php if (($bodyClass ?? '') === 'landing-page'): ?><script src="<?= e(asset_url('js/landing.js')) ?>" defer></script><?php endif; ?>
+<?php if (in_array($bodyClass ?? '', ['blog-page', 'blog-post-page'], true)): ?><script src="<?= e(asset_url('js/blog.js')) ?>" defer></script><?php endif; ?>
 </body>
 </html>
 

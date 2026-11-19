@@ -575,8 +575,7 @@ input:focus-visible { outline-offset: 2px; }
 }
 
 .feed-ticker-card:hover { border-color: #99b28c; }
-.feed-ticker-card:focus-visible,
-.feed-motion-toggle:focus-visible { outline: 2px solid #416137; outline-offset: 3px; }
+.feed-ticker-card:focus-visible { outline: 2px solid #416137; outline-offset: 3px; }
 
 .feed-ticker-label {
     margin-top: 5px;
@@ -587,22 +586,9 @@ input:focus-visible { outline-offset: 2px; }
     text-transform: uppercase;
 }
 
-.feed-motion-toggle {
-    position: absolute;
-    z-index: 3;
-    right: 0;
-    bottom: 16px;
-    min-height: 40px;
-    padding: 8px 16px;
-    border: 1px solid #d5e2d0;
-    border-radius: 999px;
-    background: #eaf1e7;
-    font-size: 11px;
-}
-
 .has-marquee .feed-ticker-track { animation: feedMarquee var(--feed-duration, 60s) linear infinite; }
-.is-paused .feed-ticker-track,
-.feed-ticker-viewport:hover .feed-ticker-track { animation-play-state: paused; }
+.feed-ticker-viewport:hover .feed-ticker-track,
+.feed-ticker-viewport:focus-within .feed-ticker-track { animation-play-state: paused; }
 
 /* Keyboard users get an unobscured, stationary row with only the original links. */
 .feed-hero:has(.feed-ticker-card:focus-visible)::after { display: none; }
@@ -625,7 +611,6 @@ input:focus-visible { outline-offset: 2px; }
     .has-marquee .feed-ticker-track,
     .feed-ticker-track { animation: none; }
     .feed-ticker-track [aria-hidden="true"] { display: none; }
-    .feed-motion-toggle { display: none; }
 }
 
 .feed-layout {
