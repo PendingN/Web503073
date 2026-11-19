@@ -4,15 +4,23 @@ declare(strict_types=1);
 // Runs inside tests/run.php against its disposable database and HTTP sessions.
 $reader = new TestBrowser($base);
 check((int) db()->query('SELECT COUNT(*) FROM blog_posts')->fetchColumn() === 7, 'Seed must include all seven blog posts.');
-$tickerPage = $reader->request('blog.php')['body'];
-check(substr_count($tickerPage, 'class="feed-ticker-card"') === 6
-    && str_contains($tickerPage, 'Bắt đầu một góc xanh từ đâu?'), 'Hero must render the current page article links once; JavaScript adds inaccessible loop copies.');
+$feedPage = $reader->request('blog.php')['body'];
+check(str_contains($feedPage, 'class="mono-masthead"')
+    && str_contains($feedPage, 'Sổ Tay Thực Vật')
+    && str_contains($feedPage, 'mono-opening-spread')
+    && !str_contains($feedPage, 'THE BLOG')
+    && !str_contains($feedPage, 'feed-ticker-card')
+    && !str_contains($feedPage, 'feed-post-actions')
+    && !str_contains($feedPage, 'data-reaction'), 'Blog feed must render the Vietnamese Botanical Monograph masthead and clean cards without ticker or reaction bars.');
+check(substr_count($feedPage, 'class="post-card feed-post"') === 6
+    && str_contains($feedPage, 'Bắt đầu một góc xanh từ đâu?'), 'Feed must render the current page article cards.');
 $secondPage = $reader->request('blog.php?page=2')['body'];
-check(substr_count($secondPage, 'class="feed-ticker-card"') === 1, 'Hero must follow pagination.');
+check(substr_count($secondPage, 'class="post-card feed-post"') === 1, 'Feed must follow pagination.');
 $searchPage = $reader->request('blog.php?search=' . rawurlencode('Tạo một nhịp sống chậm cùng cây'))['body'];
-check(substr_count($searchPage, 'class="feed-ticker-card"') === 1, 'Hero must follow the current search.');
+check(substr_count($searchPage, 'class="post-card feed-post"') === 1, 'Feed must follow the current search.');
 $emptySearchPage = $reader->request('blog.php?search=no-matching-post-98347')['body'];
-check(!str_contains($emptySearchPage, 'id="hero-articles"'), 'Empty searches must not show unrelated hero articles.');
+check(substr_count($emptySearchPage, 'class="post-card feed-post"') === 0
+    && !str_contains($emptySearchPage, 'class="recent-grid"'), 'Empty searches must not show unrelated articles.');
 check(str_contains($reader->request('blog.php?page=2')['body'], 'Tạo một nhịp sống chậm cùng cây'), 'Last seeded post is missing.');
 check($reader->request('blog-post.php?slug[]=bad')['status'] === 404, 'Array slug must return 404.');
 check($reader->request('blog-post.php?slug=missing')['status'] === 404, 'Missing post must return 404.');
@@ -84,13 +92,16 @@ foreach (['0', '1', '1'] as $saved) {
 }
 check($aliceBrowser->request('actions/blog-action.php', ['csrf_token' => 'bad', 'slug' => $slug, 'operation' => 'vote', 'value' => 1], false, true)['status'] === 403,
     'Async vote must require CSRF.');
-check(str_contains($aliceBrowser->request('blog.php?view=saved')['body'], 'Bài đã sửa'), 'Saved-post filter failed.');
-check(substr_count($aliceBrowser->request('blog.php?view=saved')['body'], 'class="feed-ticker-card"') === 1, 'Hero must respect the saved-post filter.');
+$savedFeed = $aliceBrowser->request('blog.php?view=saved')['body'];
+check(str_contains($savedFeed, 'Bài đã sửa'), 'Saved-post filter failed.');
+check(substr_count($savedFeed, 'class="post-card feed-post"') === 1
+    && !str_contains($savedFeed, 'data-reaction'), 'Saved-post feed must render clean cards matching the filter.');
 check(str_contains($blockedLogin->request('blog.php?view=saved')['body'], '0 kết quả'), 'Saved posts leaked to another user.');
 $relogin = new TestBrowser($base);
 $relogin->login('alice-new@example.test', 'NewGarden123!');
-$savedPage = $relogin->request('blog.php?view=saved')['body'];
-check(str_contains($savedPage, '>Đã lưu</span>') && str_contains($savedPage, 'aria-pressed="true"'), 'Votes and saves must survive a new login.');
+check(str_contains($relogin->request('blog.php?view=saved')['body'], 'Bài đã sửa'), 'Saved list must survive a new login.');
+$savedDetail = $relogin->request($detail)['body'];
+check(str_contains($savedDetail, '>Đã lưu</span>') && str_contains($savedDetail, 'aria-pressed="true"'), 'Votes and saves must survive a new login on the post detail page.');
 $popularPage = $reader->request('blog.php?sort=popular')['body'];
 check(strpos($popularPage, 'Bài đã sửa') < strpos($popularPage, 'Bắt đầu một góc xanh'), 'Popular ordering failed.');
 $comment = '<script>comment</script> Chăm cây vui quá!';

@@ -8,23 +8,36 @@ function blog_cover_url(array $post): string
     if (!empty($post['image_path'])) {
         return $post['image_path'];
     }
-    $key = trim((string) (($post['slug'] ?? '') !== '' ? $post['slug'] : ($post['title'] ?? '')));
+    $slug = trim((string) ($post['slug'] ?? ''));
+    $curatedCovers = [
+        'bat-dau-mot-goc-xanh-tu-dau' => 'anh21',
+        '5-dau-hieu-cay-can-quan-tam' => 'anh28',
+        'chon-cay-cho-can-phong-it-nang' => 'anh22',
+        'ban-cong-nho-thanh-khu-vuon' => 'indoor-room',
+        'tuoi-cay-dung-cach-mua-mua' => 'anh58',
+        'thay-chau-khi-nao-va-the-nao' => 'anh47',
+        'mot-nhip-song-cham-cung-cay' => 'anh49',
+    ];
+    if ($slug !== '' && isset($curatedCovers[$slug])) {
+        return 'images/optimized/' . $curatedCovers[$slug] . '.webp';
+    }
+    $key = $slug !== '' ? $slug : trim((string) ($post['title'] ?? ''));
     if ($key !== '') {
         $pool = [
-            'anh21', 'anh22', 'anh23', 'anh24', 'anh25', 'anh26',
-            'anh27', 'anh28', 'anh29', 'anh30', 'anh46', 'anh47',
-            'anh53', 'anh57', 'anh58', 'anh62',
+            'anh21', 'anh22', 'anh23', 'anh28', 'anh29', 'anh47',
+            'anh48', 'anh49', 'anh57', 'anh58', 'indoor-room',
         ];
         $fallback = $pool[abs(crc32($key)) % count($pool)];
     } else {
         $tagMap = [
-            'Chăm cây' => 'anh22',
+            'Chăm cây' => 'anh28',
             'Không gian' => 'anh21',
-            'Cảm hứng' => 'anh26',
-            'Mẹo hay' => 'anh29',
-            'Sống xanh' => 'anh27',
+            'Cảm hứng' => 'indoor-room',
+            'Mẹo hay' => 'anh58',
+            'Sống xanh' => 'anh49',
+            'Bài nổi bật' => 'anh22',
         ];
-        $fallback = $tagMap[$post['tag'] ?? ''] ?? 'anh23';
+        $fallback = $tagMap[$post['tag'] ?? ''] ?? 'anh57';
     }
     return 'images/optimized/' . $fallback . '.webp';
 }

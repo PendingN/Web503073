@@ -10,7 +10,9 @@ const { chromium } = require('playwright');
     const root = path.resolve(__dirname, '..');
     const base = (process.env.BLOG_BASE_URL || 'http://localhost/Web503073/').replace(/\/?$/, '/');
     const output = path.join(root, '.runtime', 'blog-ui');
+    const reviewDir = path.join(root, '.impeccable', 'review');
     fs.mkdirSync(output, { recursive: true });
+    fs.mkdirSync(reviewDir, { recursive: true });
     const php = process.env.PHP_BINARY || 'C:/xampp/php/php.exe';
     const covers = spawnSync(php, ['-r', `
         require 'includes/blog-images.php';
@@ -22,6 +24,7 @@ const { chromium } = require('playwright');
         if (blog_cover_url(['tag' => 'Chăm cây', 'image_path' => 'images/blog/upload.png']) !== 'images/blog/upload.png') exit(1);
     `], { cwd: root, encoding: 'utf8' });
     assert.equal(covers.status, 0, 'Every fallback must exist and uploaded covers must take priority.');
+
     const fixture = spawnSync(php, ['-r', `
         $_SERVER['SCRIPT_NAME'] = getenv('BLOG_SCRIPT_NAME');
         $source = file_get_contents('blog.php');
@@ -30,35 +33,82 @@ const { chromium } = require('playwright');
         eval(substr($source, 5));
     `], { cwd: root, encoding: 'utf8', env: { ...process.env, BLOG_SCRIPT_NAME: new URL('blog.php', base).pathname } });
     assert.equal(fixture.status, 0, 'The composer fixture must render the actual PHP template.');
+
     const browser = await chromium.launch({ channel: 'msedge', headless: true });
     const errors = [];
     try {
-        const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+        const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
         page.on('pageerror', error => errors.push(error.message));
+
         for (const width of [320, 390, 768, 1024, 1440, 1920]) {
-            await page.setViewportSize({ width, height: 1000 });
+            const height = width <= 390 ? 844 : 900;
+            await page.setViewportSize({ width, height });
             assert.equal((await page.goto(base + 'blog.php')).status(), 200);
             await page.evaluate(() => document.fonts.ready);
-            await page.locator('.feed-motion-toggle').click();
-            await page.locator('.feed-post img').evaluateAll(images => images.forEach(image => { image.loading = 'eager'; }));
-            await page.waitForFunction(() => [...document.querySelectorAll('.feed-post img')].every(image => image.complete && image.naturalWidth > 0));
-            const layout = await page.evaluate(() => ({
-                overflow: document.documentElement.scrollWidth > innerWidth,
-                columns: getComputedStyle(document.querySelector('.feed-list')).gridTemplateColumns.split(' ').length,
-                images: [...document.querySelectorAll('.feed-post img')].every(image => image.complete && image.naturalWidth > 0),
-                font: document.fonts.check('16px "Be Vietnam Pro"'),
-                sidebar: document.querySelector('.feed-sidebar').getBoundingClientRect().left >= document.querySelector('.feed-column').getBoundingClientRect().right,
-                smallInputs: [...document.querySelectorAll('.blog-search input:not([type="hidden"]), .blog-search select')].some(input => parseFloat(getComputedStyle(input).fontSize) < 16)
-            }));
+            assert.equal(await page.locator('.feed-motion-toggle').count(), 0);
+            assert.equal(await page.locator('.feed-hero-lead').count(), 0);
+            assert.equal(await page.locator('.theme-toggle').count(), 0, 'Blog uses one refined light palette without dark toggle.');
+            assert.equal(await page.locator('[data-reaction]').count(), 0, 'Blog feed must not render reaction forms.');
+            assert.equal(await page.locator('.feed-post-actions').count(), 0, 'Blog feed must not render card action bars.');
+
+            await page.locator('main img').evaluateAll(images => images.forEach(image => { image.loading = 'eager'; }));
+            await page.waitForFunction(() => [...document.querySelectorAll('main img')].every(image => image.complete && image.naturalWidth > 0));
+            await page.locator('main img').evaluateAll(images => Promise.all(images.map(image => image.decode().catch(() => {}))));
+
+            // Settle scroll-triggered reveals before measuring or capturing full-page screenshots.
+            await page.evaluate(() => {
+                document.querySelectorAll('.mono-plate-pending').forEach(el => {
+                    el.classList.remove('mono-plate-pending');
+                    el.classList.add('mono-plate-visible');
+                });
+                window.scrollTo(0, 0);
+            });
+
+            const layout = await page.evaluate(() => {
+                const h1 = document.querySelector('h1');
+                const bodyStyle = getComputedStyle(document.body);
+                const slugs = [...document.querySelectorAll('.feed-post h3 a')].map(link => link.getAttribute('href'));
+                const topicHeights = [...document.querySelectorAll('.feed-topics .topic-pill')].map(el => el.getBoundingClientRect().height);
+                return {
+                    overflow: document.documentElement.scrollWidth > innerWidth,
+                    uniquePostCount: new Set(slugs).size,
+                    totalPostCount: slugs.length,
+                    minTopicHeight: topicHeights.length ? Math.min(...topicHeights) : 44,
+                    images: [...document.querySelectorAll('main img')].every(image => image.complete && image.naturalWidth > 0),
+                    fontBody: document.fonts.check('16px "Be Vietnam Pro"'),
+                    fontDisplay: document.fonts.check('32px "Literata"'),
+                    h1Text: h1 ? h1.textContent.trim() : '',
+                    bg: bodyStyle.backgroundColor,
+                    hasSpread: !!document.querySelector('.mono-opening-spread'),
+                    hasSpotlight: !!document.querySelector('.mono-spotlight-card'),
+                    smallInputs: [...document.querySelectorAll('.blog-search input:not([type="hidden"]), .blog-search select')].some(input => parseFloat(getComputedStyle(input).fontSize) < 16)
+                };
+            });
+
             assert.equal(layout.overflow, false, 'No horizontal overflow at ' + width);
-            assert.equal(layout.columns, 1, 'Posts remain a single community feed.');
-            assert.equal(layout.sidebar, width > 1050, 'The sidebar sits beside the desktop feed.');
-            assert.equal(layout.images, true);
-            assert.equal(layout.font, true);
-            assert.equal(layout.smallInputs, false);
+            assert.equal(layout.totalPostCount, 6, 'Page 1 renders all 6 posts at ' + width);
+            assert.equal(layout.uniquePostCount, 6, 'Page 1 has zero duplicate posts at ' + width);
+            assert.ok(layout.minTopicHeight >= 44, 'Topic pills meet 44px touch target at ' + width);
+            assert.equal(layout.h1Text, 'Sổ Tay Thực Vật', 'Vietnamese monograph title renders.');
+            assert.equal(layout.bg, 'rgb(246, 247, 244)', 'Archival rag paper ground renders.');
+            assert.equal(layout.hasSpread, true, 'Opening spread renders on default first page.');
+            assert.equal(layout.hasSpotlight, true, 'Spotlight folio renders on default first page.');
+            assert.equal(layout.images, true, 'All blog photographs loaded cleanly at ' + width);
+            assert.equal(layout.fontBody, true, 'Be Vietnam Pro loaded.');
+            assert.equal(layout.fontDisplay, true, 'Literata loaded.');
+            assert.equal(layout.smallInputs, false, 'Search and sort inputs remain >= 16px.');
+
             await page.screenshot({ path: path.join(output, 'blog-' + width + '.png'), fullPage: true });
+            if (width === 1440) {
+                await page.screenshot({ path: path.join(reviewDir, 'desktop-fold.png'), fullPage: false });
+                await page.screenshot({ path: path.join(reviewDir, 'desktop.png'), fullPage: true });
+            }
+            if (width === 390) {
+                await page.screenshot({ path: path.join(reviewDir, 'mobile.png'), fullPage: true });
+            }
         }
-        await page.setViewportSize({ width: 1440, height: 1000 });
+
+        await page.setViewportSize({ width: 1440, height: 900 });
         await page.goto(base + 'blog.php');
         await page.keyboard.press('Tab');
         assert.equal(await page.locator(':focus').getAttribute('class'), 'blog-skip-link');
@@ -69,42 +119,76 @@ const { chromium } = require('playwright');
         const firstUrl = await page.locator('.feed-post h3 a').first().getAttribute('href');
         await page.locator('.feed-topics a').first().click();
         assert.equal(await page.getByLabel('Tìm bài viết', { exact: true }).inputValue(), 'Chăm cây');
+        const activeTopic = page.locator('.feed-topics .topic-pill[aria-current="page"]');
+        assert.equal(await activeTopic.count(), 1);
+        assert.equal(new URL(await activeTopic.getAttribute('href'), base).searchParams.has('search'), false, 'Active topic pill href clears search.');
+        await activeTopic.click();
+        assert.equal(new URL(page.url()).searchParams.has('search'), false);
+        assert.equal(await page.getByLabel('Tìm bài viết', { exact: true }).inputValue(), '');
+
         await page.goto(base + 'blog.php');
         await page.getByLabel('Tìm bài viết', { exact: true }).fill(firstTitle);
         await page.getByLabel('Sắp xếp').selectOption('popular');
         await Promise.all([page.waitForURL('**/blog.php?**'), page.getByRole('button', { name: 'Tìm kiếm', exact: true }).click()]);
         assert.equal(await page.getByLabel('Sắp xếp').inputValue(), 'popular');
         assert.ok((await page.locator('.feed-post h3 a').allTextContents()).includes(firstTitle));
+        assert.equal(await page.locator('.mono-opening-spread').count(), 0, 'Opening spread hides during filtered search.');
+        assert.equal(await page.locator('.mono-spotlight-card').count(), 0, 'Spotlight hides during filtered search.');
         assert.equal(new URL(page.url()).hash, '#blog-content');
 
         await page.goto(base + 'blog.php?search=__no_blog_matches_9c37a__');
         assert.equal(await page.locator('.feed-post').count(), 0);
-        assert.equal(await page.locator('.feed-ticker-card').count(), 0);
+        assert.equal(await page.locator('.mono-opening-spread').count(), 0);
+        assert.equal(await page.locator('.mono-spotlight-card').count(), 0);
         await page.screenshot({ path: path.join(output, 'empty-search.png'), fullPage: true });
         await page.getByRole('link', { name: 'Xem tất cả bài viết' }).click();
         assert.ok(await page.locator('.feed-post').count());
+
         const next = page.getByRole('link', { name: 'Sau', exact: true });
         if (await next.count()) {
             await next.click();
             assert.equal(new URL(page.url()).searchParams.get('page'), '2');
             assert.equal(await page.getByRole('link', { name: 'Trước', exact: true }).count(), 1);
         }
+
         await page.goto(base + 'blog.php?view=saved');
         assert.ok(new URL(page.url()).pathname.endsWith('/login.php'), 'Personal views retain the login gate.');
 
         for (const width of [320, 390, 768, 1440]) {
-            await page.setViewportSize({ width, height: 1000 });
+            await page.setViewportSize({ width, height: 900 });
             assert.equal((await page.goto(new URL(firstUrl, base).href)).status(), 200);
+            await page.evaluate(() => document.fonts.ready);
+            await page.locator('main img').evaluateAll(images => images.forEach(image => { image.loading = 'eager'; }));
+            await page.waitForFunction(() => [...document.querySelectorAll('main img')].every(image => image.complete && image.naturalWidth > 0));
             assert.equal(await page.locator('h1').innerText(), firstTitle);
             assert.equal(await page.locator('.blog-post-art img').evaluate(image => image.complete && image.naturalWidth > 0), true);
             assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
             assert.equal(await page.locator('.blog-post-art img').evaluate(image => getComputedStyle(image).objectFit), 'contain');
             assert.ok((await page.locator('.blog-post-body').boundingBox()).width <= 720);
         }
+
+        await page.setViewportSize({ width: 1440, height: 900 });
         await page.goto(base + 'blog-post.php?slug=bat-dau-mot-goc-xanh-tu-dau');
+        await page.evaluate(() => document.fonts.ready);
+        await page.locator('main img').evaluateAll(images => images.forEach(image => { image.loading = 'eager'; }));
+        await page.waitForFunction(() => [...document.querySelectorAll('main img')].every(image => image.complete && image.naturalWidth > 0));
+        await page.evaluate(() => {
+            document.querySelectorAll('.mono-plate-pending').forEach(el => {
+                el.classList.remove('mono-plate-pending');
+                el.classList.add('mono-plate-visible');
+            });
+            window.scrollTo(0, 0);
+        });
+        assert.equal(await page.locator('.post-meta .tag').count(), 1, 'Article ledger renders tag pill.');
+        assert.ok((await page.locator('.post-meta .tag').innerText()).trim().length > 0);
         await page.screenshot({ path: path.join(output, 'article-desktop.png'), fullPage: true });
+        await page.screenshot({ path: path.join(reviewDir, 'article-desktop.png'), fullPage: true });
+
         await page.setViewportSize({ width: 390, height: 844 });
+        await page.evaluate(() => window.scrollTo(0, 0));
         await page.screenshot({ path: path.join(output, 'article-mobile.png'), fullPage: true });
+        await page.screenshot({ path: path.join(reviewDir, 'article-mobile.png'), fullPage: true });
+
         assert.equal((await page.goto(base + 'blog-post.php?slug=__missing_blog_9c37a__')).status(), 404);
         await page.getByRole('link', { name: 'Về trang blog' }).click();
         await page.locator('[data-menu-toggle]').click();
@@ -116,14 +200,16 @@ const { chromium } = require('playwright');
         composerPage.on('pageerror', error => errors.push(error.message));
         await composerPage.route('**/blog.php', route => route.fulfill({ status: 200, contentType: 'text/html; charset=utf-8', body: fixture.stdout }));
         for (const width of [320, 390, 1440]) {
-            await composerPage.setViewportSize({ width, height: 1000 });
+            await composerPage.setViewportSize({ width, height: 900 });
             await composerPage.goto(base + 'blog.php');
-            const writeLink = composerPage.getByRole('link', { name: /Viết bài mới/ });
+            const writeLink = composerPage.locator('.blog-write-link');
             assert.equal(await writeLink.getAttribute('href'), 'blog-editor.php');
+            assert.equal(await composerPage.locator('.feed-composer').count(), 0);
             assert.equal(await composerPage.locator('.blog-form').count(), 0);
             assert.equal(await composerPage.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
-            await composerPage.locator('.feed-composer').screenshot({ path: path.join(output, 'composer-' + width + '.png') });
+            await composerPage.locator('.all-section-head').screenshot({ path: path.join(output, 'composer-' + width + '.png') });
         }
+
         const editorFixture = spawnSync(php, ['-r', `
             $_SERVER['SCRIPT_NAME'] = getenv('EDITOR_SCRIPT_NAME');
             $_SERVER['REQUEST_URI'] = $_SERVER['SCRIPT_NAME'];
@@ -155,7 +241,7 @@ const { chromium } = require('playwright');
         await editorPage.getByRole('button', { name: 'Làm lại', exact: true }).click();
         assert.equal(await editorPage.locator('.editor-block img').count(), 2);
         for (const width of [320, 390, 768, 1440]) {
-            await editorPage.setViewportSize({ width, height: 1000 });
+            await editorPage.setViewportSize({ width, height: 900 });
             assert.equal(await editorPage.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
             await editorPage.screenshot({ path: path.join(output, 'editor-' + width + '.png'), fullPage: true });
         }
@@ -166,6 +252,31 @@ const { chromium } = require('playwright');
         assert.equal(await editorPage.getByText('Ảnh chưa được tải lên. Chọn lại ảnh để tiếp tục.', { exact: true }).count(), 2);
         await editorPage.evaluate(() => localStorage.removeItem(document.querySelector('form').dataset.draftKey));
         await editorPage.close();
+
+        const firstPostUrl = new URL(firstUrl, base);
+        const postFixture = spawnSync(php, ['-r', `
+            $_SERVER['SCRIPT_NAME'] = getenv('POST_SCRIPT_NAME');
+            $_SERVER['REQUEST_URI'] = getenv('POST_REQUEST_URI');
+            $_GET['slug'] = getenv('POST_SLUG');
+            $source = file_get_contents('blog-post.php');
+            $source = str_replace('$user = current_user();', '$user = ["id" => -1, "role" => "user"];', $source, $replacements);
+            if ($replacements !== 1) exit(1);
+            eval(substr($source, 5));
+        `], {
+            cwd: root,
+            encoding: 'utf8',
+            env: {
+                ...process.env,
+                POST_SCRIPT_NAME: firstPostUrl.pathname,
+                POST_REQUEST_URI: firstPostUrl.pathname + firstPostUrl.search,
+                POST_SLUG: firstPostUrl.searchParams.get('slug') || ''
+            }
+        });
+        assert.equal(postFixture.status, 0, 'Authenticated blog-post fixture renders actual PHP template.');
+        await composerPage.route('**/blog-post.php**', route => route.fulfill({ status: 200, contentType: 'text/html; charset=utf-8', body: postFixture.stdout }));
+        await composerPage.setViewportSize({ width: 1440, height: 900 });
+        await composerPage.goto(firstPostUrl.href);
+
         const responses = [
             { vote: 1, likes: 1, dislikes: 0, saved: false },
             { vote: -1, likes: 0, dislikes: 1, saved: false },
@@ -200,7 +311,7 @@ const { chromium } = require('playwright');
         await noJsPage.goto(base + 'blog.php');
         await noJsPage.evaluate(() => document.fonts.ready);
         assert.ok(await noJsPage.locator('.feed-post').count());
-        assert.equal(await noJsPage.locator('.feed-motion-toggle').isVisible(), false);
+        assert.equal(await noJsPage.locator('.feed-motion-toggle').count(), 0);
         await noJsPage.getByLabel('Tìm bài viết', { exact: true }).fill(firstTitle);
         await Promise.all([
             noJsPage.waitForURL('**/blog.php?**'),
@@ -208,10 +319,11 @@ const { chromium } = require('playwright');
         ]);
         assert.ok((await noJsPage.locator('.feed-post h3 a').allTextContents()).includes(firstTitle));
         await noJs.close();
+
         assert.deepEqual(errors, []);
-        console.log('PASS: live blog at six widths, images/fonts, keyboard, search/sort, empty recovery, pagination, login gates, article/404, mobile menu and no-JS search.');
+        console.log('PASS: live blog at six widths, fonts/images, keyboard, search/sort, empty recovery, pagination, login gates, article/404, mobile menu and no-JS search.');
         console.log('PASS: dedicated editor link at three widths and mocked vote/save/error states. No database writes.');
-        console.log('Screenshots: ' + output);
+        console.log('Screenshots: ' + output + ' and ' + reviewDir);
     } finally {
         await browser.close();
     }

@@ -73,6 +73,12 @@ const { chromium } = require('playwright');
         assert.equal(await page.locator('.favorite-count').innerText(), '0');
 
         await page.goto(base + '/blog.php');
+        assert.equal(await page.locator('[data-reaction]').count(), 0, 'Blog feed must not expose reaction controls.');
+        assert.equal(await page.locator('.feed-post-actions').count(), 0, 'Blog feed must not expose action bars.');
+        await Promise.all([
+            page.waitForURL('**/blog-post.php?slug=*'),
+            page.locator('.feed-post h3 a').first().click()
+        ]);
         const voteForm = page.locator('[data-reaction="vote"]').first();
         const like = voteForm.locator('[data-vote="1"]');
         const dislike = voteForm.locator('[data-vote="-1"]');
@@ -96,10 +102,10 @@ const { chromium } = require('playwright');
         await react(like, true);
         await react(save, true);
         const slug = await voteForm.locator('input[name="slug"]').inputValue();
+        assert.equal(new URL(page.url()).searchParams.get('slug'), slug);
         await page.reload();
         assert.equal(await like.getAttribute('aria-pressed'), 'true');
         assert.equal(await save.getAttribute('aria-pressed'), 'true');
-        await page.goto(base + '/blog-post.php?slug=' + encodeURIComponent(slug));
         await react(page.locator('[data-vote="1"]'), false);
         await react(page.locator('[data-reaction="save"] button'), false);
 
