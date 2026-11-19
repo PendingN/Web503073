@@ -66,14 +66,9 @@ require __DIR__ . '/includes/navbar.php';
     $postDateTimeAttr = str_replace(' ', 'T', $post['created_at']);
     ?>
     <main class="blog-post-main" id="article-content" tabindex="-1">
-        <div class="mono-article-rail">
-            <div class="mono-article-rail-inner">
-                <a class="back-link" href="blog.php">Quay lại Sổ Tay Thực Vật</a>
-                <span class="mono-rail-meta"><span class="mono-tabular"><?= e($readingMinutes) ?></span> phút đọc · <time class="mono-tabular" datetime="<?= e($postDateTimeAttr) ?>"><?= e($postDateDisplay) ?></time></span>
-            </div>
-        </div>
-
         <div class="mono-article-shell">
+            <a class="back-link" href="blog.php">Sổ Tay Thực Vật</a>
+
             <?php if ($flash !== null && !$isCommentFlash): ?>
                 <p class="status-note" role="status"><?= e($flash) ?></p>
             <?php endif; ?>
@@ -82,33 +77,17 @@ require __DIR__ . '/includes/navbar.php';
                 <h1><?= e($post['title']) ?></h1>
                 <p class="mono-article-deck"><?= e($post['excerpt']) ?></p>
                 <div class="mono-article-ledger post-meta">
-                    <div class="mono-ledger-cell">
-                        <span class="mono-ledger-label">Chủ đề</span>
-                        <a class="tag" href="blog.php?<?= e(http_build_query(['search' => $post['tag']])) ?>#blog-content"><?= e($post['tag']) ?></a>
-                    </div>
-                    <div class="mono-ledger-cell">
-                        <span class="mono-ledger-label">Tác giả</span>
-                        <span class="mono-ledger-value"><?= e($post['author']) ?></span>
-                    </div>
-                    <div class="mono-ledger-cell">
-                        <span class="mono-ledger-label">Ghi nhận</span>
-                        <time class="mono-ledger-value mono-tabular" datetime="<?= e($postDateTimeAttr) ?>"><?= e($postDateDisplay) ?></time>
-                    </div>
-                    <div class="mono-ledger-cell">
-                        <span class="mono-ledger-label">Thời lượng</span>
-                        <span class="mono-ledger-value"><span class="mono-tabular"><?= e($readingMinutes) ?></span> phút đọc</span>
-                    </div>
+                    <a class="tag" href="blog.php?<?= e(http_build_query(['search' => $post['tag']])) ?>#blog-content"><?= e($post['tag']) ?></a>
+                    <?php if ((string) $post['author'] !== 'Ban biên tập'): ?>
+                        <span><?= e($post['author']) ?></span>
+                    <?php endif; ?>
+                    <time datetime="<?= e($postDateTimeAttr) ?>"><?= e($postDateDisplay) ?></time>
+                    <span><?= e($readingMinutes) ?> phút đọc</span>
                 </div>
             </header>
 
             <figure class="blog-post-art">
-                <div class="mono-art-mount">
-                    <img class="blog-cover" src="<?= e(blog_cover_url($post)) ?>" alt="<?= !empty($post['image_path']) ? e($post['title']) : '' ?>" width="1000" height="560" decoding="async" fetchpriority="high">
-                </div>
-                <figcaption class="mono-art-caption">
-                    <span class="mono-art-caption-label">Hình bìa tiêu bản</span>
-                    <span class="mono-art-caption-title"><?= e($post['title']) ?></span>
-                </figcaption>
+                <img class="blog-cover" src="<?= e(blog_cover_url($post)) ?>" alt="<?= !empty($post['image_path']) ? e($post['title']) : '' ?>" width="1000" height="560" decoding="async" fetchpriority="high">
             </figure>
 
             <article class="blog-post-body" data-reading-article>
@@ -141,7 +120,7 @@ require __DIR__ . '/includes/navbar.php';
 
             <section class="blog-comments" id="comments" aria-labelledby="comments-title">
                 <div class="mono-comments-head">
-                    <h2 id="comments-title">Bình luận (<?= e($post['comment_count']) ?>)</h2>
+                    <h2 id="comments-title">Bình luận<?= (int) $post['comment_count'] > 0 ? ' (' . e($post['comment_count']) . ')' : '' ?></h2>
                 </div>
                 <?php if ($isCommentFlash): ?>
                     <p class="status-note blog-comment-status<?= $isCommentError ? ' is-error' : '' ?>" role="<?= $isCommentError ? 'alert' : 'status' ?>"><?= e($flash) ?></p>
@@ -178,10 +157,6 @@ require __DIR__ . '/includes/navbar.php';
                     <?php endforeach; ?>
                 </div>
 
-                <?php if ($comments['comments'] === []): ?>
-                    <p class="blog-empty">Chưa có bình luận. Hãy chia sẻ ý kiến đầu tiên.</p>
-                <?php endif; ?>
-
                 <?php if ($comments['pages'] > 1): ?>
                     <nav class="pagination" aria-label="Phân trang bình luận">
                         <?php if ($comments['page'] > 1): ?><a href="blog-post.php?<?= e(http_build_query(['slug' => $slug, 'page' => $comments['page'] - 1])) ?>#comments">Trước</a><?php endif; ?>
@@ -196,14 +171,14 @@ require __DIR__ . '/includes/navbar.php';
             <section class="mono-related-band" aria-labelledby="related-heading">
                 <div class="mono-container">
                     <div class="mono-related-head">
-                        <h2 id="related-heading">Đọc tiếp trong Sổ tay</h2>
+                        <h2 id="related-heading">Đọc tiếp</h2>
                         <a class="mono-related-all" href="blog.php">
-                            <span>Xem toàn bộ lưu trữ</span>
+                            <span>Tất cả bài viết</span>
                             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
                         </a>
                     </div>
                     <div class="mono-related-grid">
-                        <?php foreach ($relatedPosts as $rIdx => $related): ?>
+                        <?php foreach ($relatedPosts as $related): ?>
                             <?php
                             $rUrl = 'blog-post.php?slug=' . rawurlencode((string) $related['slug']);
                             $rDate = date('d/m/Y', strtotime((string) $related['created_at']));
