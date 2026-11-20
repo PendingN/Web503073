@@ -2,6 +2,8 @@
 declare(strict_types=1);
 
 date_default_timezone_set('Asia/Ho_Chi_Minh');
+require_once __DIR__ . '/security.php';
+send_security_headers();
 if (session_status() !== PHP_SESSION_ACTIVE) {
     $configuredSessionPath = getenv('APP_SESSION_PATH');
     $sessionPath = is_string($configuredSessionPath) && $configuredSessionPath !== ''
@@ -34,6 +36,7 @@ require_once __DIR__ . '/repositories.php';
 require_once __DIR__ . '/blog-repository.php';
 require_once __DIR__ . '/activity-repository.php';
 require_once __DIR__ . '/auth.php';
+require_once __DIR__ . '/login-throttle.php';
 
 function e(mixed $value): string
 {

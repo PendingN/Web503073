@@ -26,13 +26,13 @@ $query = ['search' => $search, 'sort' => $sort, 'view' => $view];
 $topics = ['Chăm cây', 'Không gian', 'Cảm hứng', 'Mẹo hay', 'Sống xanh'];
 $totalArchivePosts = count_blog_posts();
 
-// The default front page leads with the newest four posts; the list below continues after them,
-// so every post appears exactly once and the list is never left with a lone leftover card.
+// The default front page opens with the newest four posts as a teaser; the list below always
+// holds every post, so nothing is missing from it.
 const BLOG_LEAD_POSTS = 4;
-$hasLead = $view === 'all' && $search === '' && $sort === 'new' && $totalArchivePosts > BLOG_LEAD_POSTS;
 $userId = (int) ($user['id'] ?? 0);
-$result = list_blog_posts($search, $sort, $view, $userId, $page, $hasLead ? BLOG_LEAD_POSTS : 0);
-$showEditorialShowcase = $hasLead && $result['page'] === 1;
+$result = list_blog_posts($search, $sort, $view, $userId, $page);
+$showEditorialShowcase = $view === 'all' && $search === '' && $sort === 'new'
+    && $result['page'] === 1 && $totalArchivePosts > BLOG_LEAD_POSTS;
 
 $leadPost = null;
 $indexPosts = [];
@@ -99,9 +99,7 @@ if (!function_exists('render_blog_card')) {
     }
 }
 
-$archiveHeading = $showEditorialShowcase
-    ? 'Bài viết trước đó'
-    : ['all' => 'Tất cả bài viết', 'mine' => 'Bài của tôi', 'saved' => 'Đã lưu'][$view];
+$archiveHeading = ['all' => 'Tất cả bài viết', 'mine' => 'Bài của tôi', 'saved' => 'Đã lưu'][$view];
 
 require __DIR__ . '/includes/header.php';
 ?>
@@ -166,9 +164,7 @@ require __DIR__ . '/includes/navbar.php';
         <div class="mono-container">
             <div class="all-section-head">
                 <h2 id="all-heading"><?= e($archiveHeading) ?></h2>
-                <?php if (!$showEditorialShowcase): ?>
-                    <p class="all-section-count"><?= e($result['total']) ?> kết quả</p>
-                <?php endif; ?>
+                <p class="all-section-count"><?= e($result['total']) ?> kết quả</p>
                 <?php if ($search !== ''): ?>
                     <a class="btn-quiet blog-clear-filter" href="blog.php?<?= e(http_build_query(['sort' => $sort, 'view' => $view])) ?>#blog-content">Xóa bộ lọc</a>
                 <?php endif; ?>

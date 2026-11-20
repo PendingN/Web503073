@@ -85,8 +85,8 @@ const { chromium } = require('playwright');
             });
 
             assert.equal(layout.overflow, false, 'No horizontal overflow at ' + width);
-            assert.equal(layout.totalPostCount, 7, 'Page 1 renders all 7 posts at ' + width);
-            assert.equal(layout.uniquePostCount, 7, 'Page 1 has zero duplicate posts at ' + width);
+            assert.equal(layout.totalPostCount, 11, 'Page 1 renders the 4-post teaser plus all 7 posts at ' + width);
+            assert.equal(layout.uniquePostCount, 7, 'Page 1 lists every post at ' + width);
             assert.ok(layout.minTopicHeight >= 44, 'Topic pills meet 44px touch target at ' + width);
             assert.equal(layout.h1Text, 'Sổ Tay Thực Vật', 'Vietnamese monograph title renders.');
             assert.equal(layout.bg, 'rgb(246, 247, 244)', 'Archival rag paper ground renders.');

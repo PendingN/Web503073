@@ -254,6 +254,33 @@ try {
     $aliceBrowser = new TestBrowser($base);
     check(str_contains($aliceBrowser->login('invalid-email', 'Garden123!')['body'], 'Email hoặc mật khẩu chưa đúng.'), 'Invalid email must show the login error.');
     check($aliceBrowser->login('alice@example.test', 'wrong-password')['status'] === 200, 'Bad password must fail.');
+    $securityHeaders = $guest->request('login.php')['headers'];
+    $contentPolicy = $securityHeaders['content-security-policy'] ?? '';
+    check(($securityHeaders['x-content-type-options'] ?? '') === 'nosniff' && ($securityHeaders['x-frame-options'] ?? '') === 'DENY'
+        && isset($securityHeaders['referrer-policy']) && isset($securityHeaders['permissions-policy']) && !isset($securityHeaders['x-powered-by'])
+        && str_contains($contentPolicy, "script-src 'self'") && str_contains($contentPolicy, "frame-ancestors 'none'") && str_contains($contentPolicy, "object-src 'none'"),
+        'Pages must send the security headers and a strict content security policy.');
+
+    // Login throttling: five wrong passwords lock that account for this client, even against the right password.
+    db()->exec('DELETE FROM login_attempts');
+    $guesser = new TestBrowser($base);
+    for ($attempt = 1; $attempt <= 5; $attempt++) {
+        $wrong = $guesser->login('alice@example.test', 'wrong-' . $attempt);
+        check($wrong['status'] === 200 && str_contains($wrong['body'], 'Email hoặc mật khẩu chưa đúng.'), 'Attempts within the limit must show the normal error.');
+    }
+    $locked = $guesser->login('alice@example.test', 'Garden123!');
+    check($locked['status'] === 429 && (int) ($locked['headers']['retry-after'] ?? 0) > 0 && str_contains($locked['body'], 'thử lại sau'), 'The right password must be refused while locked out.');
+    check($guesser->request('profile.php')['status'] === 303, 'A locked-out login must not sign the guesser in.');
+    check($guesser->login('bob@example.test', 'wrong-password')['status'] === 200, 'Failures on one account must not lock another account.');
+    db()->exec('DELETE FROM login_attempts');
+    for ($attempt = 0; $attempt < 4; $attempt++) {
+        $guesser->login('alice@example.test', 'wrong-password');
+    }
+    check($guesser->login('alice@example.test', 'Garden123!')['status'] === 303, 'The right password within the limit must sign in.');
+    for ($attempt = 0; $attempt < 4; $attempt++) {
+        check($guesser->login('alice@example.test', 'wrong-password')['status'] === 200, 'A successful sign-in must reset the failure count.');
+    }
+    db()->exec('DELETE FROM login_attempts');
     $loginResponse = $aliceBrowser->login('alice@example.test', 'Garden123!');
     check($loginResponse['status'] === 303 && $loginResponse['headers']['location'] === $prefix . '/profile.php', 'Direct login must open the standalone profile.');
     check($aliceBrowser->request('login.php')['status'] === 200, 'Login form must remain accessible for a signed-in user.');
@@ -279,6 +306,16 @@ try {
     $aliceBrowser->request('actions/profile-action.php', $profile);
     check(find_user((int) $alice['id'])['email'] === 'alice-new@example.test' && password_verify('NewGarden123!', find_user((int) $alice['id'])['password_hash']), 'Profile credentials did not persist.');
     check($aliceBrowser->request('profile.php')['status'] === 200 && $oldAliceBrowser->request('profile.php')['status'] === 303, 'Credential changes must retain current session and invalidate other sessions.');
+
+    // Re-entering the current password on the profile page is throttled as well.
+    $guess = ['csrf_token' => $aliceBrowser->token('profile.php'), 'name' => 'Alice Updated', 'email' => 'alice-new@example.test', 'new_password' => 'AnotherGarden123!', 'password_confirmation' => 'AnotherGarden123!'];
+    for ($attempt = 1; $attempt <= 5; $attempt++) {
+        $aliceBrowser->request('actions/profile-action.php', $guess + ['current_password' => 'wrong-' . $attempt]);
+    }
+    $aliceBrowser->request('actions/profile-action.php', $guess + ['current_password' => 'NewGarden123!']);
+    check(str_contains($aliceBrowser->request('profile.php')['body'], 'thử lại sau') && password_verify('NewGarden123!', find_user((int) $alice['id'])['password_hash']),
+        'Guessing the current password on the profile page must be throttled, even with the right password.');
+    db()->exec('DELETE FROM login_attempts');
 
     $bobBrowser = new TestBrowser($base);
     $response = $bobBrowser->request('register.php', ['csrf_token' => $bobBrowser->token('register.php'), 'name' => 'Bob Garden', 'email' => 'bob@example.test', 'password' => 'BobGarden123!', 'password_confirmation' => 'BobGarden123!', 'return_to' => 'https://example.invalid']);
