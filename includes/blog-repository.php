@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 
+// Six fills two rows of the three-column grid and divides evenly into the two-column one.
+const BLOG_POSTS_PER_PAGE = 6;
+
 function blog_post_select(int $userId): string
 {
     return 'SELECT p.*, COALESCE(u.name, \'Ban biên tập\') AS author,'
@@ -38,6 +41,13 @@ function latest_blog_posts(): array
         . visible_blog_condition() . ' ORDER BY p.created_at DESC, p.id DESC LIMIT 5')->fetchAll();
 }
 
+/** Compact rows for the blog search box's as-you-type suggestions, newest first. */
+function blog_search_suggestions(int $limit = 200): array
+{
+    return db()->query('SELECT p.slug, p.title, p.tag, p.excerpt, p.image_path FROM blog_posts p WHERE 1 = 1'
+        . visible_blog_condition() . ' ORDER BY p.created_at DESC, p.id DESC LIMIT ' . max(1, $limit))->fetchAll();
+}
+
 function list_admin_posts(string $search, string $tag, int $page): array
 {
     $from = ' FROM blog_posts p LEFT JOIN users u ON u.id = p.user_id';
@@ -68,8 +78,11 @@ function list_blog_posts(string $search, string $sort, string $view, int $userId
     $where = ' WHERE 1 = 1' . visible_blog_condition();
     $parameters = [];
     if ($search !== '') {
-        $where .= " AND (p.title LIKE ? ESCAPE '!' OR p.content LIKE ? ESCAPE '!' OR p.tag LIKE ? ESCAPE '!')";
-        $parameters = array_fill(0, 3, search_pattern($search));
+        // The collation already ignores most Vietnamese accents; "đ" is a separate letter to it,
+        // so fold it on both sides to let "dau" find "đầu".
+        $folded = static fn (string $column): string => "REPLACE(REPLACE($column, 'đ', 'd'), 'Đ', 'D')";
+        $where .= ' AND (' . $folded('p.title') . " LIKE ? ESCAPE '!' OR " . $folded('p.content') . " LIKE ? ESCAPE '!' OR " . $folded('p.tag') . " LIKE ? ESCAPE '!')";
+        $parameters = array_fill(0, 3, search_pattern(str_replace(['đ', 'Đ'], ['d', 'D'], $search)));
     }
     if ($view === 'saved') {
         $where .= ' AND EXISTS(SELECT 1 FROM blog_saves s WHERE s.post_id = p.id AND s.user_id = ?)';
@@ -81,10 +94,11 @@ function list_blog_posts(string $search, string $sort, string $view, int $userId
     $statement = db()->prepare('SELECT COUNT(*) FROM blog_posts p' . $where);
     $statement->execute($parameters);
     $total = (int) $statement->fetchColumn();
-    $pages = max(1, (int) ceil($total / 9));
+    $pages = max(1, (int) ceil($total / BLOG_POSTS_PER_PAGE));
     $page = min(max(1, $page), $pages);
     $order = $sort === 'popular' ? 'score DESC, p.created_at DESC, p.id DESC' : 'p.created_at DESC, p.id DESC';
-    $statement = db()->prepare(blog_post_select($userId) . $where . ' ORDER BY ' . $order . ' LIMIT 9 OFFSET ' . (($page - 1) * 9));
+    $statement = db()->prepare(blog_post_select($userId) . $where . ' ORDER BY ' . $order
+        . ' LIMIT ' . BLOG_POSTS_PER_PAGE . ' OFFSET ' . (($page - 1) * BLOG_POSTS_PER_PAGE));
     $statement->execute($parameters);
     return ['posts' => $statement->fetchAll(), 'total' => $total, 'page' => $page, 'pages' => $pages];
 }

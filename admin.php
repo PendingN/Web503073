@@ -85,7 +85,7 @@ require __DIR__ . '/includes/header.php';
                                     <td><div class="flex items-center gap-2 whitespace-nowrap">
                                         <a class="admin-panel-link min-h-[36px] px-2.5 py-1.5" href="admin.php?edit=<?= (int) $member['id'] ?>#edit-user">Xem / sửa</a>
                                         <?php if ((int) $member['id'] !== (int) $admin['id']): ?>
-                                            <form method="post" action="actions/user-action.php" data-confirm="<?= e($member['role'] === 'admin' ? 'Hạ quyền quản trị của ' . $member['name'] . ' ('. $member['email'] . ')? Tài khoản này sẽ không còn truy cập được khu vực quản trị.' : 'Nâng ' . $member['name'] . ' ('. $member['email'] . ') thành quản trị viên? Tài khoản này sẽ có toàn quyền quản lý người dùng và bài viết.') ?>">
+                                            <form method="post" action="actions/user-action.php" data-confirm="<?= e($member['role'] === 'admin' ? $member['name'] . ' (' . $member['email'] . ') sẽ không còn truy cập được khu vực quản trị.' : $member['name'] . ' (' . $member['email'] . ') sẽ có toàn quyền quản lý người dùng và bài viết.') ?>" data-confirm-title="<?= $member['role'] === 'admin' ? 'Hạ quyền quản trị?' : 'Nâng làm quản trị viên?' ?>" data-confirm-label="<?= $member['role'] === 'admin' ? 'Hạ quyền' : 'Nâng quyền' ?>"<?= $member['role'] === 'admin' ? ' data-confirm-tone="danger"' : '' ?>>
                                                 <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
                                                 <input type="hidden" name="user_id" value="<?= (int) $member['id'] ?>">
                                                 <input type="hidden" name="operation" value="<?= $member['role'] === 'admin' ? 'demote' : 'promote' ?>">
@@ -94,7 +94,7 @@ require __DIR__ . '/includes/header.php';
                                             </form>
                                         <?php endif; ?>
                                         <?php if ($member['role'] !== 'admin'): ?>
-                                            <form method="post" action="actions/user-action.php" data-confirm="<?= e($member['status'] === 'active' ? 'Khóa ' . $member['name'] . ' (' . $member['email'] . ')? Tài khoản sẽ bị đăng xuất và không thể đăng nhập cho đến khi được mở khóa.' : 'Mở khóa tài khoản ' . $member['name'] . ' (' . $member['email'] . ')? Tài khoản sẽ có thể đăng nhập trở lại.') ?>">
+                                            <form method="post" action="actions/user-action.php" data-confirm="<?= e($member['status'] === 'active' ? $member['name'] . ' (' . $member['email'] . ') sẽ bị đăng xuất và không thể đăng nhập cho đến khi được mở khóa.' : $member['name'] . ' (' . $member['email'] . ') sẽ có thể đăng nhập trở lại.') ?>" data-confirm-title="<?= $member['status'] === 'active' ? 'Khóa tài khoản?' : 'Mở khóa tài khoản?' ?>" data-confirm-label="<?= $member['status'] === 'active' ? 'Khóa tài khoản' : 'Mở khóa' ?>"<?= $member['status'] === 'active' ? ' data-confirm-tone="danger"' : '' ?>>
                                                 <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
                                                 <input type="hidden" name="user_id" value="<?= (int) $member['id'] ?>">
                                                 <input type="hidden" name="operation" value="<?= $member['status'] === 'active' ? 'block' : 'unblock' ?>">

@@ -106,16 +106,14 @@ require __DIR__ . '/includes/navbar.php';
             </article>
 
             <?php if (can_edit_post($post, $user)): ?>
-                <details class="blog-delete">
-                    <summary>Xóa bài viết</summary>
-                    <p>Bài viết cùng bình luận, lượt bình chọn và lượt lưu sẽ bị xóa. Thao tác này không thể hoàn tác.</p>
-                    <form action="actions/blog-action.php" method="post">
+                <div class="blog-delete">
+                    <form action="actions/blog-action.php" method="post" data-confirm="Bài viết “<?= e($post['title']) ?>” cùng bình luận, lượt bình chọn và lượt lưu sẽ bị xóa. Thao tác này không thể hoàn tác." data-confirm-title="Xóa bài viết?" data-confirm-label="Xóa bài viết" data-confirm-tone="danger">
                         <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
                         <input type="hidden" name="operation" value="delete">
                         <input type="hidden" name="slug" value="<?= e($slug) ?>">
-                        <button class="btn-quiet btn-danger-quiet" type="submit">Xác nhận xóa bài</button>
+                        <button class="btn-quiet btn-danger-quiet" type="submit">Xóa bài viết</button>
                     </form>
-                </details>
+                </div>
             <?php endif; ?>
 
             <section class="blog-comments" id="comments" aria-labelledby="comments-title">
@@ -146,7 +144,7 @@ require __DIR__ . '/includes/navbar.php';
                             <p class="mono-comment-meta"><strong><?= e($comment['author']) ?></strong> <span aria-hidden="true">·</span> <time class="mono-tabular"><?= e(date('d/m/Y H:i', strtotime($comment['created_at']))) ?></time></p>
                             <p class="blog-text"><?= e($comment['content']) ?></p>
                             <?php if ($user !== null && ($user['role'] === 'admin' || (int) $comment['user_id'] === (int) $user['id'])): ?>
-                                <form action="actions/blog-action.php" method="post" data-confirm="Bạn có chắc muốn xóa bình luận này?">
+                                <form action="actions/blog-action.php" method="post" data-confirm="Bình luận này sẽ bị xóa khỏi bài viết. Thao tác này không thể hoàn tác." data-confirm-title="Xóa bình luận?" data-confirm-label="Xóa bình luận" data-confirm-tone="danger">
                                     <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
                                     <input type="hidden" name="operation" value="delete-comment">
                                     <input type="hidden" name="slug" value="<?= e($slug) ?>">

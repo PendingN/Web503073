@@ -21,10 +21,24 @@ $editSlug = request_string($_GET, 'edit');
 if ($editSlug !== '') {
     redirect_to(app_url('blog-editor.php?edit=' . rawurlencode($editSlug)));
 }
+// "view" already picks all/mine/saved, so the grid/list switch lives in "layout"; grid is the default
+// and stays out of the URL.
+$layout = request_string($_GET, 'layout') === 'list' ? 'list' : 'grid';
 $query = ['search' => $search, 'sort' => $sort, 'view' => $view];
+if ($layout === 'list') {
+    $query['layout'] = 'list';
+}
 // "Bài nổi bật" stays a valid post tag, but it marks a post rather than a topic to browse.
 $topics = ['Chăm cây', 'Không gian', 'Cảm hứng', 'Mẹo hay', 'Sống xanh'];
 $totalArchivePosts = count_blog_posts();
+$searchSuggestions = array_map(static fn (array $post): array => [
+    'name' => $post['title'],
+    'category' => $post['tag'],
+    'extra' => $post['excerpt'],
+    'image' => blog_cover_url($post),
+    'url' => 'blog-post.php?slug=' . rawurlencode($post['slug']),
+], blog_search_suggestions());
+$pageScripts = ['js/search-suggest.js'];
 
 // The default front page opens with the newest four posts as a teaser; the list below always
 // holds every post, so nothing is missing from it.
@@ -60,7 +74,11 @@ if (!function_exists('render_blog_meta')) {
     /** One quiet line: topic · author (members only) · date · reading time. */
     function render_blog_meta(array $post, bool $compact = false): void
     {
-        $topicUrl = 'blog.php?' . http_build_query(['search' => $post['tag']]) . '#blog-content';
+        $topicQuery = ['search' => $post['tag']];
+        if (($GLOBALS['layout'] ?? 'grid') === 'list') {
+            $topicQuery['layout'] = 'list';
+        }
+        $topicUrl = 'blog.php?' . http_build_query($topicQuery) . '#blog-content';
         $dateTime = str_replace(' ', 'T', (string) $post['created_at']);
         $date = date('d/m/Y', strtotime((string) $post['created_at']));
         ?>
@@ -166,8 +184,30 @@ require __DIR__ . '/includes/navbar.php';
                 <h2 id="all-heading"><?= e($archiveHeading) ?></h2>
                 <p class="all-section-count"><?= e($result['total']) ?> kết quả</p>
                 <?php if ($search !== ''): ?>
-                    <a class="btn-quiet blog-clear-filter" href="blog.php?<?= e(http_build_query(['sort' => $sort, 'view' => $view])) ?>#blog-content">Xóa bộ lọc</a>
+                    <a class="btn-quiet blog-clear-filter" href="blog.php?<?= e(http_build_query(array_diff_key($query, ['search' => true]))) ?>#blog-content">Xóa bộ lọc</a>
                 <?php endif; ?>
+                <?php
+                $layoutBase = $query;
+                unset($layoutBase['layout']);
+                if ($result['page'] > 1) {
+                    $layoutBase['page'] = $result['page'];
+                }
+                $layoutOptions = [
+                    'grid' => ['Lưới', $layoutBase],
+                    'list' => ['Danh sách', $layoutBase + ['layout' => 'list']],
+                ];
+                ?>
+                <div class="blog-layout-toggle" role="group" aria-label="Kiểu hiển thị bài viết">
+                    <?php foreach ($layoutOptions as $key => [$label, $layoutQuery]): ?>
+                        <a href="blog.php?<?= e(http_build_query($layoutQuery)) ?>#blog-content"<?= $layout === $key ? ' aria-current="true"' : '' ?> aria-label="<?= e($label) ?>" title="<?= e($label) ?>">
+                            <?php if ($key === 'grid'): ?>
+                                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1"/></svg>
+                            <?php else: ?>
+                                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg>
+                            <?php endif; ?>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
             </div>
 
             <section class="mono-controls" id="blog-content" tabindex="-1" aria-label="Tìm kiếm và lọc bài viết">
@@ -178,9 +218,10 @@ require __DIR__ . '/includes/navbar.php';
                         <?php endforeach; ?>
                     </nav>
                     <form class="blog-search" action="blog.php#blog-content" method="get" role="search">
-                        <div class="blog-search-field">
+                        <div class="blog-search-field" data-search-suggest="<?= e(json_encode($searchSuggestions, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) ?>" data-empty-text="Không có bài nào khớp. Nhấn Enter để tìm trong nội dung.">
                             <label class="sr-only" for="blog-search">Tìm bài viết</label>
-                            <input id="blog-search" type="search" name="search" value="<?= e($search) ?>" placeholder="Tiêu đề, nội dung hoặc chủ đề">
+                            <input id="blog-search" type="search" name="search" value="<?= e($search) ?>" placeholder="Tiêu đề, nội dung hoặc chủ đề" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="blog-search-list">
+                            <ul class="search-suggest" id="blog-search-list" role="listbox" aria-label="Gợi ý bài viết" hidden></ul>
                         </div>
                         <div class="blog-sort-field">
                             <label class="sr-only" for="blog-sort">Sắp xếp</label>
@@ -190,6 +231,9 @@ require __DIR__ . '/includes/navbar.php';
                             </select>
                         </div>
                         <input type="hidden" name="view" value="<?= e($view) ?>">
+                        <?php if ($layout === 'list'): ?>
+                            <input type="hidden" name="layout" value="list">
+                        <?php endif; ?>
                         <button class="btn-brand" type="submit">Tìm kiếm</button>
                     </form>
                 </div>
@@ -197,16 +241,17 @@ require __DIR__ . '/includes/navbar.php';
                     <?php foreach ($topics as $topic): ?>
                         <?php
                         $isActiveTopic = $search === $topic;
-                        $topicQuery = $isActiveTopic ? ['sort' => $sort, 'view' => $view] : ['search' => $topic, 'sort' => $sort, 'view' => $view];
+                        $topicQuery = $isActiveTopic ? array_diff_key($query, ['search' => true]) : ['search' => $topic] + $query;
                         ?>
                         <a class="topic-pill" href="blog.php?<?= e(http_build_query($topicQuery)) ?>#blog-content"<?= $isActiveTopic ? ' aria-current="page"' : '' ?>><?= e($topic) ?></a>
                     <?php endforeach; ?>
                 </nav>
             </section>
 
-            <div class="all-grid feed-list<?= count($result['posts']) === 1 ? ' all-grid--single' : '' ?>">
+            <?php $singleWide = $layout === 'grid' && count($result['posts']) === 1; ?>
+            <div class="all-grid feed-list<?= $layout === 'list' ? ' all-grid--list' : '' ?><?= $singleWide ? ' all-grid--single' : '' ?>">
                 <?php foreach ($result['posts'] as $archivePost): ?>
-                    <?php render_blog_card($archivePost, count($result['posts']) === 1); ?>
+                    <?php render_blog_card($archivePost, $singleWide); ?>
                 <?php endforeach; ?>
 
                 <?php if ($result['posts'] === []): ?>

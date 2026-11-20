@@ -86,7 +86,7 @@ require __DIR__ . '/includes/header.php';
                                     <td><span class="rounded-md bg-soft px-2 py-1 text-xs text-muted"><?= e($plant['category']) ?></span></td>
                                     <td><div class="flex items-center gap-2 whitespace-nowrap">
                                         <a class="admin-panel-link min-h-[36px] px-2.5 py-1.5" href="admin-plants.php?plant=<?= (int) $plant['id'] ?>#plant-form">Sửa</a>
-                                        <form method="post" action="actions/plant-action.php" data-confirm="Xóa cây <?= e($plant['name']) ?>?">
+                                        <form method="post" action="actions/plant-action.php" data-confirm="Cây “<?= e($plant['name']) ?>” sẽ bị xóa khỏi bộ sưu tập." data-confirm-title="Xóa cây?" data-confirm-label="Xóa cây" data-confirm-tone="danger">
                                             <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
                                             <input type="hidden" name="plant_id" value="<?= (int) $plant['id'] ?>">
                                             <input type="hidden" name="operation" value="delete">

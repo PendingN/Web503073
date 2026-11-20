@@ -49,7 +49,7 @@ require __DIR__ . '/includes/navbar.php';
             </header>
 
             <form class="catalog-toolbar" method="get" action="collection.php" role="search" id="results">
-                <div class="catalog-search" data-search-suggest="<?= e(json_encode($searchSuggestions, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) ?>">
+                <div class="catalog-search" data-search-suggest="<?= e(json_encode($searchSuggestions, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) ?>" data-empty-text="Không có cây nào khớp. Nhấn Enter để tìm trong mô tả.">
                     <label class="sr-only" for="plant-search">Tìm kiếm cây</label>
                     <input id="plant-search" type="search" name="search" value="<?= e($search) ?>" placeholder="Tìm tên hoặc mô tả cây" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="plant-search-list">
                     <ul class="search-suggest" id="plant-search-list" role="listbox" aria-label="Gợi ý cây" hidden></ul>

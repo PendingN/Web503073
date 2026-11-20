@@ -401,6 +401,7 @@ try {
     check($adminBrowser->request('blog-post.php?slug=' . rawurlencode($slug))['status'] === 200, 'Administrator cannot open a hidden blog post.');
     check($bobLive->request('actions/blog-action.php', ['csrf_token' => $bobLiveToken, 'slug' => $slug, 'operation' => 'vote', 'value' => 1])['status'] === 404, 'Hidden blog post accepted a vote.');
     check(!str_contains($guest->request('blog.php')['body'], 'blog-post.php?slug=' . rawurlencode($slug) . '"'), 'Hidden blog post is listed publicly.');
+    check(!str_contains($guest->request('blog.php')['body'], 'blog-post.php?slug=' . rawurlencode($slug) . '&quot;'), 'Hidden blog post leaks into the search suggestions.');
     check(str_contains($adminBrowser->request('admin-posts.php')['body'], 'Đang ẩn'), 'Admin moderation list does not show hidden posts.');
     $adminBrowser->request('actions/blog-action.php', ['csrf_token' => $adminToken, 'slug' => $slug, 'operation' => 'unhide', 'return_to' => 'admin-posts.php']);
     check($guest->request('blog-post.php?slug=' . rawurlencode($slug))['status'] === 200, 'Unhidden blog post is still hidden.');

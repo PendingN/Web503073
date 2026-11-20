@@ -1226,7 +1226,6 @@ input:focus-visible { outline-offset: 2px; }
 .blog-comments, .blog-delete { max-width: 720px; margin: 32px auto; }
 .blog-comment { padding: 20px 0; border-bottom: 1px solid #dbe6dc; }
 .blog-empty { padding: 24px; color: #56614f; }
-.blog-delete summary { cursor: pointer; }
 @media (max-width: 600px) {
     .blog-search { align-items: stretch; flex-direction: column; }
     .blog-search input { min-width: 0; }
