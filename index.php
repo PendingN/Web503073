@@ -284,7 +284,7 @@ require __DIR__ . '/includes/header.php';
                     <?php foreach ($blogShowcasePosts as $post):
                         $cover = blog_cover_url($post);
                         $postTag = trim((string) ($post['tag'] ?? 'Chăm cây'));
-                        $postExcerpt = trim((string) ($post['excerpt'] ?? 'Ghi chép chăm cây thực tế và cảm hứng sống xanh từ cộng đồng Là Lá La.'));
+                        $postExcerpt = trim((string) (post_list_excerpt($post) ?: 'Ghi chép chăm cây thực tế và cảm hứng sống xanh từ cộng đồng Là Lá La.'));
                         $postAuthor = trim((string) ($post['author'] ?? 'Là Lá La'));
                     ?>
                     <a class="lalala-blog-card" href="blog-post.php?slug=<?= e(rawurlencode((string) $post['slug'])) ?>">
