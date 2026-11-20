@@ -4,11 +4,11 @@ declare(strict_types=1);
 require_once __DIR__ . '/includes/init.php';
 $admin = require_admin('admin-posts.php');
 $search = mb_substr(trim(request_string($_GET, 'search')), 0, 200, 'UTF-8');
-$tags = ['Chăm cây', 'Không gian', 'Cảm hứng', 'Mẹo hay', 'Sống xanh', 'Bài nổi bật'];
-$tag = request_string($_GET, 'tag');
-$tag = in_array($tag, $tags, true) ? $tag : '';
+$tags = list_tags(true);
+$tagId = (int) (filter_var($_GET['tag'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0);
+$tagId = in_array($tagId, array_column($tags, 'id'), true) ? $tagId : 0;
 $page = filter_var($_GET['page'] ?? 1, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 1;
-$result = list_admin_posts($search, $tag, $page);
+$result = list_admin_posts($search, $tagId, $page);
 if (isset($_GET['edit']) || request_string($_GET, 'create') === '1') {
     redirect_to(app_url('blog-editor.php?from=admin' . (isset($_GET['edit']) ? '&edit=' . rawurlencode(request_string($_GET, 'edit')) : '')));
 }
@@ -16,7 +16,7 @@ $pageTitle = 'Quản trị bài viết';
 $bodyClass = 'admin-page';
 $adminActive = 'posts';
 $flashMessage = take_flash();
-$query = ['search' => $search, 'tag' => $tag];
+$query = ['search' => $search, 'tag' => $tagId > 0 ? $tagId : ''];
 require __DIR__ . '/includes/header.php';
 ?>
 <div class="admin-shell min-h-screen">
@@ -31,8 +31,8 @@ require __DIR__ . '/includes/header.php';
                     <div class="mb-5 flex items-center justify-between gap-3"><h2 class="text-lg font-bold" id="posts-title">Toàn bộ bài viết</h2><span class="rounded-full bg-primary/10 px-3 py-1.5 text-xs text-primary-dark"><?= (int) $result['total'] ?> bài viết</span></div>
                     <form class="grid items-end gap-4 sm:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_220px_auto]" method="get" action="admin-posts.php">
                         <div><label class="admin-field-label" for="post-search">Tìm bài viết</label><input class="admin-input" id="post-search" type="search" name="search" maxlength="200" value="<?= e($search) ?>" placeholder="Tiêu đề hoặc tác giả"></div>
-                        <div><label class="admin-field-label" for="post-filter-tag">Chủ đề</label><select class="admin-input" id="post-filter-tag" name="tag"><option value="">Tất cả</option><?php foreach ($tags as $option): ?><option value="<?= e($option) ?>"<?= $tag === $option ? ' selected' : '' ?>><?= e($option) ?></option><?php endforeach; ?></select></div>
-                        <div class="flex flex-wrap gap-2"><button class="admin-button min-h-11" type="submit">Tìm kiếm</button><?php if ($search !== '' || $tag !== ''): ?><a class="admin-button-secondary min-h-11" href="admin-posts.php">Xóa bộ lọc</a><?php endif; ?></div>
+                        <div><label class="admin-field-label" for="post-filter-tag">Chủ đề</label><select class="admin-input" id="post-filter-tag" name="tag"><option value="">Tất cả</option><?php foreach ($tags as $option): ?><option value="<?= (int) $option['id'] ?>"<?= $tagId === $option['id'] ? ' selected' : '' ?>><?= e($option['name']) ?></option><?php endforeach; ?></select></div>
+                        <div class="flex flex-wrap gap-2"><button class="admin-button min-h-11" type="submit">Tìm kiếm</button><?php if ($search !== '' || $tagId > 0): ?><a class="admin-button-secondary min-h-11" href="admin-posts.php">Xóa bộ lọc</a><?php endif; ?></div>
                     </form>
                 </div>
                 <div class="overflow-x-auto">
@@ -40,7 +40,7 @@ require __DIR__ . '/includes/header.php';
                         <thead><tr><th>Bài viết</th><th>Tác giả</th><th>Chủ đề</th><th>Bình luận</th><th>Ngày đăng</th><th>Thao tác</th></tr></thead>
                         <tbody>
                             <?php foreach ($result['posts'] as $post): ?>
-                                <tr><td><a class="block max-w-80 text-xs font-semibold leading-relaxed wrap-anywhere hover:text-primary-dark" href="blog-post.php?slug=<?= e(rawurlencode($post['slug'])) ?>"><?= e($post['title']) ?></a><span class="mt-1 block text-xs text-muted">#<?= (int) $post['id'] ?><?= (int) $post['is_hidden'] === 1 ? ' · <strong class="text-amber-700">Đang ẩn</strong>' : '' ?></span></td><td class="max-w-48 text-xs wrap-anywhere"><?= e($post['author']) ?></td><td class="text-xs whitespace-nowrap text-muted"><?= e($post['tag']) ?></td><td class="text-xs"><?= (int) $post['comment_count'] ?></td><td class="text-xs whitespace-nowrap text-muted"><?= e(date('d/m/Y', strtotime($post['created_at']))) ?></td><td>
+                                <tr><td><a class="block max-w-80 text-xs font-semibold leading-relaxed wrap-anywhere hover:text-primary-dark" href="blog-post.php?slug=<?= e(rawurlencode($post['slug'])) ?>"><?= e($post['title']) ?></a><span class="mt-1 block text-xs text-muted">#<?= (int) $post['id'] ?><?= (int) $post['is_hidden'] === 1 ? ' · <strong class="text-amber-700">Đang ẩn</strong>' : '' ?></span></td><td class="max-w-48 text-xs wrap-anywhere"><?= e($post['author']) ?></td><td class="text-xs text-muted"><?php if ($post['tags'] === []): ?><span class="italic">Chưa có chủ đề</span><?php else: ?><div class="flex max-w-56 flex-wrap gap-1"><?php foreach ($post['tags'] as $postTag): ?><span class="rounded bg-soft px-2 py-1"><?= e($postTag['name']) ?></span><?php endforeach; ?></div><?php endif; ?></td><td class="text-xs"><?= (int) $post['comment_count'] ?></td><td class="text-xs whitespace-nowrap text-muted"><?= e(date('d/m/Y', strtotime($post['created_at']))) ?></td><td>
                                     <div class="flex items-start gap-2"><a class="admin-panel-link min-h-[36px] px-2.5 py-1.5" href="admin-posts.php?edit=<?= e(rawurlencode($post['slug'])) ?>#post-editor">Sửa</a><form method="post" action="actions/blog-action.php"><input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>"><input type="hidden" name="slug" value="<?= e($post['slug']) ?>"><input type="hidden" name="operation" value="<?= (int) $post['is_hidden'] === 1 ? 'unhide' : 'hide' ?>"><input type="hidden" name="return_to" value="<?= e(app_url('admin-posts.php')) ?>"><button class="inline-flex min-h-[36px] items-center rounded-md px-2.5 py-1.5 text-xs font-medium <?= (int) $post['is_hidden'] === 1 ? 'text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800' : 'text-amber-700 hover:bg-amber-50 hover:text-amber-800' ?>" type="submit"><?= (int) $post['is_hidden'] === 1 ? 'Hiện lại' : 'Ẩn bài' ?></button></form><form method="post" action="actions/blog-action.php" data-confirm="Bài viết “<?= e($post['title']) ?>” cùng bình luận và tương tác sẽ bị xóa. Thao tác này không thể hoàn tác." data-confirm-title="Xóa bài viết?" data-confirm-label="Xóa bài viết" data-confirm-tone="danger"><input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>"><input type="hidden" name="operation" value="delete"><input type="hidden" name="slug" value="<?= e($post['slug']) ?>"><input type="hidden" name="return_to" value="<?= e(app_url('admin-posts.php')) ?>"><button class="inline-flex min-h-[36px] items-center rounded-md bg-red-50 px-2.5 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100" type="submit">Xóa</button></form></div>
                                 </td></tr>
                             <?php endforeach; ?>

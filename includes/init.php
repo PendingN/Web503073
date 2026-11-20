@@ -34,6 +34,7 @@ header('Cache-Control: no-store');
 require_once __DIR__ . '/database.php';
 require_once __DIR__ . '/repositories.php';
 require_once __DIR__ . '/blog-repository.php';
+require_once __DIR__ . '/tag-repository.php';
 require_once __DIR__ . '/activity-repository.php';
 require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/login-throttle.php';

@@ -57,6 +57,13 @@
 .editor-settings label { display: block; font-size: 13px; font-weight: 600; margin: 24px 0 8px; }
 .editor-settings input, .editor-settings select { width: 100%; font-size: 14px; }
 #cover-preview { display: block; width: 100%; margin: 16px 0; height: auto; }
+.editor-tags { min-width: 0; margin: 24px 0 0; padding: 0; border: 0; }
+.editor-tags legend { padding: 0; font-size: 13px; font-weight: 600; margin-bottom: 8px; }
+.editor-tag-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.editor-settings .editor-tag-option { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; margin: 0; padding: 0 12px; border: 1px solid var(--editor-line); background: #ffffff; color: #243b30; font-size: 13px; font-weight: 500; cursor: pointer; }
+.editor-settings .editor-tag-option input { width: auto; margin: 0; accent-color: #35533b; }
+.editor-settings .editor-tag-option:has(input:checked) { border-color: #35533b; background: #eef3ea; font-weight: 600; }
+.editor-settings .editor-tag-option:has(input:focus-visible) { outline: 2px solid #35533b; outline-offset: 2px; }
 .editor-hint { color: #586452; font-size: 12px; line-height: 1.8; margin: 16px 0; text-wrap: pretty; }
 .editor-notice { padding: 16px 20px; background: #edf0e8; color: #243b30; line-height: 1.7; margin: 16px 0; overflow-wrap: anywhere; text-wrap: pretty; }
 #editor-preview { max-width: 820px; margin: auto; }

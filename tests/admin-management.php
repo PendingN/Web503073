@@ -10,7 +10,7 @@ foreach (['admin-posts.php'] as $path) {
 }
 $adminToken = $adminBrowser->token('blog-editor.php?from=admin');
 $postDraft = ['csrf_token' => $adminToken, 'operation' => 'create', 'title' => 'Admin <script>alert(7)</script>',
-    'content' => 'Nội dung bài viết thử nghiệm quản trị.', 'tag' => 'Chăm cây', 'return_to' => $prefix . '/admin-posts.php'];
+    'content' => 'Nội dung bài viết thử nghiệm quản trị.', 'tags' => [test_tag_id('Chăm cây')], 'return_to' => $prefix . '/admin-posts.php'];
 $beforeCount = (int) db()->query('SELECT COUNT(*) FROM blog_posts')->fetchColumn();
 $response = $adminBrowser->request('actions/blog-action.php', array_merge($postDraft, ['title' => ' ']));
 check($response['status'] === 303 && $response['headers']['location'] === $prefix . '/blog-editor.php', 'Invalid admin draft must return to the admin editor.');

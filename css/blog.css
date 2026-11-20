@@ -964,7 +964,7 @@
     color: var(--mono-ink);
 }
 
-.blog-page .feed-topics .topic-pill[aria-current="page"] {
+.blog-page .feed-topics .topic-pill[aria-current="true"] {
     color: var(--mono-accent);
     font-weight: 700;
     text-decoration: underline;

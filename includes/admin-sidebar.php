@@ -4,6 +4,7 @@ $adminNavigation = [
     ['id' => 'overview', 'href' => 'admin-dashboard.php', 'icon' => 'dashboard', 'label' => 'Tổng quan'],
     ['id' => 'users', 'href' => 'admin.php', 'icon' => 'users', 'label' => 'Người dùng'],
     ['id' => 'posts', 'href' => 'admin-posts.php', 'icon' => 'book', 'label' => 'Quản trị bài viết'],
+    ['id' => 'tags', 'href' => 'admin-tags.php', 'icon' => 'tag', 'label' => 'Quản lý chủ đề'],
     ['id' => 'plants', 'href' => 'admin-plants.php', 'icon' => 'leaf', 'label' => 'Quản lý cây'],
 ];
 $adminName = trim((string) ($admin['name'] ?? ''));

@@ -4,6 +4,7 @@
 @source "../admin.php";
 @source "../admin-posts.php";
 @source "../admin-plants.php";
+@source "../admin-tags.php";
 @source "../includes/admin-sidebar.php";
 @source "../includes/admin-topbar.php";
 @source "../includes/admin-icons.php";

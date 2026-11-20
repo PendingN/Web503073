@@ -24,16 +24,22 @@ if ($editSlug !== '') {
 // "view" already picks all/mine/saved, so the grid/list switch lives in "layout"; grid is the default
 // and stays out of the URL.
 $layout = request_string($_GET, 'layout') === 'list' ? 'list' : 'grid';
+// Topic filter: ?tag[]=ID, any number of ids. A post matches when it carries at least one of them.
+$allTags = list_tags();
+$tagIds = array_values(array_intersect(parse_tag_ids($_GET['tag'] ?? [])['ids'], array_column($allTags, 'id')));
 $query = ['search' => $search, 'sort' => $sort, 'view' => $view];
+if ($tagIds !== []) {
+    $query['tag'] = $tagIds;
+}
 if ($layout === 'list') {
     $query['layout'] = 'list';
 }
-// "Bài nổi bật" stays a valid post tag, but it marks a post rather than a topic to browse.
-$topics = ['Chăm cây', 'Không gian', 'Cảm hứng', 'Mẹo hay', 'Sống xanh'];
+// Topics worth offering: those with posts the reader can see, plus any already selected.
+$topicTags = array_values(array_filter($allTags, static fn (array $tag): bool => $tag['post_count'] > 0 || in_array($tag['id'], $tagIds, true)));
 $totalArchivePosts = count_blog_posts();
 $searchSuggestions = array_map(static fn (array $post): array => [
     'name' => $post['title'],
-    'category' => $post['tag'],
+    'category' => implode(', ', array_column($post['tags'], 'name')),
     'extra' => $post['excerpt'],
     'image' => blog_cover_url($post),
     'url' => 'blog-post.php?slug=' . rawurlencode($post['slug']),
@@ -44,8 +50,8 @@ $pageScripts = ['js/search-suggest.js'];
 // holds every post, so nothing is missing from it.
 const BLOG_LEAD_POSTS = 4;
 $userId = (int) ($user['id'] ?? 0);
-$result = list_blog_posts($search, $sort, $view, $userId, $page);
-$showEditorialShowcase = $view === 'all' && $search === '' && $sort === 'new'
+$result = list_blog_posts($search, $sort, $view, $userId, $page, $tagIds);
+$showEditorialShowcase = $view === 'all' && $search === '' && $tagIds === [] && $sort === 'new'
     && $result['page'] === 1 && $totalArchivePosts > BLOG_LEAD_POSTS;
 
 $leadPost = null;
@@ -71,19 +77,19 @@ if (!function_exists('blog_reading_minutes')) {
 }
 
 if (!function_exists('render_blog_meta')) {
-    /** One quiet line: topic · author (members only) · date · reading time. */
+    /** One quiet line: topics (none, one or several) · author (members only) · date · reading time. */
     function render_blog_meta(array $post, bool $compact = false): void
     {
-        $topicQuery = ['search' => $post['tag']];
-        if (($GLOBALS['layout'] ?? 'grid') === 'list') {
-            $topicQuery['layout'] = 'list';
-        }
-        $topicUrl = 'blog.php?' . http_build_query($topicQuery) . '#blog-content';
+        $extra = ($GLOBALS['layout'] ?? 'grid') === 'list' ? ['layout' => 'list'] : [];
+        // Cards show up to three topics; the narrow teaser list shows the first one.
+        $shownTags = array_slice($post['tags'] ?? [], 0, $compact ? 1 : 3);
         $dateTime = str_replace(' ', 'T', (string) $post['created_at']);
         $date = date('d/m/Y', strtotime((string) $post['created_at']));
         ?>
         <p class="mono-meta">
-            <a class="mono-meta-tag" href="<?= e($topicUrl) ?>"><?= e($post['tag']) ?></a>
+            <?php foreach ($shownTags as $postTag): ?>
+                <a class="mono-meta-tag" href="<?= e(blog_tag_url($postTag['id'], $extra)) ?>"><?= e($postTag['name']) ?></a>
+            <?php endforeach; ?>
             <?php if (!$compact && (string) $post['author'] !== 'Ban biên tập'): ?>
                 <span><?= e($post['author']) ?></span>
             <?php endif; ?>
@@ -183,8 +189,8 @@ require __DIR__ . '/includes/navbar.php';
             <div class="all-section-head">
                 <h2 id="all-heading"><?= e($archiveHeading) ?></h2>
                 <p class="all-section-count"><?= e($result['total']) ?> kết quả</p>
-                <?php if ($search !== ''): ?>
-                    <a class="btn-quiet blog-clear-filter" href="blog.php?<?= e(http_build_query(array_diff_key($query, ['search' => true]))) ?>#blog-content">Xóa bộ lọc</a>
+                <?php if ($search !== '' || $tagIds !== []): ?>
+                    <a class="btn-quiet blog-clear-filter" href="blog.php?<?= e(http_build_query(array_diff_key($query, ['search' => true, 'tag' => true]))) ?>#blog-content">Xóa bộ lọc</a>
                 <?php endif; ?>
                 <?php
                 $layoutBase = $query;
@@ -231,21 +237,28 @@ require __DIR__ . '/includes/navbar.php';
                             </select>
                         </div>
                         <input type="hidden" name="view" value="<?= e($view) ?>">
+                        <?php foreach ($tagIds as $selectedTagId): ?>
+                            <input type="hidden" name="tag[]" value="<?= (int) $selectedTagId ?>">
+                        <?php endforeach; ?>
                         <?php if ($layout === 'list'): ?>
                             <input type="hidden" name="layout" value="list">
                         <?php endif; ?>
                         <button class="btn-brand" type="submit">Tìm kiếm</button>
                     </form>
                 </div>
-                <nav class="feed-topics" aria-label="Lọc theo chủ đề">
-                    <?php foreach ($topics as $topic): ?>
-                        <?php
-                        $isActiveTopic = $search === $topic;
-                        $topicQuery = $isActiveTopic ? array_diff_key($query, ['search' => true]) : ['search' => $topic] + $query;
-                        ?>
-                        <a class="topic-pill" href="blog.php?<?= e(http_build_query($topicQuery)) ?>#blog-content"<?= $isActiveTopic ? ' aria-current="page"' : '' ?>><?= e($topic) ?></a>
-                    <?php endforeach; ?>
-                </nav>
+                <?php if ($topicTags !== []): ?>
+                    <nav class="feed-topics" aria-label="Lọc theo chủ đề (chọn một hoặc nhiều)">
+                        <?php foreach ($topicTags as $topicTag): ?>
+                            <?php
+                            // Each pill toggles its tag in the selection; several can be on at once.
+                            $isActiveTopic = in_array($topicTag['id'], $tagIds, true);
+                            $nextTags = $isActiveTopic ? array_values(array_diff($tagIds, [$topicTag['id']])) : [...$tagIds, $topicTag['id']];
+                            $topicQuery = array_diff_key($query, ['tag' => true]) + ($nextTags === [] ? [] : ['tag' => $nextTags]);
+                            ?>
+                            <a class="topic-pill" href="blog.php?<?= e(http_build_query($topicQuery)) ?>#blog-content"<?= $isActiveTopic ? ' aria-current="true"' : '' ?>><?= e($topicTag['name']) ?></a>
+                        <?php endforeach; ?>
+                    </nav>
+                <?php endif; ?>
             </section>
 
             <?php $singleWide = $layout === 'grid' && count($result['posts']) === 1; ?>
@@ -259,6 +272,9 @@ require __DIR__ . '/includes/navbar.php';
                         <?php if ($search !== ''): ?>
                             <h3>Không có bài viết khớp “<?= e($search) ?>”.</h3>
                             <p>Thử một từ khóa ngắn hơn hoặc quay lại danh mục đầy đủ của Sổ Tay Thực Vật.</p>
+                        <?php elseif ($tagIds !== []): ?>
+                            <h3>Chưa có bài viết nào với chủ đề đã chọn.</h3>
+                            <p>Bỏ bớt một chủ đề hoặc quay lại danh mục đầy đủ của Sổ Tay Thực Vật.</p>
                         <?php elseif ($view === 'saved'): ?>
                             <h3>Bạn chưa lưu bài viết nào.</h3>
                             <p>Chọn nút lưu trên một bài viết để gom vào sổ tay đọc lại sau.</p>

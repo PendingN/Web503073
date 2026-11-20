@@ -5,7 +5,9 @@
     if (!form) return;
     const area = document.getElementById('editor-blocks');
     const title = document.getElementById('editor-title');
-    const tag = document.getElementById('editor-tag');
+    const tagBoxes = [...form.querySelectorAll('input[name="tags[]"]')];
+    const getTags = () => tagBoxes.filter(box => box.checked).map(box => box.value);
+    const setTags = list => { const wanted = new Set(Array.isArray(list) ? list.map(String) : []); tagBoxes.forEach(box => { box.checked = wanted.has(box.value); }); };
     const cover = document.getElementById('editor-cover');
     const error = document.getElementById('editor-error');
     const status = document.getElementById('draft-status');
@@ -56,7 +58,7 @@
             } else if (block.type !== 'divider') block.html = sanitize(row.querySelector('[contenteditable]').innerHTML);
         });
     }
-    function snapshot() { return JSON.stringify({ title: title.value, tag: tag.value, blocks }); }
+    function snapshot() { return JSON.stringify({ title: title.value, tags: getTags(), blocks }); }
     function save() {
         read();
         const state = snapshot();
@@ -282,7 +284,7 @@
         const next = position + direction;
         if (next < 0 || next >= history.length) return;
         position = next; const state = JSON.parse(history[position]);
-        blocks = state.blocks; title.value = state.title; tag.value = state.tag; render(); save();
+        blocks = state.blocks; title.value = state.title; setTags(state.tags); render(); save();
     }
     document.getElementById('undo').onclick = () => travel(-1);
     document.getElementById('redo').onclick = () => travel(1);
@@ -317,13 +319,13 @@
     document.getElementById('restore-draft').onclick = () => {
         try {
             const state = JSON.parse(savedDraft);
-            if (typeof state.title !== 'string' || typeof state.tag !== 'string' || !Array.isArray(state.blocks) || state.blocks.length > 200 || state.blocks.some(b =>
+            if (typeof state.title !== 'string' || (state.tags !== undefined && (!Array.isArray(state.tags) || state.tags.some(id => typeof id !== 'string'))) || !Array.isArray(state.blocks) || state.blocks.length > 200 || state.blocks.some(b =>
                 !b || !labels[b.type] ||
                 (['paragraph', 'h2', 'h3', 'quote'].includes(b.type) && typeof b.html !== 'string') ||
                 (['ul', 'ol'].includes(b.type) && (!Array.isArray(b.items) || b.items.some(item => typeof item !== 'string'))) ||
                 (b.type === 'image' && (typeof b.src !== 'string' || typeof b.alt !== 'string' || typeof b.caption !== 'string'))
             )) throw new Error();
-            blocks = state.blocks; title.value = state.title; tag.value = state.tag;
+            blocks = state.blocks; title.value = state.title; setTags(state.tags);
             savedDraft = null; recovery.hidden = true; render(); flush();
             message('Đã khôi phục nội dung. Ảnh mới chưa đăng cần chọn lại.');
         } catch { message('Không đọc được nháp. Bạn có thể bỏ nháp để viết tiếp.'); }

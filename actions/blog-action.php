@@ -64,7 +64,9 @@ register_shutdown_function(static function () use (&$newImage, &$imageCommitted,
 if ($operation === 'create' || $operation === 'update') {
     $title = trim(request_string($_POST, 'title'));
     $content = trim(request_string($_POST, 'content'));
-    $tag = request_string($_POST, 'tag');
+    // Zero, one or many tags are all valid; unknown or malformed ids are rejected.
+    $tagInput = parse_tag_ids($_POST['tags'] ?? []);
+    $tagIds = $tagInput['ids'];
     $blocksJson = null;
     $blocks = null;
     $errors = [];
@@ -119,7 +121,10 @@ if ($operation === 'create' || $operation === 'update') {
         } elseif (isset($post) && !empty($post['content_blocks'])) {
             throw new InvalidArgumentException('Vui lòng dùng trình viết mới để sửa bài này.');
         }
-        $errors = blog_post_errors($title, $content, $tag);
+        $errors = [...blog_post_errors($title, $content), ...$tagInput['errors']];
+        if ($tagInput['errors'] === []) {
+            $errors = [...$errors, ...lock_existing_tags($connection, $tagIds)];
+        }
         if ($errors === []) {
             $newImage = store_blog_image($_FILES['image'] ?? null);
         }
@@ -128,20 +133,22 @@ if ($operation === 'create' || $operation === 'update') {
     }
     if ($errors !== []) {
         $connection->rollBack();
-        $_SESSION['blog_draft'] = ['title' => mb_substr($title, 0, 120), 'content' => mb_substr($content, 0, 10000), 'tag' => $tag, 'slug' => $operation === 'update' ? $slug : '', 'content_blocks' => strlen($blockInput) <= 250000 ? $blockInput : ''];
+        $_SESSION['blog_draft'] = ['title' => mb_substr($title, 0, 120), 'content' => mb_substr($content, 0, 10000), 'tags' => $tagIds, 'slug' => $operation === 'update' ? $slug : '', 'content_blocks' => strlen($blockInput) <= 250000 ? $blockInput : ''];
         set_flash(implode(' ', $errors) . ' Nếu đã chọn ảnh, vui lòng chọn lại trước khi gửi.');
         redirect_to(app_url('blog-editor.php') . ($operation === 'update' ? '?edit=' . rawurlencode($slug) : ''));
     }
     $excerpt = mb_substr(preg_replace('/\s+/u', ' ', $content), 0, 220, 'UTF-8');
     if ($operation === 'create') {
         $slug = 'bai-viet-' . bin2hex(random_bytes(12));
-        $statement = $connection->prepare('INSERT INTO blog_posts (user_id, slug, title, tag, excerpt, content, image_path, content_blocks) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
-        $statement->execute([$user['id'], $slug, $title, $tag, $excerpt, $content, $newImage, $blocksJson]);
+        $statement = $connection->prepare('INSERT INTO blog_posts (user_id, slug, title, excerpt, content, image_path, content_blocks) VALUES (?, ?, ?, ?, ?, ?, ?)');
+        $statement->execute([$user['id'], $slug, $title, $excerpt, $content, $newImage, $blocksJson]);
         $createdPostId = (int) $connection->lastInsertId();
+        set_post_tags($connection, $createdPostId, $tagIds);
     } else {
         $oldImage = $newImage !== null ? $post['image_path'] : null;
-        $statement = $connection->prepare('UPDATE blog_posts SET title = ?, tag = ?, excerpt = ?, content = ?, image_path = ?, content_blocks = ? WHERE id = ?');
-        $statement->execute([$title, $tag, $excerpt, $content, $newImage ?? $post['image_path'], $blocksJson, $post['id']]);
+        $statement = $connection->prepare('UPDATE blog_posts SET title = ?, excerpt = ?, content = ?, image_path = ?, content_blocks = ? WHERE id = ?');
+        $statement->execute([$title, $excerpt, $content, $newImage ?? $post['image_path'], $blocksJson, $post['id']]);
+        set_post_tags($connection, (int) $post['id'], $tagIds);
     }
     unset($_SESSION['blog_draft']);
     $returnTo = $adminEditor ? app_url('admin-posts.php?edit=' . rawurlencode($slug)) . '#post-editor' : app_url('blog-post.php?slug=' . rawurlencode($slug));
