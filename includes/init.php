@@ -35,6 +35,7 @@ require_once __DIR__ . '/database.php';
 require_once __DIR__ . '/repositories.php';
 require_once __DIR__ . '/blog-repository.php';
 require_once __DIR__ . '/tag-repository.php';
+require_once __DIR__ . '/post-access.php';
 require_once __DIR__ . '/activity-repository.php';
 require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/login-throttle.php';
@@ -187,7 +188,7 @@ function safe_return_url(mixed $returnTo, string $fallback = 'collection.php'): 
     if ($path === '') {
         $path = 'index.php';
     }
-    $pages = ['index.php', 'dashboard.php', 'collection.php', 'plant-advisor.php', 'favorites.php', 'profile.php', 'plant-detail.php', 'blog.php', 'blog-post.php', 'blog-editor.php', 'admin.php', 'admin-dashboard.php', 'admin-posts.php', 'admin-plants.php'];
+    $pages = ['index.php', 'dashboard.php', 'collection.php', 'plant-advisor.php', 'favorites.php', 'profile.php', 'account-settings.php', 'shared.php', 'ask.php', 'plant-detail.php', 'blog.php', 'blog-post.php', 'blog-editor.php', 'admin.php', 'admin-dashboard.php', 'admin-posts.php', 'admin-plants.php'];
     if (!in_array($path, $pages, true)) {
         return app_url($fallback);
     }
@@ -217,7 +218,7 @@ $viewer = current_user();
 if ($viewer !== null && ($_SERVER['REQUEST_METHOD'] ?? '') === 'GET') {
     $viewedPage = basename($_SERVER['SCRIPT_NAME'] ?? '');
     $activityPages = ['index.php' => 'Trang chủ', 'collection.php' => 'Bộ sưu tập',
-        'plant-advisor.php' => 'Gợi ý chọn cây', 'favorites.php' => 'Cây yêu thích', 'profile.php' => 'Trang cá nhân', 'plant-detail.php' => 'Chi tiết cây',
+        'plant-advisor.php' => 'Gợi ý chọn cây', 'favorites.php' => 'Cây yêu thích', 'profile.php' => 'Trang cá nhân', 'account-settings.php' => 'Cài đặt tài khoản', 'shared.php' => 'Được chia sẻ với tôi', 'ask.php' => 'Hỏi AI về sổ tay', 'plant-detail.php' => 'Chi tiết cây',
         'blog.php' => 'Blog', 'blog-post.php' => 'Chi tiết bài viết', 'admin.php' => 'Quản lý tài khoản',
         'admin-dashboard.php' => 'Tổng quan quản trị', 'admin-posts.php' => 'Quản trị bài viết', 'admin-plants.php' => 'Quản lý cây'];
     if (isset($activityPages[$viewedPage])) {

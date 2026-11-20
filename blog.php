@@ -114,8 +114,8 @@ if (!function_exists('render_blog_card')) {
                 </span>
             </a>
             <div class="post-copy">
-                <h3><a href="<?= e($postUrl) ?>"><?= e($post['title']) ?></a></h3>
-                <p class="description"><?= e($post['excerpt']) ?></p>
+                <h3><?php render_post_status_icons($post); ?><a href="<?= e($postUrl) ?>"><?= e($post['title']) ?></a></h3>
+                <p class="description"><?= e(post_list_excerpt($post)) ?></p>
                 <?php render_blog_meta($post); ?>
             </div>
         </article>
@@ -151,8 +151,8 @@ require __DIR__ . '/includes/navbar.php';
                             <img src="<?= e(blog_cover_url($leadPost)) ?>" alt="" width="560" height="440" decoding="async" fetchpriority="high">
                         </a>
                         <div class="mono-hero-copy">
-                            <h3><a href="<?= e($leadUrl) ?>"><?= e($leadPost['title']) ?></a></h3>
-                            <p class="mono-hero-excerpt"><?= e($leadPost['excerpt']) ?></p>
+                            <h3><?php render_post_status_icons($leadPost); ?><a href="<?= e($leadUrl) ?>"><?= e($leadPost['title']) ?></a></h3>
+                            <p class="mono-hero-excerpt"><?= e(post_list_excerpt($leadPost)) ?></p>
                             <?php render_blog_meta($leadPost); ?>
                             <a class="mono-hero-cta" href="<?= e($leadUrl) ?>">
                                 <span>Đọc bài</span>
@@ -168,8 +168,8 @@ require __DIR__ . '/includes/navbar.php';
                                 <?php $idxUrl = 'blog-post.php?slug=' . rawurlencode($indexPost['slug']); ?>
                                 <article class="post-card feed-post mono-index-entry">
                                     <div class="mono-entry-body">
-                                        <h3><a href="<?= e($idxUrl) ?>"><?= e($indexPost['title']) ?></a></h3>
-                                        <p class="mono-entry-excerpt"><?= e($indexPost['excerpt']) ?></p>
+                                        <h3><?php render_post_status_icons($indexPost); ?><a href="<?= e($idxUrl) ?>"><?= e($indexPost['title']) ?></a></h3>
+                                        <p class="mono-entry-excerpt"><?= e(post_list_excerpt($indexPost)) ?></p>
                                         <?php render_blog_meta($indexPost, true); ?>
                                     </div>
                                     <a class="mono-entry-thumb" href="<?= e($idxUrl) ?>" aria-hidden="true" tabindex="-1">

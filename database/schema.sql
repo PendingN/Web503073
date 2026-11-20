@@ -42,6 +42,8 @@ CREATE TABLE IF NOT EXISTS blog_posts (
     content_blocks MEDIUMTEXT NULL,
     image_path VARCHAR(255) NULL,
     is_hidden TINYINT(1) NOT NULL DEFAULT 0,
+    is_private TINYINT(1) NOT NULL DEFAULT 0,
+    lock_hash VARCHAR(255) NULL,
     illustration VARCHAR(20) NOT NULL DEFAULT 'sprout',
     tone VARCHAR(20) NOT NULL DEFAULT 'mint',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -93,6 +95,46 @@ CREATE TABLE IF NOT EXISTS blog_comments (
     KEY blog_comments_post (post_id, id),
     CONSTRAINT blog_comments_user_fk FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
     CONSTRAINT blog_comments_post_fk FOREIGN KEY (post_id) REFERENCES blog_posts (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Per-recipient access to a post. seen_at stays NULL until the recipient opens their shared list.
+CREATE TABLE IF NOT EXISTS blog_shares (
+    post_id INT UNSIGNED NOT NULL,
+    user_id INT UNSIGNED NOT NULL,
+    permission ENUM('read', 'edit') NOT NULL DEFAULT 'read',
+    shared_by INT UNSIGNED NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    seen_at DATETIME NULL,
+    PRIMARY KEY (post_id, user_id),
+    KEY blog_shares_user (user_id, created_at),
+    CONSTRAINT blog_shares_post_fk FOREIGN KEY (post_id) REFERENCES blog_posts (id) ON DELETE CASCADE,
+    CONSTRAINT blog_shares_user_fk FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    CONSTRAINT blog_shares_by_fk FOREIGN KEY (shared_by) REFERENCES users (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- AI summary per post. content_hash tells whether the post changed since it was summarized.
+CREATE TABLE IF NOT EXISTS blog_summaries (
+    post_id INT UNSIGNED NOT NULL PRIMARY KEY,
+    content_hash CHAR(64) NOT NULL,
+    summary_json TEXT NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT blog_summaries_post_fk FOREIGN KEY (post_id) REFERENCES blog_posts (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- One row per question to Sâu AI. question is stored masked, route lists the tools the model called.
+CREATE TABLE IF NOT EXISTS ai_query_logs (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNSIGNED NULL,
+    question VARCHAR(500) NOT NULL,
+    route VARCHAR(255) NOT NULL DEFAULT '',
+    source_count TINYINT UNSIGNED NOT NULL DEFAULT 0,
+    error VARCHAR(255) NULL,
+    duration_ms INT UNSIGNED NOT NULL DEFAULT 0,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY ai_query_logs_created (created_at),
+    KEY ai_query_logs_user (user_id, created_at),
+    CONSTRAINT ai_query_logs_user_fk FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS user_activity (

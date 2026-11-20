@@ -86,3 +86,23 @@
 @media (max-width: 720px) {
     .editor-shell button, .block-controls button, .editor-block li button { min-height: 44px; }
 }
+.editor-settings .editor-check { display: flex; align-items: flex-start; gap: 10px; padding: 12px; border: 1px solid var(--editor-line); border-radius: 8px; background: #ffffff; cursor: pointer; }
+.editor-settings .editor-check input { flex: none; width: 18px; height: 18px; margin: 2px 0 0; accent-color: #2f5d46; }
+.editor-settings .editor-check span { display: grid; gap: 2px; }
+.editor-settings .editor-check small { color: #4e5d55; font-size: 12px; font-weight: 400; }
+/* Real-time co-editing */
+.collab-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0 0 16px; padding: 10px 14px; border: 1px solid var(--editor-line); border-radius: 10px; background: #ffffff; font-size: 13px; }
+.collab-dot { width: 10px; height: 10px; border-radius: 50%; background: #c9a227; }
+.collab-bar[data-state="online"] .collab-dot { background: #2f8a4f; box-shadow: 0 0 0 4px rgba(47,138,79,.15); }
+.collab-bar[data-state="offline"] .collab-dot { background: #b3402a; }
+.collab-status { font-weight: 700; color: #243b30; }
+.collab-people { display: flex; margin: 0; padding: 0; list-style: none; }
+.collab-people li { display: grid; place-items: center; width: 28px; height: 28px; margin-left: -6px; border: 2px solid #ffffff; border-radius: 50%; background: var(--peer-color, #2f5d46); color: #ffffff; font-size: 12px; font-weight: 800; }
+.collab-people li:first-child { margin-left: 0; }
+.collab-hint { margin-left: auto; color: #5b6b62; font-size: 12px; }
+.editor-block.is-peer-editing { position: relative; outline: 2px solid var(--peer-color); outline-offset: 4px; border-radius: 4px; }
+.editor-block.is-peer-editing::after { content: attr(data-peer-name); position: absolute; top: 12px; left: 50%; transform: translateX(-50%); padding: 2px 8px; border-radius: 999px; background: var(--peer-color); color: #ffffff; font-size: 11px; font-weight: 700; }
+.editor-block.is-remote-change { animation: collab-flash 1.2s ease-out; }
+@keyframes collab-flash { from { background: rgba(233, 231, 120, .55); } to { background: transparent; } }
+@media (prefers-reduced-motion: reduce) { .editor-block.is-remote-change { animation: none; } }
+@media (max-width: 760px) { .collab-hint { margin-left: 0; width: 100%; } }

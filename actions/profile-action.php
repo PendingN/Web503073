@@ -4,11 +4,12 @@ declare(strict_types=1);
 require_once __DIR__ . '/../includes/init.php';
 require_post();
 require_csrf();
-$user = require_login('profile.php');
+$user = require_login('account-settings.php');
 $name = trim(request_string($_POST, 'name'));
 $email = strtolower(trim(request_string($_POST, 'email')));
 $password = request_string($_POST, 'new_password');
 $currentPassword = request_string($_POST, 'current_password');
+$section = request_string($_POST, 'section') === 'password' ? 'password' : 'info';
 $errors = account_errors($name, $email);
 if (email_in_use($email, (int) $user['id'])) {
     $errors[] = 'Email này đã được đăng ký.';
@@ -49,7 +50,8 @@ if ($errors !== []) {
     $connection->rollBack();
     $_SESSION['profile_errors'] = $errors;
     $_SESSION['profile_input'] = ['name' => $name, 'email' => $email];
-    redirect_to(app_url('profile.php'));
+    $_SESSION['profile_section'] = $section;
+    redirect_to(app_url('account-settings.php'));
 }
 try {
     $version = (int) $record['session_version'] + ($credentialsChanged ? 1 : 0);
@@ -72,5 +74,6 @@ try {
     }
     $_SESSION['profile_errors'] = ['Email này đã được đăng ký.'];
     $_SESSION['profile_input'] = ['name' => $name, 'email' => $email];
+    $_SESSION['profile_section'] = $section;
 }
-redirect_to(app_url('profile.php'));
+redirect_to(app_url('account-settings.php'));

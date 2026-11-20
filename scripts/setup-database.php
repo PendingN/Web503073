@@ -43,6 +43,12 @@ try {
         $connection->exec('INSERT IGNORE INTO post_tags (post_id, tag_id) SELECT p.id, t.id FROM blog_posts p JOIN tags t ON t.name = TRIM(p.tag)');
         $connection->exec('ALTER TABLE blog_posts DROP COLUMN tag');
     }
+    if (!$connection->query("SHOW COLUMNS FROM blog_posts LIKE 'is_private'")->fetch()) {
+        $connection->exec('ALTER TABLE blog_posts ADD COLUMN is_private TINYINT(1) NOT NULL DEFAULT 0 AFTER is_hidden');
+    }
+    if (!$connection->query("SHOW COLUMNS FROM blog_posts LIKE 'lock_hash'")->fetch()) {
+        $connection->exec('ALTER TABLE blog_posts ADD COLUMN lock_hash VARCHAR(255) NULL AFTER is_private');
+    }
     require __DIR__ . '/../data/plants.php';
     $connection->beginTransaction();
     $statement = $connection->prepare('INSERT INTO plants (id, name, category, description, care, image)'

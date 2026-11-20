@@ -23,3 +23,16 @@ function load_ai_config(): array
     $config['enabled'] = $config['api_key'] !== '' && $config['api_key'] !== 'REPLACE_WITH_DEEPSEEK_API_KEY';
     return $config;
 }
+
+// Tavily web search for Sâu AI. TAVILY_API_KEY wins over 'tavily_api_key' in config/ai.local.php; empty disables web search.
+function load_tavily_key(): string
+{
+    $environment = getenv('TAVILY_API_KEY');
+    if (is_string($environment) && $environment !== '') {
+        return trim($environment);
+    }
+    $localPath = __DIR__ . '/ai.local.php';
+    $local = is_file($localPath) ? require $localPath : [];
+    $key = is_array($local) ? trim((string) ($local['tavily_api_key'] ?? '')) : '';
+    return str_starts_with($key, 'tvly-') ? $key : '';
+}

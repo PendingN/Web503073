@@ -12,14 +12,21 @@ function blog_post_select(int $userId): string
         . ' (SELECT COUNT(*) FROM blog_votes v WHERE v.post_id = p.id AND v.value = -1) AS dislikes,'
         . ' (SELECT COUNT(*) FROM blog_comments c WHERE c.post_id = p.id) AS comment_count,'
         . ' COALESCE((SELECT v.value FROM blog_votes v WHERE v.post_id = p.id AND v.user_id = ' . $userId . '), 0) AS my_vote,'
-        . ' EXISTS(SELECT 1 FROM blog_saves s WHERE s.post_id = p.id AND s.user_id = ' . $userId . ') AS saved'
+        . ' EXISTS(SELECT 1 FROM blog_saves s WHERE s.post_id = p.id AND s.user_id = ' . $userId . ') AS saved,'
+        . ' (SELECT s.permission FROM blog_shares s WHERE s.post_id = p.id AND s.user_id = ' . $userId . ') AS my_share,'
+        . ' (SELECT COUNT(*) FROM blog_shares s WHERE s.post_id = p.id) AS share_count,'
+        . ' (p.lock_hash IS NOT NULL) AS is_locked'
         . ' FROM blog_posts p LEFT JOIN users u ON u.id = p.user_id';
 }
 
 // Hidden posts are visible only to administrators; everyone else gets the same 404 as a missing post.
+// Private posts are visible only to their author and the people they were shared with.
 function visible_blog_condition(string $alias = 'p'): string
 {
-    return is_admin() ? '' : ' AND ' . $alias . '.is_hidden = 0';
+    $userId = (int) (current_user()['id'] ?? 0);
+    $private = ' AND (' . $alias . '.is_private = 0 OR ' . $alias . '.user_id = ' . $userId
+        . ' OR EXISTS(SELECT 1 FROM blog_shares vs WHERE vs.post_id = ' . $alias . '.id AND vs.user_id = ' . $userId . '))';
+    return (is_admin() ? '' : ' AND ' . $alias . '.is_hidden = 0') . $private;
 }
 
 function find_post(string $slug): ?array
@@ -37,7 +44,7 @@ function count_blog_posts(): int
 
 function latest_blog_posts(): array
 {
-    return attach_blog_tags(db()->query("SELECT p.id, p.slug, p.title, p.excerpt, p.image_path, p.created_at, COALESCE(u.name, 'Là Lá La') AS author"
+    return attach_blog_tags(db()->query("SELECT p.id, p.slug, p.title, p.excerpt, p.image_path, p.created_at, (p.lock_hash IS NOT NULL) AS is_locked, COALESCE(u.name, 'Là Lá La') AS author"
         . ' FROM blog_posts p LEFT JOIN users u ON u.id = p.user_id WHERE 1 = 1'
         . visible_blog_condition() . ' ORDER BY p.created_at DESC, p.id DESC LIMIT 5')->fetchAll());
 }
@@ -117,9 +124,10 @@ function list_blog_posts(string $search, string $sort, string $view, int $userId
     return ['posts' => attach_blog_tags($statement->fetchAll()), 'total' => $total, 'page' => $page, 'pages' => $pages];
 }
 
+// Owners, administrators, and recipients with edit permission may change a post. Deleting is narrower: can_delete_post().
 function can_edit_post(array $post, ?array $user): bool
 {
-    return $user !== null && ($user['role'] === 'admin' || (int) $post['user_id'] === (int) $user['id']);
+    return $user !== null && ($user['role'] === 'admin' || in_array(post_role($post, $user), ['owner', 'edit'], true));
 }
 
 /** Title and content checks; tag ids are validated by parse_tag_ids() and lock_existing_tags(). */
@@ -145,4 +153,42 @@ function list_blog_comments(int $postId, int $page): array
         . ' WHERE c.post_id = ? ORDER BY c.id DESC LIMIT 20 OFFSET ' . (($page - 1) * 20));
     $statement->execute([$postId]);
     return ['comments' => $statement->fetchAll(), 'page' => $page, 'pages' => $pages];
+}
+
+// Per-user counters for the profile hero.
+function user_profile_statistics(int $userId): array
+{
+    $statement = db()->prepare('SELECT'
+        . ' (SELECT COUNT(*) FROM favorites f WHERE f.user_id = :favorite_user) AS favorites,'
+        . ' (SELECT COUNT(*) FROM blog_posts p WHERE p.user_id = :author) AS posts,'
+        . ' (SELECT COUNT(*) FROM blog_saves s JOIN blog_posts p ON p.id = s.post_id WHERE s.user_id = :saved_user' . visible_blog_condition() . ') AS saved,'
+        . ' (SELECT COUNT(*) FROM blog_comments c WHERE c.user_id = :commenter) AS comments');
+    $statement->execute(['favorite_user' => $userId, 'author' => $userId, 'saved_user' => $userId, 'commenter' => $userId]);
+    return array_map('intval', $statement->fetch() ?: ['favorites' => 0, 'posts' => 0, 'saved' => 0, 'comments' => 0]);
+}
+
+function user_post_sort_options(): array
+{
+    return [
+        'newest' => ['label' => 'Mới nhất', 'order' => 'p.created_at DESC, p.id DESC'],
+        'oldest' => ['label' => 'Cũ nhất', 'order' => 'p.created_at ASC, p.id ASC'],
+        'liked' => ['label' => 'Nhiều lượt thích', 'order' => 'likes DESC, p.created_at DESC, p.id DESC'],
+        'discussed' => ['label' => 'Nhiều bình luận', 'order' => 'comment_count DESC, p.created_at DESC, p.id DESC'],
+    ];
+}
+
+// The author's own posts, hidden ones included so they can see what moderators hid.
+function list_user_posts(int $userId, string $search = '', string $sort = 'newest'): array
+{
+    $options = user_post_sort_options();
+    $order = ($options[$sort] ?? $options['newest'])['order'];
+    $where = ' WHERE p.user_id = ?';
+    $parameters = [$userId];
+    if ($search !== '') {
+        $where .= " AND (p.title LIKE ? ESCAPE '!' OR p.excerpt LIKE ? ESCAPE '!' OR EXISTS(SELECT 1 FROM post_tags st JOIN tags stt ON stt.id = st.tag_id WHERE st.post_id = p.id AND stt.name LIKE ? ESCAPE '!'))";
+        array_push($parameters, search_pattern($search), search_pattern($search), search_pattern($search));
+    }
+    $statement = db()->prepare(blog_post_select($userId) . $where . ' ORDER BY ' . $order . ' LIMIT 60');
+    $statement->execute($parameters);
+    return attach_blog_tags($statement->fetchAll());
 }
