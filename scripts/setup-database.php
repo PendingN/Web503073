@@ -30,6 +30,12 @@ try {
     if (!$connection->query("SHOW COLUMNS FROM blog_posts LIKE 'content_blocks'")->fetch()) {
         $connection->exec('ALTER TABLE blog_posts ADD COLUMN content_blocks MEDIUMTEXT NULL AFTER content');
     }
+    if (!$connection->query("SHOW COLUMNS FROM blog_posts LIKE 'is_private'")->fetch()) {
+        $connection->exec('ALTER TABLE blog_posts ADD COLUMN is_private TINYINT(1) NOT NULL DEFAULT 0 AFTER is_hidden');
+    }
+    if (!$connection->query("SHOW COLUMNS FROM blog_posts LIKE 'lock_hash'")->fetch()) {
+        $connection->exec('ALTER TABLE blog_posts ADD COLUMN lock_hash VARCHAR(255) NULL AFTER is_private');
+    }
     require __DIR__ . '/../data/plants.php';
     $connection->beginTransaction();
     $statement = $connection->prepare('INSERT INTO plants (id, name, category, description, care, image)'
