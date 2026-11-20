@@ -29,7 +29,9 @@ $isBlogHeader = (bool) array_intersect($bodyClasses, ['blog-page', 'blog-post-pa
         <a href="blog-editor.php" class="nav-blog-write">Viết bài mới</a>
         <?php endif; ?>
         <?php if ($navbarUser === null): ?>
-        <a href="<?= e($loginTarget) ?>" class="btn-contact"><?= e($loginLabel) ?></a>
+            <?php if (!in_array($activePage, ['login', 'register'], true)): ?>
+            <a href="<?= e($loginTarget) ?>" class="btn-contact"><?= e($loginLabel) ?></a>
+            <?php endif; ?>
         <?php elseif (empty($hideNavLogout)): ?>
         <form class="inline-logout-form" method="post" action="actions/logout.php">
             <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">

@@ -47,54 +47,12 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     }
 }
 $pageTitle = 'Đăng ký';
-$bodyClass = 'login-page';
+$pageDescription = 'Tạo tài khoản mới tại Là Lá La để lưu những giống cây yêu thích.';
+$bodyClass = 'login-page auth-papercut-page';
 $activePage = 'login';
+$showSiteFooter = false;
+$authMode = 'register';
 require __DIR__ . '/includes/header.php';
 require __DIR__ . '/includes/navbar.php';
-?>
-<main id="main-content" class="login-layout" tabindex="-1">
-    <section class="brand-pane" aria-label="Giới thiệu Vũ Điệu Rừng Xanh">
-        <div class="auth-brand-copy">
-            <h1>Một góc xanh<br>của riêng bạn.</h1>
-            <p>Tạo tài khoản để lưu những giống cây yêu thích và tiếp tục hành trình chăm cây từ bất kỳ thiết bị nào.</p>
-        </div>
-    </section>
-    <section class="login-form-panel">
-        <div class="login-form-wrap">
-            <h1>Đăng ký</h1>
-            <p>Chào đón một người làm vườn mới.</p>
-            <?php if ($errors !== []): ?>
-                <div class="login-error" id="register-errors" role="alert"><ul><?php foreach ($errors as $error): ?><li><?= e($error) ?></li><?php endforeach; ?></ul></div>
-            <?php endif; ?>
-            <form class="login-form" method="post" action="register.php">
-                <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
-                <input type="hidden" name="return_to" value="<?= e($returnTo) ?>">
-                <div class="form-group">
-                    <label class="form-label" for="name">Họ tên</label>
-                    <input class="form-control" id="name" name="name" value="<?= e($name) ?>" autocomplete="name" minlength="2" maxlength="100" required<?= $errors !== [] ? ' aria-invalid="true" aria-describedby="register-errors"' : '' ?>>
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="email">Email</label>
-                    <input class="form-control" id="email" name="email" type="email" value="<?= e($email) ?>" autocomplete="email" maxlength="254" required<?= $errors !== [] ? ' aria-invalid="true" aria-describedby="register-errors"' : '' ?>>
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="password">Mật khẩu (ít nhất 8 ký tự)</label>
-                    <div class="password-field">
-                        <input class="form-control" id="password" name="password" type="password" autocomplete="new-password" minlength="8" maxlength="72" required<?= $errors !== [] ? ' aria-invalid="true" aria-describedby="register-errors"' : '' ?>>
-                        <button class="password-toggle" type="button" data-password-toggle aria-controls="password" aria-label="Hiện mật khẩu" aria-pressed="false">Hiện</button>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="password_confirmation">Nhập lại mật khẩu</label>
-                    <div class="password-field">
-                        <input class="form-control" id="password_confirmation" name="password_confirmation" type="password" autocomplete="new-password" minlength="8" maxlength="72" required<?= $errors !== [] ? ' aria-invalid="true" aria-describedby="register-errors"' : '' ?>>
-                        <button class="password-toggle" type="button" data-password-toggle aria-controls="password_confirmation" aria-label="Hiện mật khẩu" aria-pressed="false">Hiện</button>
-                    </div>
-                </div>
-                <button class="btn-brand" type="submit">Tạo tài khoản</button>
-            </form>
-            <p class="login-help">Đã có tài khoản? <a href="login.php?return_to=<?= rawurlencode($returnTo) ?>">Đăng nhập</a></p>
-        </div>
-    </section>
-</main>
-<?php require __DIR__ . '/includes/footer.php'; ?>
+require __DIR__ . '/includes/auth-sliding-card.php';
+require __DIR__ . '/includes/footer.php'; ?>

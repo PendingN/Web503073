@@ -245,6 +245,78 @@
             });
         });
 
+        var authSlider = document.querySelector('[data-auth-slider]');
+        if (authSlider) {
+            var loginPane = authSlider.querySelector('.auth-form-container--login');
+            var registerPane = authSlider.querySelector('.auth-form-container--register');
+            var reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            var syncPaneFields = function (pane, active) {
+                if (!pane) return;
+                if (active) {
+                    pane.removeAttribute('inert');
+                    pane.setAttribute('aria-hidden', 'false');
+                    pane.querySelectorAll('[data-auth-name]').forEach(function (field) {
+                        field.setAttribute('name', field.getAttribute('data-auth-name'));
+                        field.removeAttribute('data-auth-name');
+                    });
+                    var submitBtn = pane.querySelector('[data-auth-submit]');
+                    if (submitBtn) submitBtn.setAttribute('type', 'submit');
+                } else {
+                    pane.setAttribute('inert', '');
+                    pane.setAttribute('aria-hidden', 'true');
+                    pane.querySelectorAll('[name]').forEach(function (field) {
+                        var fieldName = field.getAttribute('name');
+                        if (fieldName === 'csrf_token') return;
+                        field.setAttribute('data-auth-name', fieldName);
+                        field.removeAttribute('name');
+                    });
+                    var parkedBtn = pane.querySelector('[data-auth-submit]');
+                    if (parkedBtn) parkedBtn.setAttribute('type', 'button');
+                }
+            };
+
+            var switchAuthMode = function (mode, targetHref, options) {
+                var isRegister = mode === 'register';
+                authSlider.classList.toggle('is-register', isRegister);
+                authSlider.setAttribute('data-auth-mode', isRegister ? 'register' : 'login');
+                syncPaneFields(loginPane, !isRegister);
+                syncPaneFields(registerPane, isRegister);
+                document.title = (isRegister ? 'Đăng ký' : 'Đăng nhập') + ' | Là Lá La';
+
+                if (options && options.pushHistory && targetHref && window.history && window.history.pushState) {
+                    window.history.pushState({ authMode: isRegister ? 'register' : 'login' }, '', targetHref);
+                }
+
+                if (options && options.focus) {
+                    var targetPane = isRegister ? registerPane : loginPane;
+                    var firstInput = targetPane ? targetPane.querySelector('input:not([type="hidden"])') : null;
+                    if (firstInput) {
+                        window.setTimeout(function () {
+                            firstInput.focus({ preventScroll: true });
+                        }, reducedMotion ? 0 : 280);
+                    }
+                }
+            };
+
+            authSlider.querySelectorAll('[data-auth-switch]').forEach(function (trigger) {
+                trigger.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    switchAuthMode(trigger.getAttribute('data-auth-switch'), trigger.getAttribute('href'), {
+                        pushHistory: true,
+                        focus: true
+                    });
+                });
+            });
+
+            window.addEventListener('popstate', function (event) {
+                var mode = event.state && event.state.authMode
+                    ? event.state.authMode
+                    : (window.location.pathname.indexOf('register.php') !== -1 ? 'register' : 'login');
+                switchAuthMode(mode, null, { pushHistory: false, focus: false });
+            });
+        }
+
         document.querySelectorAll('[data-auto-dismiss]').forEach(function (note) {
             var remainingMs = 5000;
             var startedAt = 0;
