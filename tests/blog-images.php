@@ -6,7 +6,7 @@ $imageFixture = tempnam(sys_get_temp_dir(), 'blog-image-');
 $imageSlug = null;
 $imagePaths = [];
 $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a6foAAAAASUVORK5CYII=');
-$imageDraft = ['csrf_token' => $aliceToken, 'operation' => 'create', 'title' => 'Bài kiểm tra ảnh', 'tag' => 'Chăm cây', 'content' => 'Nội dung bài kiểm tra tải ảnh.'];
+$imageDraft = ['csrf_token' => $aliceToken, 'operation' => 'create', 'title' => 'Bài kiểm tra ảnh', 'tags' => [test_tag_id('Chăm cây')], 'content' => 'Nội dung bài kiểm tra tải ảnh.'];
 try {
     file_put_contents($imageFixture, $png);
     $upload = new CURLFile($imageFixture, 'image/png', '../../picture.php.png');

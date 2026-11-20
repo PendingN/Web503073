@@ -24,8 +24,13 @@ if ($post !== null && in_array(post_role($post, $user), ['owner', 'edit'], true)
     }
 }
 $draft = $_SESSION['blog_draft'] ?? null;
-$form = is_array($draft) && ($draft['slug'] ?? '') === $slug ? $draft : ($post ?? ['title' => '', 'content' => '', 'tag' => 'Chăm cây']);
+$form = is_array($draft) && ($draft['slug'] ?? '') === $slug ? $draft : ($post ?? ['title' => '', 'content' => '']);
 unset($_SESSION['blog_draft']);
+// A post may have no tags, one or several. A draft kept after a failed save carries the ids as submitted.
+$availableTags = list_tags(true);
+$selectedTagIds = isset($form['tags']) && is_array($form['tags'])
+    ? array_map(static fn (mixed $tag): int => is_array($tag) ? (int) $tag['id'] : (int) $tag, $form['tags'])
+    : [];
 $initialBlocks = blog_blocks(['content' => $form['content'] ?? '']);
 if (!empty($form['content_blocks'])) {
     $decoded = json_decode($form['content_blocks'], true);
@@ -105,8 +110,19 @@ require __DIR__ . '/includes/header.php';
             </section>
             <aside class="editor-settings" aria-label="Thiết lập bài viết">
                 <details open><summary>Thiết lập bài viết</summary>
-                    <label for="editor-tag">Chủ đề</label>
-                    <select id="editor-tag" name="tag"><?php foreach (['Chăm cây', 'Không gian', 'Cảm hứng', 'Mẹo hay', 'Sống xanh', 'Bài nổi bật'] as $tag): ?><option<?= $form['tag'] === $tag ? ' selected' : '' ?>><?= e($tag) ?></option><?php endforeach; ?></select>
+                    <fieldset class="editor-tags" id="editor-tags">
+                        <legend>Chủ đề</legend>
+                        <?php if ($availableTags === []): ?>
+                            <p class="editor-hint">Chưa có chủ đề nào<?= $user['role'] === 'admin' ? '. <a href="admin-tags.php">Thêm chủ đề</a>' : '' ?>.</p>
+                        <?php else: ?>
+                            <div class="editor-tag-list">
+                                <?php foreach ($availableTags as $availableTag): ?>
+                                    <label class="editor-tag-option"><input type="checkbox" name="tags[]" value="<?= (int) $availableTag['id'] ?>"<?= in_array($availableTag['id'], $selectedTagIds, true) ? ' checked' : '' ?>><span><?= e($availableTag['name']) ?></span></label>
+                                <?php endforeach; ?>
+                            </div>
+                            <p class="editor-hint">Chọn một hoặc nhiều chủ đề, hoặc để trống nếu bài chưa thuộc chủ đề nào.</p>
+                        <?php endif; ?>
+                    </fieldset>
                     <?php if ($canChangeVisibility): ?>
                         <label class="editor-check" for="editor-private">
                             <input type="checkbox" id="editor-private" name="is_private" value="1"<?= !empty($form['is_private']) ? ' checked' : '' ?>>

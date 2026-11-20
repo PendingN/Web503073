@@ -23,14 +23,14 @@ function notes_qa_terms(string $text): array
 /** Posts the user may ask about: their own and those shared with them, locked ones only if unlocked now. */
 function notes_qa_candidates(int $userId): array
 {
-    $statement = db()->prepare('SELECT p.id, p.slug, p.title, p.tag, p.excerpt, p.content, p.content_blocks, p.lock_hash, p.created_at, p.user_id,'
+    $statement = db()->prepare('SELECT p.id, p.slug, p.title, p.excerpt, p.content, p.content_blocks, p.lock_hash, p.created_at, p.user_id,'
         . ' COALESCE(u.name, \'Người dùng đã xóa\') AS author'
         . ' FROM blog_posts p LEFT JOIN users u ON u.id = p.user_id'
         . ' WHERE p.is_hidden = 0 AND (p.user_id = ? OR EXISTS(SELECT 1 FROM blog_shares s WHERE s.post_id = p.id AND s.user_id = ?))'
         . ' ORDER BY p.created_at DESC, p.id DESC LIMIT 200');
     $statement->execute([$userId, $userId]);
     $posts = [];
-    foreach ($statement->fetchAll() as $post) {
+    foreach (attach_blog_tags($statement->fetchAll()) as $post) {
         if (!post_is_unlocked($post)) {
             continue;
         }
@@ -49,7 +49,7 @@ function notes_qa_select(array $posts, string $question, int $limit = NOTES_QA_C
     $terms = array_unique(notes_qa_terms($question));
     $scored = [];
     foreach ($posts as $index => $post) {
-        $titleTerms = array_count_values(notes_qa_terms($post['title'] . ' ' . $post['tag']));
+        $titleTerms = array_count_values(notes_qa_terms($post['title'] . ' ' . (implode(' ', array_column($post['tags'] ?? [], 'name')) ?: (string) ($post['tag'] ?? ''))));
         $bodyTerms = array_count_values(notes_qa_terms($post['text']));
         $score = 0.0;
         foreach ($terms as $term) {
@@ -76,12 +76,12 @@ function notes_qa_select(array $posts, string $question, int $limit = NOTES_QA_C
 /** Public, unlocked posts by other people; only those matching the question are sent to the AI. */
 function notes_qa_public_posts(int $userId): array
 {
-    $statement = db()->prepare('SELECT p.id, p.slug, p.title, p.tag, p.excerpt, p.content, p.content_blocks, p.created_at,'
+    $statement = db()->prepare('SELECT p.id, p.slug, p.title, p.excerpt, p.content, p.content_blocks, p.created_at,'
         . ' COALESCE(u.name, \'Ban biên tập\') AS author FROM blog_posts p LEFT JOIN users u ON u.id = p.user_id'
         . ' WHERE p.is_hidden = 0 AND p.is_private = 0 AND p.lock_hash IS NULL AND (p.user_id IS NULL OR p.user_id <> ?)'
         . ' ORDER BY p.created_at DESC, p.id DESC LIMIT 200');
     $statement->execute([$userId]);
-    return array_map(static fn(array $post): array => $post + ['text' => blog_blocks_text(blog_blocks($post))], $statement->fetchAll());
+    return array_map(static fn(array $post): array => $post + ['text' => blog_blocks_text(blog_blocks($post))], attach_blog_tags($statement->fetchAll()));
 }
 
 /** The user's favourite plants, newest first. */

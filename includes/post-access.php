@@ -102,14 +102,14 @@ function list_post_shares(int $postId): array
 /** Posts shared with a user, newest share first. */
 function list_shared_with(int $userId): array
 {
-    $statement = db()->prepare('SELECT p.id, p.slug, p.title, p.tag, p.excerpt, p.image_path, p.lock_hash, p.created_at AS post_created_at,'
+    $statement = db()->prepare('SELECT p.id, p.slug, p.title, p.excerpt, p.image_path, p.lock_hash, p.created_at AS post_created_at,'
         . ' s.permission, s.created_at AS shared_at, s.seen_at, COALESCE(o.name, \'Người dùng đã xóa\') AS owner_name, o.email AS owner_email,'
         . ' COALESCE(b.name, o.name) AS shared_by_name'
         . ' FROM blog_shares s JOIN blog_posts p ON p.id = s.post_id'
         . ' LEFT JOIN users o ON o.id = p.user_id LEFT JOIN users b ON b.id = s.shared_by'
         . ' WHERE s.user_id = ? AND p.is_hidden = 0 ORDER BY s.created_at DESC, p.id DESC');
     $statement->execute([$userId]);
-    return $statement->fetchAll();
+    return attach_blog_tags($statement->fetchAll());
 }
 
 function count_unseen_shares(int $userId): int

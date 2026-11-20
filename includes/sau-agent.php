@@ -171,7 +171,7 @@ final class SauContext
     {
         if ($kind === 'note' || $kind === 'blog') {
             $this->sources[$item['ref']] = ['kind' => $kind === 'note' ? 'note' : 'blog', 'url' => 'blog-post.php?slug=' . rawurlencode($row['slug']), 'title' => $row['title'],
-                'meta' => ($kind === 'blog' ? 'Blog · ' : '') . $row['tag'] . ' · ' . date('d/m/Y', strtotime((string) $row['created_at']))];
+                'meta' => implode(' · ', array_filter([$kind === 'blog' ? 'Blog' : '', (string) ($row['tag'] ?? ''), date('d/m/Y', strtotime((string) $row['created_at']))], static fn (string $part): bool => $part !== ''))];
         } else {
             $this->sources[$item['ref']] = ['kind' => 'plant', 'url' => 'plant-detail.php?id=' . (int) $row['id'], 'title' => $row['name'],
                 'meta' => $kind === 'favorite' ? 'Cây yêu thích ♥' : $row['category']];

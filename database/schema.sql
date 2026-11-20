@@ -37,7 +37,6 @@ CREATE TABLE IF NOT EXISTS blog_posts (
     user_id INT UNSIGNED NULL,
     slug VARCHAR(160) NOT NULL UNIQUE,
     title VARCHAR(120) NOT NULL,
-    tag VARCHAR(50) NOT NULL,
     excerpt VARCHAR(300) NOT NULL,
     content TEXT NOT NULL,
     content_blocks MEDIUMTEXT NULL,
@@ -51,6 +50,23 @@ CREATE TABLE IF NOT EXISTS blog_posts (
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     KEY blog_posts_created (created_at, id),
     CONSTRAINT blog_posts_user_fk FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS tags (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY tags_name_unique (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS post_tags (
+    post_id INT UNSIGNED NOT NULL,
+    tag_id INT UNSIGNED NOT NULL,
+    PRIMARY KEY (post_id, tag_id),
+    KEY post_tags_tag (tag_id),
+    CONSTRAINT post_tags_post_fk FOREIGN KEY (post_id) REFERENCES blog_posts (id) ON DELETE CASCADE,
+    CONSTRAINT post_tags_tag_fk FOREIGN KEY (tag_id) REFERENCES tags (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS blog_votes (

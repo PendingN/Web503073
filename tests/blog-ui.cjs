@@ -115,14 +115,18 @@ const { chromium } = require('playwright');
 
         const firstTitle = await page.locator('.feed-post h3 a').first().innerText();
         const firstUrl = await page.locator('.feed-post h3 a').first().getAttribute('href');
+        // A topic pill filters by tag (tag[]=ID), leaves the search box alone, and toggles off on a second click.
+        const topicName = (await page.locator('.feed-topics a').first().innerText()).trim();
         await page.locator('.feed-topics a').first().click();
-        assert.equal(await page.getByLabel('Tìm bài viết', { exact: true }).inputValue(), 'Chăm cây');
-        const activeTopic = page.locator('.feed-topics .topic-pill[aria-current="page"]');
-        assert.equal(await activeTopic.count(), 1);
-        assert.equal(new URL(await activeTopic.getAttribute('href'), base).searchParams.has('search'), false, 'Active topic pill href clears search.');
-        await activeTopic.click();
-        assert.equal(new URL(page.url()).searchParams.has('search'), false);
         assert.equal(await page.getByLabel('Tìm bài viết', { exact: true }).inputValue(), '');
+        assert.equal(new URL(page.url()).searchParams.getAll('tag[0]').length, 1, 'Topic pill selects one tag.');
+        const activeTopic = page.locator('.feed-topics .topic-pill[aria-current="true"]');
+        assert.equal(await activeTopic.count(), 1);
+        assert.equal((await activeTopic.innerText()).trim(), topicName);
+        assert.equal([...new URL(await activeTopic.getAttribute('href'), base).searchParams.keys()].some(key => key.startsWith('tag')), false, 'Active topic pill href clears its tag.');
+        await activeTopic.click();
+        assert.equal([...new URL(page.url()).searchParams.keys()].some(key => key.startsWith('tag')), false);
+        assert.equal(await page.locator('.feed-topics .topic-pill[aria-current="true"]').count(), 0);
 
         await page.goto(base + 'blog.php');
         await page.getByLabel('Tìm bài viết', { exact: true }).fill(firstTitle);

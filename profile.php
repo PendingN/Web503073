@@ -121,7 +121,7 @@ require __DIR__ . '/includes/navbar.php';
                             <li class="profile-post-card<?= $isHidden ? ' is-hidden' : '' ?>">
                                 <div class="profile-post-cover">
                                     <img src="<?= e(blog_cover_url($post)) ?>" alt="" width="400" height="260" loading="lazy" decoding="async">
-                                    <span class="profile-post-tag"><?= e($post['tag']) ?></span>
+                                    <?php if ((string) $post['tag'] !== ''): ?><span class="profile-post-tag"><?= e($post['tag']) ?></span><?php endif; ?>
                                     <?php if ($isHidden): ?><span class="profile-post-badge">Đang bị ẩn</span><?php endif; ?>
                                         <span class="profile-post-icons"><?php render_post_status_icons($post); ?></span>
                                 </div>

@@ -19,6 +19,18 @@ function check(bool $condition, string $label): void
     $checks++;
 }
 
+/** Id of a seeded blog tag by name; tests post tag ids, never tag text. */
+function test_tag_id(string $name): int
+{
+    $statement = db()->prepare('SELECT id FROM tags WHERE name = ?');
+    $statement->execute([$name]);
+    $id = $statement->fetchColumn();
+    if ($id === false) {
+        throw new RuntimeException('Missing test tag: ' . $name);
+    }
+    return (int) $id;
+}
+
 function run_cli(array $arguments): string
 {
     $process = proc_open(array_merge([PHP_BINARY], $arguments), [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes, dirname(__DIR__));
@@ -353,6 +365,7 @@ try {
     check($blockedLogin->login('bob@example.test', 'BobGarden123!')['status'] === 303, 'Unblocked user cannot log in again.');
 
     require __DIR__ . '/blog.php';
+    require __DIR__ . '/tags.php';
 
     $update['email'] = 'bob-updated@example.test';
     check($adminBrowser->request('actions/user-action.php', $update)['status'] === 303, 'Administrator email update failed.');

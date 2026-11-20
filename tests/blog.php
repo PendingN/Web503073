@@ -37,8 +37,8 @@ check(str_contains($feedPage, 'blog-layout-toggle')
 check(!str_contains($reader->request('blog.php?layout=bogus')['body'], 'all-grid--list'), 'An unknown layout must fall back to the grid.');
 $listSearch = $reader->request('blog.php?layout=list&search=' . rawurlencode('Chăm cây'))['body'];
 check(str_contains($listSearch, 'name="layout" value="list"')
-    && str_contains($listSearch, 'search=' . urlencode('Không gian') . '&amp;sort=new&amp;view=all&amp;layout=list#blog-content')
-    && str_contains($listPage, 'search=' . urlencode('Chăm cây') . '&amp;layout=list#blog-content'), 'Search, topic and card tag links must keep the list layout.');
+    && str_contains($listSearch, '&amp;layout=list&amp;tag%5B0%5D=' . test_tag_id('Không gian') . '#blog-content')
+    && str_contains($listPage, 'tag%5B0%5D=' . test_tag_id('Chăm cây') . '&amp;layout=list#blog-content'), 'Search, topic and card tag links must keep the list layout.');
 $searchPage = $reader->request('blog.php?search=' . rawurlencode('Tạo một nhịp sống chậm cùng cây'))['body'];
 check(substr_count($searchPage, 'class="post-card feed-post') === 1, 'Feed must follow the current search.');
 check(str_contains($feedPage, 'id="blog-search-list"')
@@ -59,11 +59,11 @@ check($reader->request('actions/blog-action.php', ['csrf_token' => $readerToken,
 $aliceToken = $aliceBrowser->token('blog-editor.php');
 require __DIR__ . '/blog-images.php';
 require __DIR__ . '/blog-editor.php';
-$draft = ['csrf_token' => $aliceToken, 'operation' => 'create', 'title' => 'Góc cây <script>alert(1)</script>', 'content' => "Kinh nghiệm chăm cây xanh.\n<script>alert(2)</script>", 'tag' => 'Chăm cây', 'user_id' => $admin['id']];
+$draft = ['csrf_token' => $aliceToken, 'operation' => 'create', 'title' => 'Góc cây <script>alert(1)</script>', 'content' => "Kinh nghiệm chăm cây xanh.\n<script>alert(2)</script>", 'tags' => [test_tag_id('Chăm cây')], 'user_id' => $admin['id']];
 check($aliceBrowser->request('actions/blog-action.php', array_merge($draft, ['title' => ' ']))['status'] === 303, 'Invalid post must return to the editor.');
 check((int) db()->query('SELECT COUNT(*) FROM blog_posts')->fetchColumn() === 7, 'Invalid post was inserted.');
 check(str_contains($aliceBrowser->request('blog-editor.php')['body'], 'Kinh nghiệm chăm cây xanh.'), 'Invalid draft content was lost.');
-foreach ([['tag' => 'invalid'], ['title' => ['bad']], ['content' => str_repeat('x', 10001)], ['title' => str_repeat('x', 121)]] as $invalidFields) {
+foreach ([['tags' => ['invalid']], ['tags' => 'not-a-list'], ['tags' => [999999]], ['tags' => range(1, POST_TAG_LIMIT + 1)], ['title' => ['bad']], ['content' => str_repeat('x', 10001)], ['title' => str_repeat('x', 121)]] as $invalidFields) {
     $aliceBrowser->request('actions/blog-action.php', array_merge($draft, $invalidFields));
     check((int) db()->query('SELECT COUNT(*) FROM blog_posts')->fetchColumn() === 7, 'Invalid blog input was accepted.');
 }
@@ -87,7 +87,7 @@ foreach (['update', 'delete'] as $operation) {
 }
 check($blockedLogin->request('blog-editor.php?edit=' . $slug)['status'] === 403, 'Another user accessed the edit form.');
 $aliceAction = ['csrf_token' => $aliceToken, 'slug' => $slug];
-$aliceBrowser->request('actions/blog-action.php', $aliceAction + ['operation' => 'update', 'title' => 'Bài đã sửa', 'content' => 'Nội dung mới được lưu lâu dài.', 'tag' => 'Sống xanh']);
+$aliceBrowser->request('actions/blog-action.php', $aliceAction + ['operation' => 'update', 'title' => 'Bài đã sửa', 'content' => 'Nội dung mới được lưu lâu dài.', 'tags' => [test_tag_id('Sống xanh')]]);
 check(str_contains($reader->request($detail)['body'], 'Nội dung mới được lưu lâu dài.'), 'Edited post did not persist.');
 foreach ([1, 1, -1, 0, 1] as $vote) {
     $response = $aliceBrowser->request('actions/blog-action.php', $aliceAction + ['operation' => 'vote', 'value' => $vote, 'return_to' => '//example.invalid']);
@@ -153,7 +153,7 @@ $adminAction = ['csrf_token' => $adminToken, 'slug' => $slug];
 $commentId = (int) db()->query('SELECT MAX(id) FROM blog_comments')->fetchColumn();
 $adminBrowser->request('actions/blog-action.php', $adminAction + ['operation' => 'delete-comment', 'comment_id' => $commentId]);
 check((int) db()->query('SELECT COUNT(*) FROM blog_comments')->fetchColumn() === 20, 'Admin could not moderate comments.');
-$adminBrowser->request('actions/blog-action.php', $adminAction + ['operation' => 'update', 'title' => 'Bài quản trị sửa', 'content' => 'Nội dung được quản trị viên sửa.', 'tag' => 'Chăm cây']);
+$adminBrowser->request('actions/blog-action.php', $adminAction + ['operation' => 'update', 'title' => 'Bài quản trị sửa', 'content' => 'Nội dung được quản trị viên sửa.', 'tags' => [test_tag_id('Chăm cây')]]);
 check(str_contains($reader->request($detail)['body'], 'Bài quản trị sửa'), 'Admin could not edit posts.');
 run_cli(['scripts/setup-database.php']);
 check((int) db()->query('SELECT COUNT(*) FROM blog_posts')->fetchColumn() === 8 && str_contains($reader->request($detail)['body'], 'Bài quản trị sửa'), 'Setup overwrote blog data.');

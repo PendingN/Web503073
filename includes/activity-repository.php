@@ -39,6 +39,7 @@ function activity_labels(): array
         'blog.vote' => 'Bình chọn bài viết', 'blog.saved' => 'Lưu bài viết', 'blog.unsaved' => 'Bỏ lưu bài viết',
         'comment.created' => 'Gửi bình luận', 'comment.deleted' => 'Xóa bình luận',
         'plant.saved' => 'Yêu thích cây', 'plant.unsaved' => 'Bỏ yêu thích cây',
+        'tag.created' => 'Thêm chủ đề', 'tag.renamed' => 'Đổi tên chủ đề', 'tag.deleted' => 'Xóa chủ đề',
         'blog.locked' => 'Khóa bài viết', 'blog.lock_changed' => 'Đổi mật khẩu khóa', 'blog.unlocked' => 'Tắt khóa bài viết',
         'blog.shared' => 'Chia sẻ bài viết', 'blog.share_changed' => 'Đổi quyền chia sẻ', 'blog.unshared' => 'Thu hồi chia sẻ',
     ];

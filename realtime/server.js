@@ -52,7 +52,7 @@ function verifyTicket(ticket) {
 /** Light shape check; PHP validates the content again when someone saves. */
 function validState(state) {
     return state && typeof state.title === 'string' && state.title.length <= 200
-        && typeof state.tag === 'string' && state.tag.length <= 50
+        && (state.tags === undefined || (Array.isArray(state.tags) && state.tags.length <= 10 && state.tags.every(id => typeof id === 'string' && id.length <= 20)))
         && Array.isArray(state.blocks) && state.blocks.length <= 200
         && state.blocks.every(block => block && typeof block.type === 'string');
 }

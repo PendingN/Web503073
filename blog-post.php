@@ -85,7 +85,9 @@ require __DIR__ . '/includes/navbar.php';
                 <h1><?= e($post['title']) ?></h1>
                 <p class="mono-article-deck"><?= e($post['excerpt']) ?></p>
                 <div class="mono-article-ledger post-meta">
-                    <a class="tag" href="blog.php?<?= e(http_build_query(['search' => $post['tag']])) ?>#blog-content"><?= e($post['tag']) ?></a>
+                    <?php foreach ($post['tags'] as $postTag): ?>
+                        <a class="tag" href="<?= e(blog_tag_url($postTag['id'])) ?>"><?= e($postTag['name']) ?></a>
+                    <?php endforeach; ?>
                     <?php if ((string) $post['author'] !== 'Ban biên tập'): ?>
                         <span><?= e($post['author']) ?></span>
                     <?php endif; ?>
@@ -205,7 +207,7 @@ require __DIR__ . '/includes/navbar.php';
                                     <h3><a href="<?= e($rUrl) ?>"><?= e((string) $related['title']) ?></a></h3>
                                     <p><?= e((string) $related['excerpt']) ?></p>
                                     <div class="mono-related-meta">
-                                        <span class="tag"><?= e((string) $related['tag']) ?></span>
+                                        <?php if ((string) $related['tag'] !== ''): ?><span class="tag"><?= e((string) $related['tag']) ?></span><?php endif; ?>
                                         <time class="mono-tabular"><?= e($rDate) ?></time>
                                     </div>
                                 </div>

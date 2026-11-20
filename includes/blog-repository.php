@@ -33,7 +33,8 @@ function find_post(string $slug): ?array
 {
     $statement = db()->prepare(blog_post_select((int) (current_user()['id'] ?? 0)) . ' WHERE p.slug = ?' . visible_blog_condition());
     $statement->execute([$slug]);
-    return $statement->fetch() ?: null;
+    $post = $statement->fetch();
+    return $post ? attach_blog_tags([$post])[0] : null;
 }
 
 function count_blog_posts(): int
@@ -43,19 +44,19 @@ function count_blog_posts(): int
 
 function latest_blog_posts(): array
 {
-    return db()->query("SELECT p.slug, p.title, p.tag, p.excerpt, p.image_path, p.created_at, (p.lock_hash IS NOT NULL) AS is_locked, COALESCE(u.name, 'Là Lá La') AS author"
+    return attach_blog_tags(db()->query("SELECT p.id, p.slug, p.title, p.excerpt, p.image_path, p.created_at, (p.lock_hash IS NOT NULL) AS is_locked, COALESCE(u.name, 'Là Lá La') AS author"
         . ' FROM blog_posts p LEFT JOIN users u ON u.id = p.user_id WHERE 1 = 1'
-        . visible_blog_condition() . ' ORDER BY p.created_at DESC, p.id DESC LIMIT 5')->fetchAll();
+        . visible_blog_condition() . ' ORDER BY p.created_at DESC, p.id DESC LIMIT 5')->fetchAll());
 }
 
 /** Compact rows for the blog search box's as-you-type suggestions, newest first. */
 function blog_search_suggestions(int $limit = 200): array
 {
-    return db()->query('SELECT p.slug, p.title, p.tag, p.excerpt, p.image_path FROM blog_posts p WHERE 1 = 1'
-        . visible_blog_condition() . ' ORDER BY p.created_at DESC, p.id DESC LIMIT ' . max(1, $limit))->fetchAll();
+    return attach_blog_tags(db()->query('SELECT p.id, p.slug, p.title, p.excerpt, p.image_path FROM blog_posts p WHERE 1 = 1'
+        . visible_blog_condition() . ' ORDER BY p.created_at DESC, p.id DESC LIMIT ' . max(1, $limit))->fetchAll());
 }
 
-function list_admin_posts(string $search, string $tag, int $page): array
+function list_admin_posts(string $search, int $tagId, int $page): array
 {
     $from = ' FROM blog_posts p LEFT JOIN users u ON u.id = p.user_id';
     $where = ' WHERE 1 = 1';
@@ -64,23 +65,29 @@ function list_admin_posts(string $search, string $tag, int $page): array
         $where .= " AND (p.title LIKE ? ESCAPE '!' OR u.name LIKE ? ESCAPE '!')";
         $parameters = [search_pattern($search), search_pattern($search)];
     }
-    if ($tag !== '') {
-        $where .= ' AND p.tag = ?';
-        $parameters[] = $tag;
+    if ($tagId > 0) {
+        $where .= ' AND EXISTS(SELECT 1 FROM post_tags pt WHERE pt.post_id = p.id AND pt.tag_id = ?)';
+        $parameters[] = $tagId;
     }
     $statement = db()->prepare('SELECT COUNT(*)' . $from . $where);
     $statement->execute($parameters);
     $total = (int) $statement->fetchColumn();
     $pages = max(1, (int) ceil($total / 20));
     $page = min(max(1, $page), $pages);
-    $statement = db()->prepare("SELECT p.id, p.slug, p.title, p.tag, p.is_hidden, p.created_at, p.image_path, COALESCE(u.name, 'Ban biên tập') AS author,"
+    $statement = db()->prepare("SELECT p.id, p.slug, p.title, p.is_hidden, p.created_at, p.image_path, COALESCE(u.name, 'Ban biên tập') AS author,"
         . ' (SELECT COUNT(*) FROM blog_comments c WHERE c.post_id = p.id) AS comment_count'
         . $from . $where . ' ORDER BY p.created_at DESC, p.id DESC LIMIT 20 OFFSET ' . (($page - 1) * 20));
     $statement->execute($parameters);
-    return ['posts' => $statement->fetchAll(), 'total' => $total, 'page' => $page, 'pages' => $pages];
+    return ['posts' => attach_blog_tags($statement->fetchAll()), 'total' => $total, 'page' => $page, 'pages' => $pages];
 }
 
-function list_blog_posts(string $search, string $sort, string $view, int $userId, int $page): array
+/**
+ * One page of posts. $tagIds keeps posts that carry at least one of those tags (exact match on
+ * the tag, unlike $search, which looks through title, text and tag names).
+ *
+ * @param int[] $tagIds
+ */
+function list_blog_posts(string $search, string $sort, string $view, int $userId, int $page, array $tagIds = []): array
 {
     $where = ' WHERE 1 = 1' . visible_blog_condition();
     $parameters = [];
@@ -88,7 +95,9 @@ function list_blog_posts(string $search, string $sort, string $view, int $userId
         // The collation already ignores most Vietnamese accents; "đ" is a separate letter to it,
         // so fold it on both sides to let "dau" find "đầu".
         $folded = static fn (string $column): string => "REPLACE(REPLACE($column, 'đ', 'd'), 'Đ', 'D')";
-        $where .= ' AND (' . $folded('p.title') . " LIKE ? ESCAPE '!' OR " . $folded('p.content') . " LIKE ? ESCAPE '!' OR " . $folded('p.tag') . " LIKE ? ESCAPE '!')";
+        $where .= ' AND (' . $folded('p.title') . " LIKE ? ESCAPE '!' OR " . $folded('p.content') . " LIKE ? ESCAPE '!'"
+            . ' OR EXISTS(SELECT 1 FROM post_tags st JOIN tags stt ON stt.id = st.tag_id WHERE st.post_id = p.id AND '
+            . $folded('stt.name') . " LIKE ? ESCAPE '!'))";
         $parameters = array_fill(0, 3, search_pattern(str_replace(['đ', 'Đ'], ['d', 'D'], $search)));
     }
     if ($view === 'saved') {
@@ -97,6 +106,11 @@ function list_blog_posts(string $search, string $sort, string $view, int $userId
     } elseif ($view === 'mine') {
         $where .= ' AND p.user_id = ?';
         $parameters[] = $userId;
+    }
+    if ($tagIds !== []) {
+        $where .= ' AND EXISTS(SELECT 1 FROM post_tags pt WHERE pt.post_id = p.id AND pt.tag_id IN ('
+            . implode(',', array_fill(0, count($tagIds), '?')) . '))';
+        array_push($parameters, ...array_map('intval', array_values($tagIds)));
     }
     $statement = db()->prepare('SELECT COUNT(*) FROM blog_posts p' . $where);
     $statement->execute($parameters);
@@ -107,7 +121,7 @@ function list_blog_posts(string $search, string $sort, string $view, int $userId
     $statement = db()->prepare(blog_post_select($userId) . $where . ' ORDER BY ' . $order
         . ' LIMIT ' . BLOG_POSTS_PER_PAGE . ' OFFSET ' . (($page - 1) * BLOG_POSTS_PER_PAGE));
     $statement->execute($parameters);
-    return ['posts' => $statement->fetchAll(), 'total' => $total, 'page' => $page, 'pages' => $pages];
+    return ['posts' => attach_blog_tags($statement->fetchAll()), 'total' => $total, 'page' => $page, 'pages' => $pages];
 }
 
 // Owners, administrators, and recipients with edit permission may change a post. Deleting is narrower: can_delete_post().
@@ -116,7 +130,8 @@ function can_edit_post(array $post, ?array $user): bool
     return $user !== null && ($user['role'] === 'admin' || in_array(post_role($post, $user), ['owner', 'edit'], true));
 }
 
-function blog_post_errors(string $title, string $content, string $tag): array
+/** Title and content checks; tag ids are validated by parse_tag_ids() and lock_existing_tags(). */
+function blog_post_errors(string $title, string $content): array
 {
     $errors = [];
     if (mb_strlen($title, 'UTF-8') < 3 || mb_strlen($title, 'UTF-8') > 120) {
@@ -124,9 +139,6 @@ function blog_post_errors(string $title, string $content, string $tag): array
     }
     if (mb_strlen($content, 'UTF-8') < 10 || mb_strlen($content, 'UTF-8') > 10000) {
         $errors[] = 'Nội dung cần có từ 10 đến 10.000 ký tự.';
-    }
-    if (!in_array($tag, ['Chăm cây', 'Không gian', 'Cảm hứng', 'Mẹo hay', 'Sống xanh', 'Bài nổi bật'], true)) {
-        $errors[] = 'Vui lòng chọn chủ đề hợp lệ.';
     }
     return $errors;
 }
@@ -173,10 +185,10 @@ function list_user_posts(int $userId, string $search = '', string $sort = 'newes
     $where = ' WHERE p.user_id = ?';
     $parameters = [$userId];
     if ($search !== '') {
-        $where .= " AND (p.title LIKE ? ESCAPE '!' OR p.excerpt LIKE ? ESCAPE '!' OR p.tag LIKE ? ESCAPE '!')";
+        $where .= " AND (p.title LIKE ? ESCAPE '!' OR p.excerpt LIKE ? ESCAPE '!' OR EXISTS(SELECT 1 FROM post_tags st JOIN tags stt ON stt.id = st.tag_id WHERE st.post_id = p.id AND stt.name LIKE ? ESCAPE '!'))";
         array_push($parameters, search_pattern($search), search_pattern($search), search_pattern($search));
     }
     $statement = db()->prepare(blog_post_select($userId) . $where . ' ORDER BY ' . $order . ' LIMIT 60');
     $statement->execute($parameters);
-    return $statement->fetchAll();
+    return attach_blog_tags($statement->fetchAll());
 }

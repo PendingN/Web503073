@@ -283,7 +283,7 @@ require __DIR__ . '/includes/header.php';
                 <?php if ($blogShowcasePosts !== []): ?>
                     <?php foreach ($blogShowcasePosts as $post):
                         $cover = blog_cover_url($post);
-                        $postTag = trim((string) ($post['tag'] ?? 'Chăm cây'));
+                        $postTag = trim((string) ($post['tag'] ?? ''));
                         $postExcerpt = trim((string) (post_list_excerpt($post) ?: 'Ghi chép chăm cây thực tế và cảm hứng sống xanh từ cộng đồng Là Lá La.'));
                         $postAuthor = trim((string) ($post['author'] ?? 'Là Lá La'));
                     ?>
@@ -292,7 +292,7 @@ require __DIR__ . '/includes/header.php';
                             <img src="<?= e(asset_url($cover)) ?>" alt="<?= e((string) $post['title']) ?>" width="420" height="280" loading="lazy">
                         </div>
                         <div class="lalala-blog-card-body">
-                            <span class="lalala-blog-tag"><?= e($postTag) ?></span>
+                            <?php if ($postTag !== ''): ?><span class="lalala-blog-tag"><?= e($postTag) ?></span><?php endif; ?>
                             <h3><?= e((string) $post['title']) ?></h3>
                             <p><?= e(mb_strimwidth($postExcerpt, 0, 108, '…', 'UTF-8')) ?></p>
                         </div>

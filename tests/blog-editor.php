@@ -16,7 +16,7 @@ try {
         ['type' => 'image', 'src' => 'upload_ab', 'alt' => 'Lá cây', 'caption' => 'Ảnh thứ nhất'],
         ['type' => 'image', 'src' => 'upload_cd', 'alt' => 'Chậu cây', 'caption' => 'Ảnh thứ hai'],
     ]];
-    $blockFields = ['csrf_token' => $aliceToken, 'operation' => 'create', 'title' => 'Bài viết theo khối', 'tag' => 'Chăm cây', 'content_blocks' => json_encode($blockData)];
+    $blockFields = ['csrf_token' => $aliceToken, 'operation' => 'create', 'title' => 'Bài viết theo khối', 'tags' => [test_tag_id('Chăm cây')], 'content_blocks' => json_encode($blockData)];
     $response = $aliceBrowser->request('actions/blog-action.php', $blockFields + ['block_images[upload_ab]' => $blockUpload, 'block_images[upload_cd]' => $blockUpload], true);
     $savedBlockPost = db()->query('SELECT * FROM blog_posts ORDER BY id DESC LIMIT 1')->fetch();
     check($response['status'] === 303 && $savedBlockPost['title'] === $blockFields['title'], 'Multi-image block publishing failed.');
