@@ -16,7 +16,7 @@
     const files = new Map();
     const urls = new Map();
     let blocks = JSON.parse(document.getElementById('initial-blocks').textContent);
-    let history = [], position = -1, pending, range, dirty = false, savedDraft, activeBlockIndex = -1;
+    let history = [], position = -1, pending, range, dirty = false, savedDraft, activeBlockIndex = -1, applyingRemote = false;
     const labels = { paragraph: 'Đoạn văn', h2: 'Tiêu đề H2', h3: 'Tiêu đề H3', ul: 'Danh sách', ol: 'Danh sách đánh số', quote: 'Trích dẫn', image: 'Ảnh', divider: 'Đường phân cách' };
     const make = (name, text, className) => {
         const node = document.createElement(name);
@@ -65,6 +65,8 @@
             history.push(state);
             if (history.length > 80) history.shift();
             position = history.length - 1;
+            // Real-time co-editing (blog-collab.js) listens for local changes; remote ones are not echoed back.
+            if (!applyingRemote) form.dispatchEvent(new CustomEvent('blog-editor:change', { detail: JSON.parse(state) }));
         }
         dirty = true;
         if (!savedDraft) {
@@ -168,6 +170,7 @@
             }
         }
         updateCount();
+        form.dispatchEvent(new CustomEvent('blog-editor:rendered'));
     }
     function move(i, direction) {
         read();
@@ -180,7 +183,9 @@
     function trackActiveBlock(event) {
         const blockEl = event.target.closest('.editor-block');
         if (blockEl && blockEl.parentElement === area) {
-            activeBlockIndex = [...area.children].indexOf(blockEl);
+            const index = [...area.children].indexOf(blockEl);
+            if (index !== activeBlockIndex) form.dispatchEvent(new CustomEvent('blog-editor:focus', { detail: index }));
+            activeBlockIndex = index;
         }
     }
     area.addEventListener('focusin', trackActiveBlock);
@@ -306,6 +311,46 @@
             preview.append(node);
         });
     }
+    function validState(state) {
+        return !!state && typeof state.title === 'string' && typeof state.tag === 'string' && Array.isArray(state.blocks) && state.blocks.length <= 200 && !state.blocks.some(b =>
+            !b || !labels[b.type] ||
+            (['paragraph', 'h2', 'h3', 'quote'].includes(b.type) && typeof b.html !== 'string') ||
+            (['ul', 'ol'].includes(b.type) && (!Array.isArray(b.items) || b.items.some(item => typeof item !== 'string'))) ||
+            (b.type === 'image' && (typeof b.src !== 'string' || typeof b.alt !== 'string' || typeof b.caption !== 'string')));
+    }
+    // A co-editor's state arrives here. Blocks are patched in place so the caret stays where it is,
+    // and the block this user is typing in keeps the local text (their next change is sent to everyone).
+    function applyRemote(state) {
+        if (!validState(state)) return;
+        read();
+        const focusedRow = document.activeElement?.closest?.('.editor-block');
+        const focusedIndex = focusedRow && focusedRow.parentElement === area ? [...area.children].indexOf(focusedRow) : -1;
+        if (document.activeElement !== title) title.value = state.title;
+        if ([...tag.options].some(option => option.value === state.tag)) tag.value = state.tag;
+        const sameShape = state.blocks.length === blocks.length && state.blocks.every((b, i) => b.type === blocks[i].type
+            && (!['ul', 'ol'].includes(b.type) || b.items.length === (blocks[i].items || []).length)
+            && (b.type !== 'image' || b.src === blocks[i].src));
+        if (sameShape) {
+            const rows = area.querySelectorAll('.editor-block');
+            state.blocks.forEach((b, i) => {
+                if (i === focusedIndex || JSON.stringify(b) === JSON.stringify(blocks[i])) return;
+                blocks[i] = b;
+                const row = rows[i];
+                if (b.type === 'image') { row.querySelector('[data-alt]').value = b.alt; row.querySelector('[data-caption]').value = b.caption; }
+                else if (b.type === 'ul' || b.type === 'ol') row.querySelectorAll('[contenteditable]').forEach((node, k) => { node.innerHTML = sanitize(b.items[k] || ''); });
+                else if (b.type !== 'divider') row.querySelector('[contenteditable]').innerHTML = sanitize(b.html || '');
+                row.classList.add('is-remote-change');
+                setTimeout(() => row.classList.remove('is-remote-change'), 1200);
+            });
+        } else {
+            blocks = state.blocks;
+            render(focusedIndex >= 0 && blocks.length ? Math.min(focusedIndex, blocks.length - 1) : undefined);
+        }
+        applyingRemote = true;
+        try { save(); } finally { applyingRemote = false; }
+        form.dispatchEvent(new CustomEvent('blog-editor:rendered'));
+    }
+    form.addEventListener('blog-editor:apply', event => applyRemote(event.detail));
     document.getElementById('preview-toggle').onclick = event => {
         const opening = preview.hidden;
         if (opening) showPreview();
@@ -317,12 +362,7 @@
     document.getElementById('restore-draft').onclick = () => {
         try {
             const state = JSON.parse(savedDraft);
-            if (typeof state.title !== 'string' || typeof state.tag !== 'string' || !Array.isArray(state.blocks) || state.blocks.length > 200 || state.blocks.some(b =>
-                !b || !labels[b.type] ||
-                (['paragraph', 'h2', 'h3', 'quote'].includes(b.type) && typeof b.html !== 'string') ||
-                (['ul', 'ol'].includes(b.type) && (!Array.isArray(b.items) || b.items.some(item => typeof item !== 'string'))) ||
-                (b.type === 'image' && (typeof b.src !== 'string' || typeof b.alt !== 'string' || typeof b.caption !== 'string'))
-            )) throw new Error();
+            if (!validState(state)) throw new Error();
             blocks = state.blocks; title.value = state.title; tag.value = state.tag;
             savedDraft = null; recovery.hidden = true; render(); flush();
             message('Đã khôi phục nội dung. Ảnh mới chưa đăng cần chọn lại.');
@@ -347,6 +387,7 @@
                     && url.searchParams.has('edit');
                 if (response.ok && (/\/(blog-post|admin-posts)\.php$/.test(url.pathname) || isAdminRedirect)) {
                     clearTimeout(pending); dirty = false; try { localStorage.removeItem(key); } catch {}
+                    form.dispatchEvent(new CustomEvent('blog-editor:saved'));
                     location.assign(isAdminRedirect ? new URL('admin-posts.php', response.url).href : response.url);
                     return;
                 }

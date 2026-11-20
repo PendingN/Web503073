@@ -7,6 +7,7 @@ $hasSiteHeader = true;
 $bodyClasses = preg_split('/\s+/', trim($bodyClass ?? '')) ?: [];
 $hasCustomSkipLink = (bool) array_intersect($bodyClasses, ['landing-page', 'blog-page', 'blog-post-page']);
 $isBlogHeader = (bool) array_intersect($bodyClasses, ['blog-page', 'blog-post-page']);
+$unseenShares = $navbarUser !== null && $activePage !== 'shared' ? count_unseen_shares((int) $navbarUser['id']) : 0;
 ?>
 <?php if (!$hasCustomSkipLink): ?>
 <a class="skip-link" href="#main-content">Đến nội dung chính</a>
@@ -21,6 +22,7 @@ $isBlogHeader = (bool) array_intersect($bodyClasses, ['blog-page', 'blog-post-pa
         <a class="nav-link<?= $activePage === 'collection' ? ' active' : '' ?>" <?= $activePage === 'collection' ? 'aria-current="page"' : '' ?> href="collection.php">Bộ sưu tập</a>
         <a class="nav-link<?= $activePage === 'blog' ? ' active' : '' ?>" <?= $activePage === 'blog' ? 'aria-current="page"' : '' ?> href="blog.php">Blog</a>
         <a class="nav-link<?= $activePage === 'profile' ? ' active' : '' ?>" <?= $activePage === 'profile' ? 'aria-current="page"' : '' ?> href="profile.php">Trang cá nhân</a>
+        <?php if ($navbarUser !== null): ?><a class="nav-link<?= $activePage === 'shared' ? ' active' : '' ?>" <?= $activePage === 'shared' ? 'aria-current="page"' : '' ?> href="shared.php">Được chia sẻ<?php if ($unseenShares > 0): ?> <span class="nav-badge"><?= $unseenShares ?><span class="sr-only"> bài mới</span></span><?php endif; ?></a><?php endif; ?>
         <?php if ($isBlogHeader): ?><a class="nav-link nav-link--mobile-write" href="blog-editor.php">Viết bài mới</a><?php endif; ?>
         <?php if (is_admin()): ?><a class="nav-link<?= $activePage === 'admin' ? ' active' : '' ?>" <?= $activePage === 'admin' ? 'aria-current="page"' : '' ?> href="admin-dashboard.php">Quản trị</a><?php endif; ?>
     </nav>
@@ -41,4 +43,10 @@ $isBlogHeader = (bool) array_intersect($bodyClasses, ['blog-page', 'blog-post-pa
         <button class="menu-icon" type="button" aria-label="Mở menu" aria-controls="site-menu" aria-expanded="false" data-menu-toggle><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
     </div>
 </header>
-
+<?php if ($unseenShares > 0): ?>
+<div class="share-notice" role="status">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    <span>Bạn có <strong><?= $unseenShares ?></strong> bài viết mới được chia sẻ với bạn.</span>
+    <a href="shared.php">Xem ngay</a>
+</div>
+<?php endif; ?>

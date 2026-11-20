@@ -3,10 +3,14 @@
   "private": true,
   "scripts": {
     "build:css": "tailwindcss -i ./css/admin-tailwind.css -o ./css/admin.css --minify",
-    "watch:css": "tailwindcss -i ./css/admin-tailwind.css -o ./css/admin.css --watch"
+    "watch:css": "tailwindcss -i ./css/admin-tailwind.css -o ./css/admin.css --watch",
+    "realtime": "node realtime/server.js"
   },
   "devDependencies": {
     "@tailwindcss/cli": "4.1.17",
     "tailwindcss": "4.1.17"
+  },
+  "dependencies": {
+    "ws": "^8.18.3"
   }
 }

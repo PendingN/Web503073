@@ -33,9 +33,20 @@ if ($operation !== 'create') {
         $connection->rollBack();
         abort_request(404, 'Không tìm thấy bài viết.');
     }
-    if (in_array($operation, ['update', 'delete'], true) && !can_edit_post($post, $user)) {
+    // Private posts behave like missing posts for anyone they were not shared with.
+    $role = post_role($post, $user);
+    if ((int) $post['is_private'] === 1 && $role === null && $user['role'] !== 'admin') {
         $connection->rollBack();
-        abort_request(403, 'Bạn không có quyền sửa hoặc xóa bài viết này.');
+        abort_request(404, 'Không tìm thấy bài viết.');
+    }
+    if (($operation === 'update' && !can_edit_post($post, $user)) || ($operation === 'delete' && !can_delete_post($post, $user))) {
+        $connection->rollBack();
+        abort_request(403, $operation === 'delete' ? 'Chỉ tác giả mới được xóa bài viết này.' : 'Bạn không có quyền sửa bài viết này.');
+    }
+    // A password-locked post needs its password in this session before any action except moderation.
+    if (!in_array($operation, ['hide', 'unhide'], true) && !post_is_unlocked($post)) {
+        $connection->rollBack();
+        abort_request(403, 'Bài viết đang được khóa. Hãy nhập mật khẩu của bài trước.');
     }
     if (in_array($operation, ['hide', 'unhide'], true) && $user['role'] !== 'admin') {
         $connection->rollBack();
@@ -128,20 +139,23 @@ if ($operation === 'create' || $operation === 'update') {
     }
     if ($errors !== []) {
         $connection->rollBack();
-        $_SESSION['blog_draft'] = ['title' => mb_substr($title, 0, 120), 'content' => mb_substr($content, 0, 10000), 'tag' => $tag, 'slug' => $operation === 'update' ? $slug : '', 'content_blocks' => strlen($blockInput) <= 250000 ? $blockInput : ''];
+        $_SESSION['blog_draft'] = ['is_private' => request_string($_POST, 'is_private') === '1' ? 1 : 0, 'title' => mb_substr($title, 0, 120), 'content' => mb_substr($content, 0, 10000), 'tag' => $tag, 'slug' => $operation === 'update' ? $slug : '', 'content_blocks' => strlen($blockInput) <= 250000 ? $blockInput : ''];
         set_flash(implode(' ', $errors) . ' Nếu đã chọn ảnh, vui lòng chọn lại trước khi gửi.');
         redirect_to(app_url('blog-editor.php') . ($operation === 'update' ? '?edit=' . rawurlencode($slug) : ''));
     }
     $excerpt = mb_substr(preg_replace('/\s+/u', ' ', $content), 0, 220, 'UTF-8');
+    $isPrivate = request_string($_POST, 'is_private') === '1' ? 1 : 0;
     if ($operation === 'create') {
         $slug = 'bai-viet-' . bin2hex(random_bytes(12));
-        $statement = $connection->prepare('INSERT INTO blog_posts (user_id, slug, title, tag, excerpt, content, image_path, content_blocks) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
-        $statement->execute([$user['id'], $slug, $title, $tag, $excerpt, $content, $newImage, $blocksJson]);
+        $statement = $connection->prepare('INSERT INTO blog_posts (user_id, slug, title, tag, excerpt, content, image_path, content_blocks, is_private) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
+        $statement->execute([$user['id'], $slug, $title, $tag, $excerpt, $content, $newImage, $blocksJson, $isPrivate]);
         $createdPostId = (int) $connection->lastInsertId();
     } else {
         $oldImage = $newImage !== null ? $post['image_path'] : null;
-        $statement = $connection->prepare('UPDATE blog_posts SET title = ?, tag = ?, excerpt = ?, content = ?, image_path = ?, content_blocks = ? WHERE id = ?');
-        $statement->execute([$title, $tag, $excerpt, $content, $newImage ?? $post['image_path'], $blocksJson, $post['id']]);
+        // Only the author decides who can see the post; editors keep the current visibility.
+        $isPrivate = $role === 'owner' ? $isPrivate : (int) $post['is_private'];
+        $statement = $connection->prepare('UPDATE blog_posts SET title = ?, tag = ?, excerpt = ?, content = ?, image_path = ?, content_blocks = ?, is_private = ? WHERE id = ?');
+        $statement->execute([$title, $tag, $excerpt, $content, $newImage ?? $post['image_path'], $blocksJson, $isPrivate, $post['id']]);
     }
     unset($_SESSION['blog_draft']);
     $returnTo = $adminEditor ? app_url('admin-posts.php?edit=' . rawurlencode($slug)) . '#post-editor' : app_url('blog-post.php?slug=' . rawurlencode($slug));

@@ -1,0 +1,176 @@
+/* AI caterpillar: floating chat button in rice-seedling green ("xanh mạ"), gentle idle motion. */
+.ai-worm {
+    --worm-light: #b5e05a;
+    --worm-body: #9fd146;
+    --worm-deep: #7cb82f;
+    --worm-line: #4d8a1f;
+    --worm-ink: #2b3a12;
+    position: fixed;
+    right: max(20px, env(safe-area-inset-right));
+    bottom: max(14px, env(safe-area-inset-bottom));
+    z-index: 900;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+    pointer-events: none;
+}
+
+.ai-worm > * { pointer-events: auto; }
+
+.ai-worm-button {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 108px;
+    height: 98px;
+    border-radius: 999px;
+    color: inherit;
+    text-decoration: none;
+    animation: ai-worm-float 4.6s ease-in-out infinite;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.ai-worm-button:focus-visible { outline: 3px solid var(--worm-line); outline-offset: 2px; }
+
+.ai-worm-art { overflow: visible; filter: drop-shadow(0 6px 10px rgba(77, 138, 31, 0.25)); transition: transform 0.25s ease; }
+.ai-worm-button:hover .ai-worm-art,
+.ai-worm-button:focus-visible .ai-worm-art { transform: scale(1.06) rotate(-2deg); }
+
+.ai-worm-shadow { fill: rgba(31, 58, 18, 0.14); animation: ai-worm-shadow 4.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+
+.ai-worm-seg > ellipse:not(.ai-worm-foot):not(.ai-worm-shine) { fill: url(#aiWormSkin); stroke: var(--worm-ink); stroke-width: 2.2; }
+.ai-worm-foot { fill: #7cc4e0; stroke: #2b4a5a; stroke-width: 1.6; }
+.ai-worm-shine { fill: #ffffff; opacity: 0.55; }
+/* The body ripples from head to tail like a caterpillar inching along. */
+.ai-worm-seg { animation: ai-worm-wave 1.8s ease-in-out infinite; animation-delay: calc(var(--i) * -0.22s); transform-box: fill-box; transform-origin: center bottom; }
+
+.ai-worm-face { fill: url(#aiWormSkin); stroke: var(--worm-ink); stroke-width: 2.4; }
+.ai-worm-head { animation: ai-worm-nod 3.6s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 95%; }
+.ai-worm-antenna-line { fill: none; stroke: var(--worm-ink); stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; }
+.ai-worm-antenna-fill { fill: none; stroke: #a9d84b; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+.ai-worm-antenna { animation: ai-worm-antenna 2.4s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 100%; }
+.ai-worm-eye { fill: url(#aiWormIris); stroke: #2a1840; stroke-width: 1.8; }
+.ai-worm-pupil { fill: #2a1650; }
+.ai-worm-glint { fill: #ffffff; }
+.ai-worm-eyes { animation: ai-worm-blink 5.5s infinite; transform-box: fill-box; transform-origin: center; }
+.ai-worm-cheek { fill: #f4a6b8; opacity: 0.85; }
+.ai-worm-smile { fill: none; stroke: var(--worm-ink); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.ai-worm-spark path { fill: #f5d04e; stroke: #b98d12; stroke-width: 0.8; }
+.ai-worm-spark { animation: ai-worm-spark 2.8s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+
+/* Speech-bubble label on hover / keyboard focus. */
+.ai-worm-tip {
+    position: absolute;
+    right: 96px;
+    top: 4px;
+    padding: 6px 12px;
+    border: 1px solid #cfe6a6;
+    border-radius: 14px 14px 4px 14px;
+    background: #ffffff;
+    color: var(--worm-ink);
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+    box-shadow: 0 6px 16px rgba(31, 58, 18, 0.12);
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: none;
+}
+.ai-worm-button:hover .ai-worm-tip,
+.ai-worm-button:focus-visible .ai-worm-tip { opacity: 1; transform: translateY(0); }
+.ai-worm.is-open .ai-worm-tip { display: none; }
+
+/* While answering, the caterpillar wriggles faster and the spark twinkles. */
+.ai-worm.is-thinking .ai-worm-seg { animation-duration: 0.7s; }
+.ai-worm.is-thinking .ai-worm-spark { animation-duration: 0.9s; }
+
+/* Chat panel: the site's own palette (paper, forest, yellow, blue) so only the caterpillar is green. */
+.ai-worm-panel {
+    --chat-paper: #fbf9f4;
+    --chat-line: #e4ded3;
+    --chat-ink: #241f21;
+    --chat-muted: #645a55;
+    --chat-forest: #042d2b;
+    --chat-yellow: #e9e778;
+    --chat-bot: #f3f0ea;
+    --chat-source: #eef2f8;
+    --chat-source-line: #c8d4e6;
+    display: flex;
+    flex-direction: column;
+    width: min(380px, calc(100vw - 32px));
+    height: min(540px, calc(100svh - 140px));
+    overflow: hidden;
+    border: 1px solid var(--chat-line);
+    border-radius: 22px;
+    background: #ffffff;
+    box-shadow: 0 24px 60px rgba(36, 31, 33, 0.18);
+    transform-origin: bottom right;
+    animation: ai-worm-pop 0.22s ease-out;
+}
+.ai-worm-panel[hidden] { display: none; }
+
+.ai-worm-panel > header { display: flex; align-items: center; gap: 10px; padding: 14px 14px 12px 16px; border-bottom: 1px solid var(--chat-line); background: var(--chat-paper); }
+.ai-worm-avatar { display: grid; place-items: center; flex: none; width: 42px; height: 42px; border: 2px solid #bacfa3; border-radius: 50%; background: #ffffff; }
+.ai-worm-panel > header h2 { margin: 0; color: var(--chat-forest); font-size: 16px; }
+.ai-worm-panel > header p { margin: 0; color: var(--chat-muted); font-size: 12px; }
+.ai-worm-close { display: grid; place-items: center; width: 40px; height: 40px; margin-left: auto; border: 0; border-radius: 50%; background: transparent; color: var(--chat-ink); cursor: pointer; }
+.ai-worm-close:hover { background: #efe9df; }
+
+.ai-worm-thread { display: grid; align-content: start; gap: 14px; flex: 1; overflow-y: auto; padding: 16px; background: #ffffff; overscroll-behavior: contain; }
+.ai-worm-hello p { margin: 0 0 10px; padding: 10px 12px; border-radius: 4px 14px 14px 14px; background: var(--chat-bot); color: var(--chat-ink); font-size: 14px; line-height: 1.6; }
+.ai-worm-panel .ask-examples { margin: 0; }
+.ai-worm-panel .ask-examples button { border: 1px solid var(--chat-line); background: #ffffff; color: var(--chat-forest); font-size: 12px; font-weight: 600; transition: background-color 0.15s ease, border-color 0.15s ease; }
+.ai-worm-panel .ask-examples button:hover { border-color: #d8d36a; background: #faf8d9; }
+.ai-worm-panel .ask-turn { gap: 8px; padding: 0; border: 0; background: transparent; }
+.ai-worm-panel .ask-question { background: var(--chat-forest); color: #ffffff; font-size: 14px; }
+.ai-worm-panel .ask-answer { padding: 10px 12px; border-radius: 4px 14px 14px 14px; background: var(--chat-bot); color: var(--chat-ink); font-size: 14px; line-height: 1.65; }
+.ai-worm-panel .ask-sources h2 { color: var(--chat-muted); }
+.ai-worm-panel .ask-sources a { border-color: var(--chat-source-line); background: var(--chat-source); }
+.ai-worm-panel .ask-sources a:hover { border-color: #85a1c5; }
+.ai-worm-panel .ask-sources strong { color: #2f4f7a; }
+
+.ai-worm-status { margin: 0; padding: 0 16px; color: var(--chat-muted); font-size: 12px; }
+.ai-worm-status:empty { display: none; }
+.ai-worm-panel.is-thinking .ai-worm-status::before { content: '🐛 '; }
+
+.ai-worm-form { display: flex; align-items: flex-end; gap: 8px; margin: 10px 12px 12px; padding: 6px 6px 6px 12px; border: 1px solid var(--chat-line); border-radius: 16px; background: var(--chat-paper); }
+.ai-worm-form:focus-within { border-color: var(--chat-forest); box-shadow: 0 0 0 3px rgba(186, 207, 163, 0.45); }
+.ai-worm-form textarea { flex: 1; min-height: 36px; max-height: 120px; padding: 8px 0; border: 0; background: transparent; color: var(--chat-ink); font: inherit; font-size: 14px; line-height: 1.4; resize: none; }
+.ai-worm-form textarea::placeholder { color: #8f857f; }
+.ai-worm-form textarea:focus { outline: none; }
+.ai-worm-form button { display: grid; place-items: center; flex: none; width: 40px; height: 40px; border: 0; border-radius: 12px; background: var(--chat-forest); color: var(--chat-yellow); cursor: pointer; transition: background-color 0.15s ease; }
+.ai-worm-form button:hover { background: #0b413d; }
+.ai-worm-form button:disabled { opacity: 0.55; cursor: progress; }
+
+@keyframes ai-worm-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@keyframes ai-worm-shadow { 0%, 100% { transform: scaleX(1); opacity: 1; } 50% { transform: scaleX(0.88); opacity: 0.7; } }
+@keyframes ai-worm-wave { 0%, 100% { transform: translateY(0) scaleY(1); } 50% { transform: translateY(-4px) scaleY(1.04); } }
+@keyframes ai-worm-nod { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-4deg); } }
+@keyframes ai-worm-antenna { 0%, 100% { transform: rotate(0); } 30% { transform: rotate(-6deg); } 70% { transform: rotate(5deg); } }
+@keyframes ai-worm-blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(0.1); } }
+@keyframes ai-worm-spark { 0%, 100% { opacity: 0.35; transform: scale(0.8) rotate(0); } 50% { opacity: 1; transform: scale(1.15) rotate(20deg); } }
+@keyframes ai-worm-pop { from { opacity: 0; transform: translateY(10px) scale(0.96); } to { opacity: 1; transform: none; } }
+
+@media (max-width: 560px) {
+    .ai-worm-button { width: 86px; height: 78px; }
+    .ai-worm-art { width: 84px; height: 76px; }
+    .ai-worm-tip { display: none; }
+    .ai-worm-panel { width: calc(100vw - 24px); height: min(560px, calc(100svh - 96px)); }
+    .ai-worm-form textarea { font-size: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ai-worm-button, .ai-worm-shadow, .ai-worm-seg, .ai-worm-head, .ai-worm-antenna, .ai-worm-eyes, .ai-worm-spark, .ai-worm-panel { animation: none; }
+}
+
+@media print { .ai-worm { display: none; } }
+
+/* Corner toasts move up so they never sit on the caterpillar. */
+body:has(.ai-worm) .dashboard-shell .status-note { bottom: 96px; }
+.ai-worm-panel .ask-sources a.is-plant { border-color: #cfe3c0; background: #f1f8ec; }
+.ai-worm-panel .ask-sources a.is-plant strong { color: #2f5d46; }
+.ai-worm-panel .ask-sources a.is-web { border-color: #e4d9c4; background: #fbf6ec; }
+.ai-worm-panel .ask-sources a.is-web strong { color: #7a5a1f; }
+.ai-worm-panel .ask-notes a { color: #042d2b; }

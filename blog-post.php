@@ -4,7 +4,9 @@ declare(strict_types=1);
 require_once __DIR__ . '/includes/init.php';
 require_once __DIR__ . '/includes/blog-images.php';
 require_once __DIR__ . '/includes/blog-blocks.php';
+require_once __DIR__ . '/includes/blog-ai.php';
 $pageStyles = ['css/blog-editor.css'];
+$pageScripts = ['js/blog-summary.js'];
 
 $slug = trim(request_string($_GET, 'slug'));
 $post = find_post($slug);
@@ -40,6 +42,12 @@ if ($post !== null) {
         }
     }
 }
+
+if ($post !== null && !post_is_unlocked($post)) {
+    require __DIR__ . '/includes/post-locked-page.php';
+    exit;
+}
+$isPostOwner = $post !== null && is_post_owner($post, $user);
 
 require __DIR__ . '/includes/header.php';
 ?>
@@ -90,6 +98,8 @@ require __DIR__ . '/includes/navbar.php';
                 <img class="blog-cover" src="<?= e(blog_cover_url($post)) ?>" alt="<?= !empty($post['image_path']) ? e($post['title']) : '' ?>" width="1000" height="560" decoding="async" fetchpriority="high">
             </figure>
 
+            <?php require __DIR__ . '/includes/blog-summary-panel.php'; ?>
+
             <article class="blog-post-body" data-reading-article>
                 <div class="block-article"><?= render_blog_blocks(blog_blocks($post)) ?></div>
 
@@ -105,7 +115,11 @@ require __DIR__ . '/includes/navbar.php';
                 </div>
             </article>
 
-            <?php if (can_edit_post($post, $user)): ?>
+            <?php if ($isPostOwner): ?>
+                <?php require __DIR__ . '/includes/post-manage-panel.php'; ?>
+            <?php endif; ?>
+
+            <?php if (can_delete_post($post, $user)): ?>
                 <div class="blog-delete">
                     <form action="actions/blog-action.php" method="post" data-confirm="Bài viết “<?= e($post['title']) ?>” cùng bình luận, lượt bình chọn và lượt lưu sẽ bị xóa. Thao tác này không thể hoàn tác." data-confirm-title="Xóa bài viết?" data-confirm-label="Xóa bài viết" data-confirm-tone="danger">
                         <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
