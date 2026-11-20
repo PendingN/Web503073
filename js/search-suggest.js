@@ -1,4 +1,6 @@
-// Live plant-name suggestions for the collection search box.
+// Live as-you-type suggestions for a search box, used by the plant collection and the blog.
+// Markup: <div data-search-suggest='[{"name","category","image","url","extra"?}]' data-empty-text="…">
+// wrapping an input[role=combobox] and a ul[role=listbox]. Matching ignores case and Vietnamese accents.
 (function () {
     'use strict';
 
@@ -10,13 +12,14 @@
             .replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase().trim();
     }
 
-    // Lower score ranks first: name prefix, word prefix, name contains, category match.
+    // Lower score ranks first: name prefix, word prefix, name contains, category match, extra text match.
     function score(item, query) {
         if (item.foldedName.indexOf(query) === 0) return 0;
         if (item.foldedShort.indexOf(query) === 0) return 0;
         if ((' ' + item.foldedName).indexOf(' ' + query) !== -1) return 1;
         if (item.foldedName.indexOf(query) !== -1) return 2;
         if (item.foldedCategory.indexOf(query) !== -1) return 3;
+        if (item.foldedExtra.indexOf(query) !== -1) return 4;
         return -1;
     }
 
@@ -34,8 +37,10 @@
         items.forEach(function (item) {
             item.foldedName = fold(item.name);
             item.foldedShort = item.foldedName.replace(/^cay\s+/, '');
-            item.foldedCategory = fold(item.category);
+            item.foldedCategory = fold(item.category || '');
+            item.foldedExtra = fold(item.extra || '');
         });
+        var emptyText = wrapper.getAttribute('data-empty-text') || 'Không có kết quả khớp. Nhấn Enter để tìm đầy đủ.';
 
         var matches = [];
         var active = -1;
@@ -80,12 +85,12 @@
             if (matches.length === 0) {
                 var empty = document.createElement('li');
                 empty.className = 'search-suggest-empty';
-                empty.textContent = 'Không có cây nào khớp. Nhấn Enter để tìm trong mô tả.';
+                empty.textContent = emptyText;
                 list.appendChild(empty);
             }
             matches.forEach(function (item, index) {
                 var option = document.createElement('li');
-                option.id = 'plant-search-option-' + index;
+                option.id = list.id + '-option-' + index;
                 option.setAttribute('role', 'option');
                 option.setAttribute('aria-selected', 'false');
 

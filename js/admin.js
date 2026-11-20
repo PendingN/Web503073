@@ -47,11 +47,7 @@
         setMenu(false);
     }
 
-    document.querySelectorAll('form[data-confirm]').forEach(function (form) {
-        form.addEventListener('submit', function (event) {
-            if (!window.confirm(form.dataset.confirm)) event.preventDefault();
-        });
-    });
+    // form[data-confirm] popups are handled by js/confirm-dialog.js.
     document.querySelectorAll('form[method="post"]').forEach(function (form) {
         form.addEventListener('submit', function (event) {
             if (event.defaultPrevented) return;

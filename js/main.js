@@ -198,16 +198,7 @@
             }
         });
 
-        document.querySelectorAll('form[data-confirm]').forEach(function (form) {
-            form.addEventListener('submit', function (event) {
-                var inlineSubmit = form.getAttribute('onsubmit') || '';
-                if (inlineSubmit.indexOf('confirm(') !== -1) return;
-                var message = form.getAttribute('data-confirm') || 'Bạn có chắc chắn muốn thực hiện thao tác này?';
-                if (!window.confirm(message)) {
-                    event.preventDefault();
-                }
-            });
-        });
+        // form[data-confirm] popups are handled by js/confirm-dialog.js.
 
         document.querySelectorAll('form[method="post"]').forEach(function (form) {
             form.addEventListener('submit', function (event) {
