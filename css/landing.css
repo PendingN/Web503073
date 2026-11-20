@@ -2448,7 +2448,7 @@ a.lalala-card:focus-visible .lalala-card-label {
         transparent 46px 92px
     );
     color: #f4f5e9;
-    padding: clamp(64px, 7.5vw, 100px) clamp(16px, 3vw, 48px) clamp(48px, 6vw, 72px);
+    padding: clamp(64px, 7.5vw, 100px) 0 0;
     border-top: 1px solid rgba(181, 201, 122, .22);
 }
 
@@ -2459,9 +2459,17 @@ a.lalala-card:focus-visible .lalala-card-label {
 .floema-footer-grid {
     max-width: 1440px;
     margin: 0 auto;
+    padding: 0 clamp(16px, 3vw, 48px) clamp(44px, 5.5vw, 64px);
     display: grid;
-    grid-template-columns: minmax(200px, 0.32fr) minmax(0, 0.68fr);
+    grid-template-columns: minmax(220px, 0.34fr) minmax(0, 0.66fr);
     gap: clamp(28px, 4vw, 64px);
+}
+
+.floema-footer-mark {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 24px;
 }
 
 .floema-footer-brand {
@@ -2471,6 +2479,49 @@ a.lalala-card:focus-visible .lalala-card-label {
     gap: 16px;
     color: #f4f5e9;
     text-decoration: none;
+}
+
+.footer-contact {
+    font-style: normal;
+    margin: 0;
+    max-width: 300px;
+}
+
+.footer-contact p {
+    margin: 0 0 8px;
+    font-size: 0.9rem;
+    line-height: 1.55;
+    color: rgba(244, 245, 233, .84);
+}
+
+.footer-contact p:last-child {
+    margin-bottom: 0;
+}
+
+.footer-contact .footer-contact-heading {
+    margin: 0 0 10px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #b5c97a;
+}
+
+.footer-contact strong {
+    color: #f4f5e9;
+    font-weight: 600;
+}
+
+.footer-contact a {
+    color: #f4f5e9;
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color .18s ease, color .18s ease;
+}
+
+.footer-contact a:hover {
+    color: #b5c97a;
+    border-bottom-color: #b5c97a;
 }
 
 .floema-footer-emblem {
@@ -2609,6 +2660,68 @@ a.lalala-card:focus-visible .lalala-card-label {
     font-size: 0.84rem;
     line-height: 1.5;
     color: rgba(244, 245, 233, .76);
+}
+
+.floema-footer-bottom {
+    background: #ebe4d2;
+    color: #183022;
+    border-top: 1px solid rgba(24, 48, 34, .12);
+    padding: 14px clamp(16px, 3vw, 48px);
+}
+
+.floema-footer-bottom :is(a, button):focus-visible {
+    outline-color: #183022;
+}
+
+.floema-footer-bottom-inner {
+    max-width: 1440px;
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px 24px;
+}
+
+.floema-footer-copy {
+    margin: 0;
+    font-size: 0.86rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    color: #183022;
+}
+
+.floema-footer-copy strong {
+    font-weight: 700;
+    letter-spacing: 0.03em;
+}
+
+.floema-footer-socials {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.floema-footer-socials a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    background: #183022;
+    color: #ebe4d2;
+    text-decoration: none;
+    transition: background-color .18s ease, color .18s ease, transform .18s ease;
+}
+
+.floema-footer-socials a:hover {
+    background: #2d6a4f;
+    color: #f4f5e9;
+    transform: translateY(-2px);
 }
 
 /* =========================================================
@@ -2927,6 +3040,11 @@ a.lalala-card:focus-visible .lalala-card-label {
 @media (max-width: 480px) {
     .footer-columns {
         grid-template-columns: 1fr;
+    }
+
+    .floema-footer-bottom-inner {
+        justify-content: center;
+        text-align: center;
     }
 
     .collection-row {

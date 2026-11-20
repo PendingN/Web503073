@@ -336,6 +336,13 @@ require __DIR__ . '/includes/header.php';
                 </svg>
                 <span>LÀ LÁ LA<sup>®</sup></span>
             </a>
+
+            <address class="footer-contact">
+                <p class="footer-contact-heading">Contact</p>
+                <p><strong>Điện thoại:</strong> <a href="tel:0982671982">0982671982</a></p>
+                <p><strong>Mail:</strong> <a href="mailto:lalala@gmail.com">lalala@gmail.com</a></p>
+                <p><strong>Địa chỉ:</strong> <span>19 Nguyễn Hữu Thọ, Tân Hưng, Hồ Chí Minh</span></p>
+            </address>
         </div>
 
         <div class="floema-footer-content">
@@ -405,6 +412,44 @@ require __DIR__ . '/includes/header.php';
                     <path d="M112 93V64h26v29M125 64V44M125 54c-10 0-15-7-15-15 8 0 15 6 15 15M125 50c9 0 15-6 15-14-9 0-15 6-15 14"/>
                 </svg>
             </div>
+        </div>
+    </div>
+
+    <div class="floema-footer-bottom">
+        <div class="floema-footer-bottom-inner">
+            <p class="floema-footer-copy">Copyright © <?= e(date('Y')) ?> by <strong>LÀ LÁ LA</strong></p>
+            <ul class="floema-footer-socials" aria-label="Mạng xã hội Là Lá La">
+                <li>
+                    <a href="https://www.facebook.com/" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+                            <path d="M13.5 21v-7.6h2.55l.38-2.96H13.5V8.55c0-.86.24-1.44 1.47-1.44h1.57V4.46c-.27-.04-1.2-.12-2.29-.12-2.27 0-3.82 1.38-3.82 3.92v2.18H7.88v2.96h2.55V21h3.07Z"/>
+                        </svg>
+                    </a>
+                </li>
+                <li>
+                    <a href="https://www.instagram.com/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true">
+                            <rect x="3.5" y="3.5" width="17" height="17" rx="5"/>
+                            <circle cx="12" cy="12" r="4"/>
+                            <circle cx="17.2" cy="6.8" r="1" fill="currentColor" stroke="none"/>
+                        </svg>
+                    </a>
+                </li>
+                <li>
+                    <a href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+                        <svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true">
+                            <path d="M21.58 7.19a2.75 2.75 0 0 0-1.94-1.95C17.93 4.78 12 4.78 12 4.78s-5.93 0-7.64.46A2.75 2.75 0 0 0 2.42 7.2 28.9 28.9 0 0 0 1.96 12a28.9 28.9 0 0 0 .46 4.81 2.75 2.75 0 0 0 1.94 1.95c1.71.46 7.64.46 7.64.46s5.93 0 7.64-.46a2.75 2.75 0 0 0 1.94-1.95A28.9 28.9 0 0 0 22.04 12a28.9 28.9 0 0 0-.46-4.81ZM10 15.1V8.9l5.25 3.1L10 15.1Z"/>
+                        </svg>
+                    </a>
+                </li>
+                <li>
+                    <a href="https://www.tiktok.com/" target="_blank" rel="noopener noreferrer" aria-label="TikTok">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+                            <path d="M19.32 6.62a4.68 4.68 0 0 1-3.1-2.55 4.6 4.6 0 0 1-.41-1.9h-3.1v13.26a2.62 2.62 0 0 1-2.62 2.61 2.62 2.62 0 0 1-2.62-2.61 2.62 2.62 0 0 1 3.42-2.49V9.77a5.72 5.72 0 0 0-6.51 5.66 5.72 5.72 0 0 0 5.71 5.71 5.72 5.72 0 0 0 5.72-5.71V8.7a7.7 7.7 0 0 0 4.5 1.44V7.05c-.34 0-.67-.15-.99-.43Z"/>
+                        </svg>
+                    </a>
+                </li>
+            </ul>
         </div>
     </div>
 </footer>
