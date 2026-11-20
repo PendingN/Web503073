@@ -7,4 +7,6 @@ return [
     'model' => 'deepseek-chat',
     'base_url' => 'https://api.deepseek.com',
     'timeout' => 20,
+    // Optional: Tavily key (tvly-...) lets Sâu AI search the web for plant care questions.
+    'tavily_api_key' => '',
 ];

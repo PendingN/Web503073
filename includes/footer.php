@@ -9,6 +9,14 @@ $pageScripts = $pageScripts ?? [];
         <span><?= e($footerTagline) ?></span>
     </footer>
 <?php endif; ?>
+<?php
+// The AI caterpillar sits in the corner of every public page for signed-in users.
+$showAiWorm = current_user() !== null && ($bodyClass ?? '') !== 'admin-page' && ($activePage ?? '') !== 'ask';
+if ($showAiWorm) {
+    require __DIR__ . '/ai-worm.php';
+    $pageScripts = array_values(array_unique([...$pageScripts, 'js/ask.js', 'js/ai-worm.js']));
+}
+?>
 <?php foreach ($pageScripts as $pageScript): ?><script src="<?= e(asset_url($pageScript)) ?>" defer></script>
 <?php endforeach; ?>
 <script src="<?= e(asset_url('js/confirm-dialog.js')) ?>" defer></script>
