@@ -92,3 +92,13 @@ CREATE TABLE IF NOT EXISTS user_activity (
     KEY user_activity_actor (actor_id, created_at),
     KEY user_activity_subject (subject_id, created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS login_attempts (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    email_hash CHAR(64) NOT NULL,
+    ip VARCHAR(45) NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY login_attempts_pair (email_hash, ip, created_at),
+    KEY login_attempts_ip (ip, created_at),
+    KEY login_attempts_created (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

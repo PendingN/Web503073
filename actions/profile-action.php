@@ -20,6 +20,18 @@ if ($password !== '' && $password !== request_string($_POST, 'password_confirmat
     $errors[] = 'Mật khẩu nhập lại chưa khớp.';
 }
 
+// Re-entering the current password is a password-guessing surface for a hijacked session.
+// The attempt is recorded outside the transaction below so a rolled-back failure still counts.
+$throttleIdentity = 'user:' . (int) $user['id'];
+if ($email !== $user['email'] || $password !== '') {
+    $retryAfter = login_throttle_begin($throttleIdentity);
+    if ($retryAfter > 0) {
+        $_SESSION['profile_errors'] = [login_throttle_message($retryAfter)];
+        $_SESSION['profile_input'] = ['name' => $name, 'email' => $email];
+        redirect_to(app_url('profile.php'));
+    }
+}
+
 $connection = db();
 $connection->beginTransaction();
 $statement = $connection->prepare('SELECT * FROM users WHERE id = ? FOR UPDATE');
@@ -47,6 +59,7 @@ try {
     record_activity($user, 'profile.updated', $credentialsChanged ? 'Cập nhật hồ sơ và thông tin đăng nhập' : 'Cập nhật hồ sơ', ['id' => $user['id'], 'name' => $name]);
     $connection->commit();
     if ($credentialsChanged) {
+        login_throttle_succeeded($throttleIdentity);
         session_regenerate_id(true);
         $_SESSION['auth_version'] = $version;
         $_SESSION['csrf_token'] = bin2hex(random_bytes(24));
