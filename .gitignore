@@ -76,3 +76,8 @@ Desktop.ini
 .impeccable/*
 images/blog/*
 !images/blog/.htaccess
+images/avatars/*
+!images/avatars/.htaccess
+
+# Deployment packages built by scripts/build-infinityfree.php
+dist/
