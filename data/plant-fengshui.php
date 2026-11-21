@@ -16,8 +16,6 @@ return [
         'meaning' => 'Thân bện vào nhau tượng trưng cho sự gắn kết, tài lộc tụ về một mối.'],
     25 => ['elements' => ['kim', 'thuy'], 'zodiac' => ['water', 'air'], 'wishes' => ['binh-an'], 'care' => 'easy', 'light' => ['indirect', 'low'], 'position' => ['floor', 'shelf'],
         'meaning' => 'Hoa trắng thanh khiết, còn gọi là Huệ Hòa Bình, mang ý nghĩa bình yên và hòa thuận.'],
-    26 => ['elements' => ['moc', 'hoa'], 'zodiac' => ['fire', 'earth'], 'wishes' => ['su-nghiep'], 'care' => 'medium', 'light' => ['bright', 'indirect'], 'position' => ['floor'],
-        'meaning' => 'Dáng cây cao thẳng, lá to vững chãi, tượng trưng cho sự vươn lên trong công việc.'],
     27 => ['elements' => ['moc', 'hoa'], 'zodiac' => ['air', 'earth'], 'wishes' => ['binh-an'], 'care' => 'easy', 'light' => ['bright'], 'position' => ['floor'],
         'meaning' => 'Lá xòe như bàn tay che chở, được xem là cây xua đuổi điều xấu, giữ nhà yên ổn.'],
     28 => ['elements' => ['hoa', 'tho'], 'zodiac' => ['fire'], 'wishes' => ['tai-loc', 'su-nghiep'], 'care' => 'easy', 'light' => ['indirect', 'low'], 'position' => ['floor'],
