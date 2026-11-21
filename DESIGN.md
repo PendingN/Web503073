@@ -92,6 +92,7 @@ UI pills, header links, inputs, and buttons share Floema's signature `12px` radi
 - Avoid placing eyebrow/kicker labels directly above section headings.
 - Keep all landing overrides scoped inside `.landing-page` so shared internal/admin pages remain unchanged.
 - Always honor `prefers-reduced-motion: reduce`, keyboard navigation, and live DB / fixture fallbacks.
+- Landing motion (end of `css/landing.css`, last module of `js/landing.js`): the hero headline rises line by line, the wall cards bloom and bob, wall columns drift in opposite directions on scroll and follow the pointer, and `[data-reveal]` blocks (staggered inside `[data-reveal-group]`) rise or slide in once. Use the individual `translate`/`scale`/`rotate` properties so hover `transform`s keep working, and only hide content after JavaScript adds `.is-motion`.
 
 ## Blog Extension
 

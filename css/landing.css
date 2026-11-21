@@ -3177,3 +3177,170 @@ a.lalala-card:focus-visible .lalala-card-label {
         animation: none !important;
     }
 }
+
+/* =========================================================
+   Landing motion (index.php)
+   Load: hero headline lines rise out of a mask, copy and buttons follow, wall cards bloom column by column.
+   Ambient: wall cards bob gently; the plant in "Những vấn đề" sways.
+   Scroll: js/landing.js adds .is-motion and reveals [data-reveal] blocks as they enter the viewport,
+   staggering items inside [data-reveal-group]; it also drives the wall parallax (--wall-shift, --wall-mx/--wall-my).
+   Motion uses the individual translate/scale/rotate properties so the existing hover transforms keep working.
+   No JavaScript or prefers-reduced-motion: everything is visible and still.
+   ========================================================= */
+@keyframes lalala-line-up {
+    from { translate: 0 108%; }
+    to { translate: 0 0; }
+}
+
+@keyframes lalala-fade-up {
+    from { opacity: 0; translate: 0 18px; }
+    to { opacity: 1; translate: 0 0; }
+}
+
+@keyframes lalala-card-in {
+    from { opacity: 0; scale: .82; }
+    to { opacity: 1; scale: 1; }
+}
+
+@keyframes lalala-card-float {
+    from { translate: 0 -5px; }
+    to { translate: 0 6px; }
+}
+
+@keyframes lalala-reveal-up {
+    from { opacity: 0; translate: 0 30px; }
+    to { opacity: 1; translate: 0 0; }
+}
+
+@keyframes lalala-reveal-left {
+    from { opacity: 0; translate: -56px 0; }
+    to { opacity: 1; translate: 0 0; }
+}
+
+@keyframes lalala-reveal-right {
+    from { opacity: 0; translate: 56px 0; }
+    to { opacity: 1; translate: 0 0; }
+}
+
+@keyframes lalala-reveal-zoom {
+    from { opacity: 0; scale: .9; }
+    to { opacity: 1; scale: 1; }
+}
+
+@keyframes lalala-sway {
+    from { rotate: -1.6deg; }
+    to { rotate: 1.6deg; }
+}
+
+.lalala-hero-line {
+    display: block;
+    /* Hide the text below its line while it rises; leave room for descenders and stacked diacritics. */
+    clip-path: inset(-45% -6% -0.24em -6%);
+}
+
+.lalala-hero-line > span {
+    display: inline-block;
+    animation: lalala-line-up .95s cubic-bezier(.2, .75, .22, 1) .05s both;
+}
+
+.lalala-hero-line + .lalala-hero-line > span {
+    animation-delay: .17s;
+}
+
+.lalala-hero-desc {
+    animation: lalala-fade-up .8s cubic-bezier(.2, .7, .3, 1) .38s both;
+}
+
+.lalala-hero-actions {
+    animation: lalala-fade-up .8s cubic-bezier(.2, .7, .3, 1) .52s both;
+}
+
+/* Pointer parallax for the whole wall (smoothed), scroll parallax per column (set every frame). */
+.lalala-wall {
+    translate: var(--wall-mx, 0px) var(--wall-my, 0px);
+    transition: translate .9s cubic-bezier(.2, .7, .3, 1);
+}
+
+.lalala-wall-col {
+    translate: 0 calc(var(--wall-shift, 0px) * var(--col-speed, 0));
+}
+
+.lalala-wall-col--1 { --col-i: 0; --col-speed: .32; --float-time: 8.4s; }
+.lalala-wall-col--2 { --col-i: 1; --col-speed: -.26; --float-time: 9.6s; }
+.lalala-wall-col--3 { --col-i: 2; --col-speed: .38; --float-time: 7.8s; }
+.lalala-wall-col--4 { --col-i: 3; --col-speed: -.34; --float-time: 9.1s; }
+.lalala-wall-col--5 { --col-i: 4; --col-speed: .28; --float-time: 8.2s; }
+.lalala-wall-col--6 { --col-i: 5; --col-speed: -.4; --float-time: 10.2s; }
+.lalala-wall-col--7 { --col-i: 6; --col-speed: .3; --float-time: 8.8s; }
+
+.lalala-card:nth-child(1) { --row-i: 0; }
+.lalala-card:nth-child(2) { --row-i: 1; }
+.lalala-card:nth-child(3) { --row-i: 2; }
+.lalala-card:nth-child(4) { --row-i: 3; }
+.lalala-card:nth-child(5) { --row-i: 4; }
+
+.lalala-card {
+    animation:
+        lalala-card-in .9s cubic-bezier(.2, .7, .3, 1) calc(.12s + var(--col-i, 0) * 70ms + var(--row-i, 0) * 45ms) both,
+        lalala-card-float var(--float-time, 9s) ease-in-out calc(var(--col-i, 0) * -1.3s + var(--row-i, 0) * -.9s) infinite alternate;
+}
+
+/* Scroll reveals: hidden only once JavaScript has confirmed it will reveal them. */
+.landing-page.is-motion [data-reveal]:not(.is-revealed) {
+    opacity: 0;
+}
+
+.landing-page.is-motion [data-reveal].is-revealed {
+    animation: lalala-reveal-up .85s cubic-bezier(.2, .7, .3, 1) calc(var(--reveal-i, 0) * 110ms) both;
+}
+
+.landing-page.is-motion [data-reveal="left"].is-revealed {
+    animation-name: lalala-reveal-left;
+}
+
+.landing-page.is-motion [data-reveal="right"].is-revealed {
+    animation-name: lalala-reveal-right;
+}
+
+.landing-page.is-motion [data-reveal="zoom"].is-revealed {
+    animation-name: lalala-reveal-zoom;
+    animation-duration: 1.1s;
+}
+
+.lalala-needs-center img {
+    transform-origin: 50% 94%;
+    animation: lalala-sway 6.5s ease-in-out infinite alternate;
+}
+
+.lalala-offering-icon svg {
+    transition: scale .35s cubic-bezier(.2, .7, .3, 1), rotate .35s cubic-bezier(.2, .7, .3, 1);
+}
+
+.lalala-offering-card:hover .lalala-offering-icon svg,
+.lalala-offering-card:focus-visible .lalala-offering-icon svg {
+    scale: 1.12;
+    rotate: -7deg;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .lalala-hero-line > span,
+    .lalala-hero-desc,
+    .lalala-hero-actions,
+    .lalala-card,
+    .lalala-needs-center img,
+    .landing-page [data-reveal] {
+        animation: none !important;
+    }
+
+    .landing-page [data-reveal] {
+        opacity: 1 !important;
+    }
+
+    .lalala-wall,
+    .lalala-wall-col,
+    .lalala-offering-icon svg {
+        translate: none !important;
+        scale: none !important;
+        rotate: none !important;
+    }
+}
