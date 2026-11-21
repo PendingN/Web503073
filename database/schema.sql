@@ -161,6 +161,31 @@ CREATE TABLE IF NOT EXISTS login_attempts (
     KEY login_attempts_created (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- One 1-5 star rating per user and plant; the user can change or remove it.
+CREATE TABLE IF NOT EXISTS plant_ratings (
+    plant_id INT UNSIGNED NOT NULL,
+    user_id INT UNSIGNED NOT NULL,
+    rating TINYINT UNSIGNED NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (plant_id, user_id),
+    KEY plant_ratings_user (user_id),
+    CONSTRAINT plant_ratings_value CHECK (rating BETWEEN 1 AND 5),
+    CONSTRAINT plant_ratings_plant_fk FOREIGN KEY (plant_id) REFERENCES plants (id) ON DELETE CASCADE,
+    CONSTRAINT plant_ratings_user_fk FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS plant_comments (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    plant_id INT UNSIGNED NOT NULL,
+    user_id INT UNSIGNED NOT NULL,
+    content TEXT NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY plant_comments_plant (plant_id, id),
+    CONSTRAINT plant_comments_plant_fk FOREIGN KEY (plant_id) REFERENCES plants (id) ON DELETE CASCADE,
+    CONSTRAINT plant_comments_user_fk FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- One pending password reset per user. Only hashes are stored: the link token as SHA-256,
 -- the 6-digit code with password_hash(). A row is deleted once the password has been changed.
 CREATE TABLE IF NOT EXISTS password_resets (

@@ -444,6 +444,7 @@ try {
     check(str_contains($adminBrowser->request('admin.php?page=2')['body'], 'Trang 2 / 2'), 'User pagination failed.');
     check(str_contains($adminBrowser->request('admin.php?page=99999')['body'], 'Trang 2 / 2'), 'Pagination must clamp out-of-range pages.');
     require __DIR__ . '/password-reset.php';
+    require __DIR__ . '/plant-reviews.php';
 
     db()->exec("UPDATE plants SET name = 'Preserved plant' WHERE id = 21");
     run_cli(['scripts/setup-database.php']);

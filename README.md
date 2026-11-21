@@ -231,6 +231,7 @@ C:/xampp/php/php.exe -S 127.0.0.1:8090 -t .
 | <code>blog-post.php?slug=...</code> | Chi tiết bài viết | Công khai |
 | <code>actions/favorite-action.php</code> | Thêm/xóa yêu thích | POST + CSRF + đăng nhập |
 | <code>actions/plant-advice-action.php</code> | Tạo gợi ý chọn cây | POST + CSRF |
+| <code>actions/plant-review-action.php</code> | Chấm 1–5 sao (sửa/xóa được), gửi và xóa bình luận dưới mỗi cây (người viết hoặc admin mới xóa được) | POST + CSRF + đăng nhập |
 | <code>actions/profile-action.php</code> | Cập nhật cá nhân | POST + CSRF + đăng nhập |
 | <code>actions/user-action.php</code> | Sửa/khóa/mở khóa user | POST + CSRF + admin |
 | <code>actions/blog-action.php</code> | Đăng/sửa/xóa bài, bình chọn, lưu và bình luận | POST + CSRF + đăng nhập |
