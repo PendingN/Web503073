@@ -39,6 +39,7 @@ require_once __DIR__ . '/post-access.php';
 require_once __DIR__ . '/activity-repository.php';
 require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/login-throttle.php';
+require_once __DIR__ . '/plant-reviews.php';
 
 function e(mixed $value): string
 {

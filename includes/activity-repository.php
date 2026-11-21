@@ -33,12 +33,15 @@ function activity_labels(): array
 {
     return [
         'account.created' => 'Tạo tài khoản', 'auth.login' => 'Đăng nhập', 'auth.logout' => 'Đăng xuất',
+        'auth.password_reset_requested' => 'Yêu cầu đặt lại mật khẩu', 'auth.password_reset' => 'Đặt lại mật khẩu',
         'page.view' => 'Xem trang', 'profile.updated' => 'Sửa hồ sơ', 'user.updated' => 'Quản trị sửa tài khoản',
         'user.blocked' => 'Khóa tài khoản', 'user.unblocked' => 'Mở khóa tài khoản',
         'blog.created' => 'Đăng bài viết', 'blog.updated' => 'Sửa bài viết', 'blog.deleted' => 'Xóa bài viết',
         'blog.vote' => 'Bình chọn bài viết', 'blog.saved' => 'Lưu bài viết', 'blog.unsaved' => 'Bỏ lưu bài viết',
         'comment.created' => 'Gửi bình luận', 'comment.deleted' => 'Xóa bình luận',
         'plant.saved' => 'Yêu thích cây', 'plant.unsaved' => 'Bỏ yêu thích cây',
+        'plant.rated' => 'Đánh giá cây', 'plant.unrated' => 'Xóa đánh giá cây',
+        'plant.commented' => 'Bình luận về cây', 'plant.comment_deleted' => 'Xóa bình luận về cây',
         'tag.created' => 'Thêm chủ đề', 'tag.renamed' => 'Đổi tên chủ đề', 'tag.deleted' => 'Xóa chủ đề',
         'blog.locked' => 'Khóa bài viết', 'blog.lock_changed' => 'Đổi mật khẩu khóa', 'blog.unlocked' => 'Tắt khóa bài viết',
         'blog.shared' => 'Chia sẻ bài viết', 'blog.share_changed' => 'Đổi quyền chia sẻ', 'blog.unshared' => 'Thu hồi chia sẻ',

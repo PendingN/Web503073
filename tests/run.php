@@ -108,6 +108,7 @@ $server = null;
 $webProcess = null;
 $webPipes = [];
 $log = tempnam(sys_get_temp_dir(), 'web503073-test-');
+$mailDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'web503073-mail-' . bin2hex(random_bytes(6));
 $failure = null;
 try {
     if (!extension_loaded('curl') || !extension_loaded('pdo_mysql') || !extension_loaded('mbstring')) {
@@ -116,7 +117,7 @@ try {
     $server = create_database_connection(load_database_config(true), false);
     putenv('DB_NAME=' . $testName);
     run_cli(['scripts/setup-database.php']);
-    check((int) db()->query('SELECT COUNT(*) FROM plants')->fetchColumn() === 29, 'Seed must import all 29 plants.');
+    check((int) db()->query('SELECT COUNT(*) FROM plants')->fetchColumn() === 28, 'Seed must import all 28 plants.');
     check(array_column(plants_by_ids([22, 21, 22, 99999]), 'id') === [22, 21], 'Bulk plant lookup must preserve order, remove duplicates and skip missing IDs.');
 
     $adminEnvironment = ['APP_ADMIN_NAME' => 'Test Admin', 'APP_ADMIN_EMAIL' => 'admin@example.test', 'APP_ADMIN_PASSWORD' => 'TestAdmin123!'];
@@ -147,6 +148,10 @@ try {
     $base = 'http://' . $address . $prefix;
     // Never call the real AI from tests; the advisor must answer from its rules.
     putenv('DEEPSEEK_API_KEY=');
+    // Never send real email from tests; the log driver writes each message to a temporary folder.
+    putenv('MAIL_DRIVER=log');
+    putenv('MAIL_LOG_DIR=' . $mailDir);
+    putenv('MAIL_APP_URL=');
     $webProcess = proc_open([PHP_BINARY, '-S', $address, '-t', $documentRoot, 'server-router.php'], [0 => ['pipe', 'r'], 1 => ['file', $log, 'a'], 2 => ['file', $log, 'a']], $webPipes, dirname(__DIR__));
     if (!is_resource($webProcess)) {
         throw new RuntimeException('Cannot start test web server.');
@@ -160,7 +165,7 @@ try {
         usleep(100000);
     }
     $guest = new TestBrowser($base);
-    foreach (['index.php', 'collection.php', 'plant-detail.php?id=22', 'plant-advisor.php', 'blog.php', 'blog-post.php?slug=bat-dau-mot-goc-xanh-tu-dau', 'login.php', 'register.php'] as $path) {
+    foreach (['index.php', 'collection.php', 'plant-detail.php?id=22', 'plant-advisor.php', 'blog.php', 'blog-post.php?slug=bat-dau-mot-goc-xanh-tu-dau', 'login.php', 'register.php', 'forgot-password.php'] as $path) {
         check($guest->request($path)['status'] === 200, 'Public route failed: ' . $path);
     }
     foreach (['favorites.php', 'profile.php', 'admin.php', 'admin-dashboard.php'] as $path) {
@@ -438,6 +443,9 @@ try {
     }
     check(str_contains($adminBrowser->request('admin.php?page=2')['body'], 'Trang 2 / 2'), 'User pagination failed.');
     check(str_contains($adminBrowser->request('admin.php?page=99999')['body'], 'Trang 2 / 2'), 'Pagination must clamp out-of-range pages.');
+    require __DIR__ . '/password-reset.php';
+    require __DIR__ . '/plant-reviews.php';
+
     db()->exec("UPDATE plants SET name = 'Preserved plant' WHERE id = 21");
     run_cli(['scripts/setup-database.php']);
     check(find_plant(21)['name'] === 'Preserved plant' && find_user((int) $alice['id'])['name'] === 'Alice Updated' && user_favorite_ids((int) $alice['id']) === [22], 'Repeat setup overwrote existing records.');
@@ -470,6 +478,12 @@ try {
     putenv($previousName === false ? 'DB_NAME' : 'DB_NAME=' . $previousName);
     if ($log !== false) {
         unlink($log);
+    }
+    foreach (glob($mailDir . DIRECTORY_SEPARATOR . '*.txt') ?: [] as $mailFile) {
+        unlink($mailFile);
+    }
+    if (is_dir($mailDir)) {
+        rmdir($mailDir);
     }
 }
 if ($failure !== null) {
