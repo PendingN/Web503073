@@ -449,3 +449,120 @@
         syncFeatureControls();
     }
 })();
+
+// Landing motion: scroll reveals for [data-reveal] blocks and depth for the hero wall.
+// Content is only hidden after .is-motion is set here, so no-JS and reduced-motion visitors see everything at once.
+(function () {
+    'use strict';
+
+    var body = document.body;
+    if (!body || !body.classList.contains('landing-page')) return;
+    var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    var finePointer = window.matchMedia('(pointer: fine)');
+    var revealItems = Array.from(document.querySelectorAll('[data-reveal]'));
+    var observer = null;
+
+    // Items in one group enter one after another.
+    Array.from(document.querySelectorAll('[data-reveal-group]')).forEach(function (group) {
+        Array.from(group.querySelectorAll('[data-reveal]')).forEach(function (item, index) {
+            item.style.setProperty('--reveal-i', String(index));
+        });
+    });
+
+    var revealAll = function () {
+        revealItems.forEach(function (item) { item.classList.add('is-revealed'); });
+    };
+
+    var setupReveals = function () {
+        if (observer) {
+            observer.disconnect();
+            observer = null;
+        }
+        if (reducedMotion.matches || !('IntersectionObserver' in window)) {
+            body.classList.remove('is-motion');
+            revealAll();
+            return;
+        }
+        body.classList.add('is-motion');
+        observer = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (!entry.isIntersecting) return;
+                entry.target.classList.add('is-revealed');
+                observer.unobserve(entry.target);
+            });
+        }, { rootMargin: '0px 0px -8% 0px', threshold: 0.12 });
+        revealItems.forEach(function (item) {
+            if (!item.classList.contains('is-revealed')) observer.observe(item);
+        });
+    };
+
+    var hero = document.querySelector('.lalala-hero');
+    var wall = hero ? hero.querySelector('.lalala-wall') : null;
+    var framePending = false;
+
+    // Columns slide in opposite directions while the hero scrolls away (speeds live in CSS as --col-speed).
+    var updateWallShift = function () {
+        framePending = false;
+        if (!hero) return;
+        if (reducedMotion.matches) {
+            hero.style.removeProperty('--wall-shift');
+            return;
+        }
+        var rect = hero.getBoundingClientRect();
+        if (rect.bottom < 0) return;
+        var travelled = Math.max(0, Math.min(rect.height, -rect.top));
+        hero.style.setProperty('--wall-shift', (travelled * 0.32).toFixed(1) + 'px');
+    };
+
+    // Anchor links and End/Home can jump past a block without it ever intersecting; reveal anything already passed.
+    var revealPassed = function () {
+        if (!observer) return;
+        var limit = (window.innerHeight || 800) * 0.92;
+        revealItems.forEach(function (item) {
+            if (item.classList.contains('is-revealed')) return;
+            if (item.getBoundingClientRect().top < limit) {
+                item.classList.add('is-revealed');
+                observer.unobserve(item);
+            }
+        });
+    };
+
+    var scheduleWallShift = function () {
+        if (framePending) return;
+        framePending = true;
+        window.requestAnimationFrame(function () {
+            updateWallShift();
+            revealPassed();
+        });
+    };
+
+    window.addEventListener('scroll', scheduleWallShift, { passive: true });
+    window.addEventListener('resize', scheduleWallShift);
+    if (hero && wall) {
+        hero.addEventListener('pointermove', function (event) {
+            if (reducedMotion.matches || !finePointer.matches) return;
+            var rect = hero.getBoundingClientRect();
+            if (!rect.width || !rect.height) return;
+            var nx = (event.clientX - rect.left) / rect.width - 0.5;
+            var ny = (event.clientY - rect.top) / rect.height - 0.5;
+            wall.style.setProperty('--wall-mx', (nx * -18).toFixed(1) + 'px');
+            wall.style.setProperty('--wall-my', (ny * -12).toFixed(1) + 'px');
+        }, { passive: true });
+        hero.addEventListener('pointerleave', function () {
+            wall.style.removeProperty('--wall-mx');
+            wall.style.removeProperty('--wall-my');
+        });
+    }
+
+    reducedMotion.addEventListener('change', function () {
+        setupReveals();
+        if (wall && reducedMotion.matches) {
+            wall.style.removeProperty('--wall-mx');
+            wall.style.removeProperty('--wall-my');
+        }
+        updateWallShift();
+    });
+
+    setupReveals();
+    updateWallShift();
+})();

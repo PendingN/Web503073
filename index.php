@@ -120,7 +120,7 @@ require __DIR__ . '/includes/header.php';
     <section class="lalala-hero" aria-labelledby="lalala-hero-title" data-nav-section="light">
         <div class="lalala-hero-inner landing-content">
             <div class="lalala-hero-copy">
-                <h1 id="lalala-hero-title">Là Lá La,<br>chọn xanh cho nhà</h1>
+                <h1 id="lalala-hero-title"><span class="lalala-hero-line"><span>Là Lá La,</span></span> <span class="lalala-hero-line"><span>chọn xanh cho nhà</span></span></h1>
                 <p class="lalala-hero-desc">
                     Lá Lá La mang một chút xanh dịu dàng vào không gian sống, nơi mỗi chiếc lá, mỗi chồi non đều kể một câu chuyện nhỏ về thiên nhiên, để bạn tìm thấy niềm vui và sự bình yên trong từng khoảnh khắc chăm sóc cây.
                 </p>
@@ -165,13 +165,13 @@ require __DIR__ . '/includes/header.php';
 
     <section class="lalala-offerings" id="lalala-features" aria-labelledby="lalala-offerings-title" data-nav-section="light">
         <div class="landing-content">
-            <header class="lalala-offerings-head">
+            <header class="lalala-offerings-head" data-reveal>
                 <p class="lalala-offerings-kicker">OPEN TO NATURE</p>
                 <h2 id="lalala-offerings-title">LÀ LÁ LA có gì?</h2>
             </header>
-            <div class="lalala-offerings-grid">
+            <div class="lalala-offerings-grid" data-reveal-group>
                 <?php foreach ($lalalaOfferings as $offering): ?>
-                    <a class="lalala-offering-card" href="<?= e($offering['href']) ?>" aria-label="<?= e($offering['aria']) ?>">
+                    <a class="lalala-offering-card" data-reveal href="<?= e($offering['href']) ?>" aria-label="<?= e($offering['aria']) ?>">
                         <span class="lalala-offering-icon" aria-hidden="true">
                             <?php if ($offering['icon'] === 'pot-hand'): ?>
                                 <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M24 22V12"/><path d="M24 15c0-4.5 3.5-7 7.5-7 0 4.5-3.5 7-7.5 7Z"/><path d="M24 17c0-3.8-3-6-6.5-6 0 3.8 3 6 6.5 6Z"/><path d="M18 22h12l-1.5 8h-9L18 22Z"/><path d="M11 33h8l4 2.5h9a2.5 2.5 0 0 1 0 5H19l-8-3.5v-4Z"/></svg>
@@ -193,34 +193,34 @@ require __DIR__ . '/includes/header.php';
 
     <section class="lalala-needs" id="plant-needs" aria-labelledby="lalala-needs-title" data-nav-section="light">
         <div class="landing-content">
-            <header class="lalala-needs-head">
+            <header class="lalala-needs-head" data-reveal>
                 <h2 id="lalala-needs-title">Những vấn đề cây đang gặp phải</h2>
             </header>
         </div>
 
         <div class="lalala-needs-stage">
             <div class="lalala-needs-grid landing-content">
-                <div class="lalala-needs-col lalala-needs-col--left">
-                    <article class="lalala-need-card lalala-need-card--dark lalala-need-card--inward">
+                <div class="lalala-needs-col lalala-needs-col--left" data-reveal-group>
+                    <article data-reveal="left" class="lalala-need-card lalala-need-card--dark lalala-need-card--inward">
                         <h3>Vàng lá &amp; úng rễ</h3>
                         <p>Tưới quá tay hoặc chậu bí nước khiến lá gốc mềm vàng và rễ dễ thối nhũn.</p>
                     </article>
-                    <article class="lalala-need-card lalala-need-card--light lalala-need-card--outward">
+                    <article data-reveal="left" class="lalala-need-card lalala-need-card--light lalala-need-card--outward">
                         <h3>Cháy mép &amp; khô đầu lá</h3>
                         <p>Nắng gắt chiếu trực tiếp hoặc phòng máy lạnh quá khô làm lá sạm viền.</p>
                     </article>
                 </div>
 
-                <div class="lalala-needs-center">
+                <div class="lalala-needs-center" data-reveal="zoom">
                     <img src="<?= e(image_url('plant-needs-hero.png')) ?>" alt="Chậu cây Monstera minh họa những vấn đề cây thường gặp" width="617" height="947">
                 </div>
 
-                <div class="lalala-needs-col lalala-needs-col--right">
-                    <article class="lalala-need-card lalala-need-card--light lalala-need-card--outward">
+                <div class="lalala-needs-col lalala-needs-col--right" data-reveal-group>
+                    <article data-reveal="right" class="lalala-need-card lalala-need-card--light lalala-need-card--outward">
                         <h3>Thiếu sáng, cây vươn còi</h3>
                         <p>Đặt xa cửa sổ khiến thân vươn dài yếu ớt, lá nhạt màu và thưa dần.</p>
                     </article>
-                    <article class="lalala-need-card lalala-need-card--dark lalala-need-card--inward">
+                    <article data-reveal="right" class="lalala-need-card lalala-need-card--dark lalala-need-card--inward">
                         <h3>Rệp sáp &amp; nấm phấn</h3>
                         <p>Góc trồng thiếu thoáng khí dễ xuất hiện rệp trắng dưới tán lá và nấm thân.</p>
                     </article>
@@ -230,7 +230,7 @@ require __DIR__ . '/includes/header.php';
     </section>
 
     <section class="lalala-marquee-section" id="plant-carousel" aria-labelledby="lalala-marquee-title" data-nav-section="light">
-        <div class="lalala-marquee-head landing-content">
+        <div class="lalala-marquee-head landing-content" data-reveal>
             <div>
                 <p class="lalala-section-kicker">BỘ SƯU TẬP HIỆN CÓ</p>
                 <h2 id="lalala-marquee-title">Các loài cây trong Là Lá La</h2>
@@ -243,7 +243,7 @@ require __DIR__ . '/includes/header.php';
             </div>
         </div>
 
-        <div class="lalala-marquee-viewport" data-marquee-viewport>
+        <div class="lalala-marquee-viewport" data-marquee-viewport data-reveal>
             <div class="lalala-marquee-track">
                 <?php for ($loop = 0; $loop < 2; $loop++):
                     $isClone = $loop === 1;
@@ -268,7 +268,7 @@ require __DIR__ . '/includes/header.php';
 
     <section class="lalala-blog-intro" id="blog-showcase" aria-labelledby="lalala-blog-title" data-nav-section="light">
         <div class="landing-content">
-            <div class="lalala-blog-head">
+            <div class="lalala-blog-head" data-reveal>
                 <div>
                     <p class="lalala-section-kicker">CỘNG ĐỒNG LÀ LÁ LA</p>
                     <h2 id="lalala-blog-title">Blog chia sẻ kinh nghiệm</h2>
@@ -279,7 +279,7 @@ require __DIR__ . '/includes/header.php';
                 </div>
             </div>
 
-            <div class="lalala-blog-grid">
+            <div class="lalala-blog-grid" data-reveal-group>
                 <?php if ($blogShowcasePosts !== []): ?>
                     <?php foreach ($blogShowcasePosts as $post):
                         $cover = blog_cover_url($post);
@@ -287,7 +287,7 @@ require __DIR__ . '/includes/header.php';
                         $postExcerpt = trim((string) (post_list_excerpt($post) ?: 'Ghi chép chăm cây thực tế và cảm hứng sống xanh từ cộng đồng Là Lá La.'));
                         $postAuthor = trim((string) ($post['author'] ?? 'Là Lá La'));
                     ?>
-                    <a class="lalala-blog-card" href="blog-post.php?slug=<?= e(rawurlencode((string) $post['slug'])) ?>">
+                    <a class="lalala-blog-card" data-reveal href="blog-post.php?slug=<?= e(rawurlencode((string) $post['slug'])) ?>">
                         <div class="lalala-blog-card-media">
                             <img src="<?= e(asset_url($cover)) ?>" alt="<?= e((string) $post['title']) ?>" width="420" height="280" loading="lazy">
                         </div>
@@ -305,7 +305,7 @@ require __DIR__ . '/includes/header.php';
                     </a>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <a class="lalala-blog-card" href="blog.php">
+                    <a class="lalala-blog-card" data-reveal href="blog.php">
                         <div class="lalala-blog-card-media">
                             <img src="<?= e(image_url('anh57.jpg')) ?>" alt="Cây xanh trong nhà" width="420" height="280" loading="lazy">
                         </div>
