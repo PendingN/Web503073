@@ -32,7 +32,7 @@ function record_activity(?array $actor, string $event, string $description, ?arr
 function activity_labels(): array
 {
     return [
-        'account.created' => 'Tạo tài khoản', 'auth.login' => 'Đăng nhập', 'auth.logout' => 'Đăng xuất',
+        'account.created' => 'Tạo tài khoản', 'account.verified' => 'Kích hoạt tài khoản', 'account.password_reset' => 'Đặt lại mật khẩu', 'user.verified' => 'Quản trị kích hoạt tài khoản', 'auth.login' => 'Đăng nhập', 'auth.logout' => 'Đăng xuất',
         'page.view' => 'Xem trang', 'profile.updated' => 'Sửa hồ sơ', 'user.updated' => 'Quản trị sửa tài khoản',
         'user.blocked' => 'Khóa tài khoản', 'user.unblocked' => 'Mở khóa tài khoản',
         'blog.created' => 'Đăng bài viết', 'blog.updated' => 'Sửa bài viết', 'blog.deleted' => 'Xóa bài viết',

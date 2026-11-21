@@ -21,6 +21,16 @@ try {
             $connection->exec($sql);
         }
     }
+    // One-off upgrade: accounts created before email activation existed count as verified,
+    // otherwise everyone would be locked out. Runs only when the column is added, so later runs never
+    // activate an account that is still waiting for its email link.
+    if (!$connection->query("SHOW COLUMNS FROM users LIKE 'email_verified_at'")->fetch()) {
+        $connection->exec('ALTER TABLE users ADD COLUMN email_verified_at DATETIME NULL AFTER status');
+        $connection->exec('UPDATE users SET email_verified_at = created_at WHERE email_verified_at IS NULL');
+    }
+    if (!$connection->query("SHOW COLUMNS FROM users LIKE 'avatar_path'")->fetch()) {
+        $connection->exec('ALTER TABLE users ADD COLUMN avatar_path VARCHAR(255) NULL AFTER email');
+    }
     if (!$connection->query("SHOW COLUMNS FROM blog_posts LIKE 'image_path'")->fetch()) {
         $connection->exec('ALTER TABLE blog_posts ADD COLUMN image_path VARCHAR(255) NULL AFTER content');
     }

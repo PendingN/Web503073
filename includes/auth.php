@@ -15,7 +15,7 @@ function current_user(): ?array
     }
 
     $record = find_user($id);
-    if ($record === null || $record['status'] !== 'active'
+    if ($record === null || $record['status'] !== 'active' || !user_email_verified($record)
         || (int) $record['session_version'] !== ($_SESSION['auth_version'] ?? null)) {
         unset($_SESSION['user_id'], $_SESSION['auth_version']);
         session_regenerate_id(true);

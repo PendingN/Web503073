@@ -120,11 +120,30 @@ function email_in_use(string $email, int $exceptId = 0): bool
     return $statement->fetchColumn() !== false;
 }
 
-function create_user(string $name, string $email, string $password, string $role = 'user'): int
+// Accounts start unverified: they cannot sign in until the emailed link is opened. Trusted callers
+// (CLI scripts that create administrators or demo data) pass $verified = true.
+function create_user(string $name, string $email, string $password, string $role = 'user', bool $verified = false): int
 {
-    $statement = db()->prepare('INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)');
+    $statement = db()->prepare('INSERT INTO users (name, email, password_hash, role, email_verified_at) VALUES (?, ?, ?, ?, '
+        . ($verified ? 'CURRENT_TIMESTAMP' : 'NULL') . ')');
     $statement->execute([$name, $email, password_hash($password, PASSWORD_DEFAULT), $role]);
     return (int) db()->lastInsertId();
+}
+
+// Registering an email whose owner never opened the activation link takes the account over, so a stranger who
+// typed someone else's address cannot keep that person from signing up. Only untouched ordinary accounts qualify:
+// they could never sign in, so they hold no data. Call inside a transaction; returns the user id or null.
+function reclaim_unverified_user(string $name, string $email, string $password): ?int
+{
+    $statement = db()->prepare("SELECT id FROM users WHERE email = ? AND email_verified_at IS NULL AND role = 'user' AND status = 'active' FOR UPDATE");
+    $statement->execute([$email]);
+    $id = $statement->fetchColumn();
+    if ($id === false) {
+        return null;
+    }
+    $statement = db()->prepare('UPDATE users SET name = ?, password_hash = ?, session_version = session_version + 1 WHERE id = ?');
+    $statement->execute([$name, password_hash($password, PASSWORD_DEFAULT), $id]);
+    return (int) $id;
 }
 
 function duplicate_email_error(PDOException $exception): bool
@@ -158,7 +177,7 @@ function list_users(string $search, string $status, int $page, int $perPage = 20
     $pages = max(1, (int) ceil($total / $perPage));
     $page = min(max(1, $page), $pages);
     $offset = ($page - 1) * $perPage;
-    $statement = db()->prepare('SELECT u.id, u.name, u.email, u.role, u.status, u.created_at, u.last_login_at,'
+    $statement = db()->prepare('SELECT u.id, u.name, u.email, u.role, u.status, u.email_verified_at, u.created_at, u.last_login_at,'
         . ' (SELECT COUNT(*) FROM favorites f WHERE f.user_id = u.id) AS favorite_count FROM users u'
         . $where . ' ORDER BY u.id DESC LIMIT ' . $perPage . ' OFFSET ' . $offset);
     $statement->execute($parameters);

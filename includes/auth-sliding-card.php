@@ -7,6 +7,7 @@ $returnTo = $returnTo ?? '';
 $email = $email ?? '';
 $name = $name ?? '';
 $loginError = $loginError ?? null;
+$unverifiedEmail = $unverifiedEmail ?? null;
 $flashMessage = $flashMessage ?? null;
 $errors = $errors ?? [];
 $signedInUser = current_user();
@@ -83,6 +84,15 @@ $registerAttr = static fn (string $fieldName): string => $isRegister
                     <div class="login-error" id="login-error" role="alert"><?= e($loginError) ?></div>
                 <?php endif; ?>
 
+                <?php if ($unverifiedEmail !== null): ?>
+                    <form class="auth-resend" method="post" action="actions/resend-verification.php">
+                        <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+                        <input type="hidden" name="email" value="<?= e($unverifiedEmail) ?>">
+                        <input type="hidden" name="return_to" value="<?= e($returnTo) ?>">
+                        <button class="auth-resend-button" type="submit">Gửi lại email kích hoạt</button>
+                    </form>
+                <?php endif; ?>
+
                 <form class="login-form auth-papercut-form" method="post" action="login.php">
                     <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
                     <input type="hidden" <?= $loginAttr('return_to') ?> value="<?= e($returnTo) ?>">
@@ -97,6 +107,7 @@ $registerAttr = static fn (string $fieldName): string => $isRegister
                             <button class="password-toggle" type="button" data-password-toggle aria-controls="login-password" aria-label="Hiện mật khẩu" aria-pressed="false">Hiện</button>
                         </div>
                     </div>
+                    <a class="auth-forgot-link" href="forgot-password.php">Quên mật khẩu?</a>
                     <button class="btn-brand auth-video-submit" data-auth-submit type="<?= $isRegister ? 'button' : 'submit' ?>">Đăng nhập</button>
                 </form>
 

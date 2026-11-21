@@ -79,7 +79,7 @@ require __DIR__ . '/includes/header.php';
                                     <td class="text-sm text-muted">#<?= (int) $member['id'] ?></td>
                                     <td><strong class="block max-w-64 text-sm font-semibold wrap-anywhere"><?= e($member['name']) ?></strong><span class="mt-1 block max-w-64 text-sm wrap-anywhere text-muted"><?= e($member['email']) ?></span></td>
                                     <td><span class="rounded-md bg-soft px-2 py-1 text-sm whitespace-nowrap text-muted"><?= $member['role'] === 'admin' ? 'Quản trị viên' : 'Thành viên' ?></span></td>
-                                    <td><span class="status-<?= e($member['status']) ?>"><?= $member['status'] === 'active' ? 'Đang hoạt động' : 'Đã khóa' ?></span></td>
+                                    <td><span class="status-<?= e($member['status']) ?>"><?= $member['status'] === 'active' ? 'Đang hoạt động' : 'Đã khóa' ?></span><?php if ($member['email_verified_at'] === null): ?><span class="mt-1 block text-xs text-muted">Chưa kích hoạt email</span><?php endif; ?></td>
                                     <td class="text-sm"><?= (int) $member['favorite_count'] ?></td>
                                     <td class="text-sm whitespace-nowrap text-muted"><?= e(date('d/m/Y', strtotime($member['created_at']))) ?></td>
                                     <td><div class="flex items-center gap-2 whitespace-nowrap">
@@ -91,6 +91,15 @@ require __DIR__ . '/includes/header.php';
                                                 <input type="hidden" name="operation" value="<?= $member['role'] === 'admin' ? 'demote' : 'promote' ?>">
                                                 <input type="hidden" name="return_to" value="<?= e(current_request_url()) ?>">
                                                 <button class="inline-flex min-h-[36px] items-center rounded-md bg-primary/10 px-2.5 py-1.5 text-sm font-medium text-primary-dark hover:bg-primary/20" type="submit"><?= $member['role'] === 'admin' ? 'Hạ quyền' : 'Nâng quyền' ?></button>
+                                            </form>
+                                        <?php endif; ?>
+                                        <?php if ($member['email_verified_at'] === null): ?>
+                                            <form method="post" action="actions/user-action.php" data-confirm="<?= e($member['name'] . ' (' . $member['email'] . ') sẽ được kích hoạt mà không cần mở liên kết trong email.') ?>" data-confirm-title="Kích hoạt tài khoản?" data-confirm-label="Kích hoạt">
+                                                <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+                                                <input type="hidden" name="user_id" value="<?= (int) $member['id'] ?>">
+                                                <input type="hidden" name="operation" value="verify">
+                                                <input type="hidden" name="return_to" value="<?= e(current_request_url()) ?>">
+                                                <button class="inline-flex min-h-[36px] items-center rounded-md bg-emerald-50 px-2.5 py-1.5 text-sm font-medium text-emerald-700 hover:bg-emerald-100" type="submit">Kích hoạt</button>
                                             </form>
                                         <?php endif; ?>
                                         <?php if ($member['role'] !== 'admin'): ?>

@@ -22,19 +22,30 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     if ($password !== $confirmation) {
         $errors[] = 'Mật khẩu nhập lại chưa khớp.';
     }
-    if ($errors === [] && email_in_use($email)) {
-        $errors[] = 'Email này đã được đăng ký.';
-    }
     if ($errors === []) {
         try {
-            // Public registration always creates an ordinary user.
+            // Public registration always creates an ordinary, unverified user; it signs in only after the emailed link is opened.
             db()->beginTransaction();
-            $id = create_user($name, $email, $password);
-            record_activity(['id' => $id, 'name' => $name], 'account.created', 'Đăng ký tài khoản thành viên', ['id' => $id, 'name' => $name]);
-            db()->commit();
-            sign_in(find_user($id));
-            set_flash('Đăng ký thành công. Chào mừng bạn đến với khu vườn!');
-            redirect_to($returnTo);
+            $id = reclaim_unverified_user($name, $email, $password);
+            if ($id === null) {
+                if (email_in_use($email)) {
+                    db()->rollBack();
+                    $errors[] = 'Email này đã được đăng ký.';
+                } else {
+                    $id = create_user($name, $email, $password);
+                }
+            }
+            if ($id !== null) {
+                $token = issue_email_verification($id);
+                record_activity(['id' => $id, 'name' => $name], 'account.created', 'Đăng ký tài khoản thành viên, chờ kích hoạt qua email', ['id' => $id, 'name' => $name]);
+                db()->commit();
+                // Send after the commit: an SMTP outage must not undo the registration. "Gửi lại" on the login page recovers.
+                $sent = send_verification_email(['name' => $name, 'email' => $email], $token);
+                set_flash($sent
+                    ? 'Đăng ký thành công. Chúng tôi đã gửi email kích hoạt tới ' . $email . '. Hãy mở liên kết trong email (có hiệu lực ' . EMAIL_VERIFICATION_HOURS . ' giờ, kiểm tra cả thư rác) rồi đăng nhập.'
+                    : 'Đã tạo tài khoản nhưng chưa gửi được email kích hoạt. Hãy đăng nhập bằng mật khẩu vừa đặt và chọn "Gửi lại email kích hoạt".');
+                redirect_to(app_url('login.php') . '?return_to=' . rawurlencode($returnTo));
+            }
         } catch (PDOException $exception) {
             if (db()->inTransaction()) {
                 db()->rollBack();

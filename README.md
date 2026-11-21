@@ -302,6 +302,38 @@ Luồng xử lý: **trang PHP → biểu mẫu POST → `actions/blog-action.php
 
 Không thêm framework, thư viện hoặc công đoạn build.
 
+### Kích hoạt tài khoản qua email
+
+Đăng ký công khai tạo tài khoản **chưa kích hoạt** và gửi email chứa liên kết <code>verify-email.php?token=...</code>. Liên kết dùng được một lần, hiệu lực 24 giờ; chỉ SHA-256 của token được lưu trong bảng <code>email_verifications</code>. Tài khoản chưa kích hoạt không đăng nhập được: sau khi nhập đúng mật khẩu, trang đăng nhập báo "chưa được kích hoạt" kèm nút **Gửi lại email kích hoạt** (tối đa một email mỗi phút cho mỗi tài khoản, có giới hạn lượt thử theo IP). Đăng ký lại bằng email chưa từng được kích hoạt sẽ thay thế đăng ký trước, nên người lạ nhập nhầm hoặc cố ý nhập email của bạn không chặn được bạn đăng ký.
+
+Quản trị viên có nút **Kích hoạt** ở trang quản lý tài khoản cho trường hợp email không tới. Tài khoản tạo bằng <code>scripts/create-admin.php</code> và <code>scripts/create-demo-users.php</code> được kích hoạt sẵn.
+
+Cấu hình gửi mail (file <code>config/mail.local.php</code> bị Git bỏ qua, hoặc biến môi trường <code>MAIL_HOST</code>, <code>MAIL_PORT</code>, <code>MAIL_ENCRYPTION</code>, <code>MAIL_USERNAME</code>, <code>MAIL_PASSWORD</code>, <code>MAIL_FROM_EMAIL</code>, <code>MAIL_FROM_NAME</code>, <code>APP_URL</code>):
+
+~~~powershell
+Copy-Item config/mail.local.example.php config/mail.local.php
+# Điền SMTP và app_url (địa chỉ công khai của website, ví dụ https://example.com/Web503073)
+~~~
+
+- <code>MAIL_ENCRYPTION</code>: <code>tls</code> (STARTTLS, cổng 587), <code>ssl</code> (cổng 465) hoặc <code>none</code> (chỉ cho server test cục bộ; mật khẩu SMTP không bao giờ được gửi không mã hóa tới máy khác). Chứng chỉ máy chủ được kiểm tra; nếu PHP trên XAMPP chưa có CA bundle, đặt <code>openssl.cafile</code> trong <code>php.ini</code> thay vì tắt kiểm tra.
+- <code>APP_URL</code> bắt buộc khi chạy trên tên miền thật. Liên kết trong email không bao giờ lấy từ header <code>Host</code> của request (kẻ tấn công có thể giả để lấy token), trừ khi truy cập bằng <code>localhost</code>/<code>127.0.0.1</code>.
+- Khi chưa có <code>MAIL_HOST</code>, website dùng driver <code>log</code>: email không được gửi mà ghi vào <code>.runtime/mail/*.eml</code>; mở file mới nhất để lấy liên kết kích hoạt khi phát triển local.
+- Gửi mail lỗi không làm hỏng đăng ký: tài khoản vẫn được tạo, lỗi ghi vào log PHP (không chứa mật khẩu hay token) và người dùng có thể bấm gửi lại.
+
+Sau khi cập nhật mã nguồn, chạy lại <code>scripts/setup-database.php</code>. Lệnh thêm cột <code>users.email_verified_at</code> và bảng <code>email_verifications</code>, đồng thời **đánh dấu mọi tài khoản đang có là đã kích hoạt** (một lần, khi thêm cột) để không ai bị khóa ngoài. Chạy lại setup sau đó không kích hoạt thêm tài khoản nào.
+
+### Quên mật khẩu
+
+Trang đăng nhập có liên kết **Quên mật khẩu?** tới <code>forgot-password.php</code>. Nhập email, hệ thống luôn trả cùng một thông báo dù email có tồn tại hay không, và chỉ gửi mail khi tài khoản có thật:
+
+- tài khoản đã kích hoạt nhận liên kết <code>reset-password.php?token=...</code>, **hết hạn sau 60 phút** (hằng số <code>PASSWORD_RESET_MINUTES</code> trong <code>includes/password-reset.php</code>), dùng được một lần;
+- tài khoản chưa kích hoạt nhận lại liên kết kích hoạt thay vì liên kết đặt lại, vì đặt lại mật khẩu không được bỏ qua bước xác nhận email;
+- tài khoản bị khóa không nhận gì.
+
+Mỗi tài khoản chỉ có một liên kết còn hiệu lực (yêu cầu mới thay liên kết cũ), tối đa một email mỗi phút, và mọi yêu cầu tính vào giới hạn lượt thử theo IP/email của đăng nhập. Chỉ SHA-256 của token nằm trong bảng <code>password_resets</code>. Đặt mật khẩu mới thành công sẽ đăng xuất mọi phiên đang mở của tài khoản đó, xóa các liên kết còn lại và không tự đăng nhập. Cần chạy lại <code>scripts/setup-database.php</code> để tạo bảng <code>password_resets</code>.
+
+Chưa làm: đổi email trong hồ sơ hoặc do quản trị viên sửa chưa yêu cầu xác nhận lại email mới.
+
 ## 6. Bảo mật quan trọng
 
 - SQL dùng PDO prepared statements; không nối trực tiếp dữ liệu người dùng vào câu lệnh SQL.
@@ -313,10 +345,12 @@ Không thêm framework, thư viện hoặc công đoạn build.
 - Apache và PHP router chặn metadata Git, secret, cấu hình, database schema, script CLI và runtime state.
 - App user không phải <code>root</code>, không có password rỗng và không được dùng password placeholder.
 - Khóa user làm mất hiệu lực các session cũ; đổi email hoặc password cũng kết thúc các session khác.
+- Tài khoản mới phải kích hoạt qua email trước khi đăng nhập; token kích hoạt chỉ lưu dạng hash và liên kết không dựa vào header <code>Host</code>.
 
 Không commit các file sau:
 
 - <code>config/database.local.php</code>;
+- <code>config/mail.local.php</code> (mật khẩu SMTP);
 - <code>.env</code> và <code>.env.*</code>;
 - password, private key, certificate private, credential JSON;
 - <code>.runtime/</code>, log, cache, database dump và file tạm.
@@ -350,6 +384,7 @@ Remove-Item Env:DB_SETUP_USER, Env:DB_SETUP_PASSWORD
 Bộ test kiểm tra các luồng:
 
 - đăng ký, đăng nhập và password hashing;
+- kích hoạt qua email: email chứa liên kết, token chỉ lưu dạng hash, chặn đăng nhập khi chưa kích hoạt, gửi lại và thời gian chờ, token hết hạn/dùng lại/sai, đăng ký lại email chưa kích hoạt, kích hoạt thủ công bởi admin, nâng cấp database cũ; quên mật khẩu: liên kết một lần, hết hạn, bị thay thế, đăng xuất phiên cũ, thông báo trung lập, tài khoản chưa kích hoạt và bị khóa (test ghi email vào thư mục tạm, không gửi mail thật);
 - bảo vệ route riêng tư và admin;
 - CSRF và cấm GET trên handler thay đổi dữ liệu;
 - tìm kiếm tiếng Việt và xử lý wildcard/chuỗi SQL injection thử nghiệm;
@@ -359,6 +394,12 @@ Bộ test kiểm tra các luồng:
 - blog: đăng/sửa/xóa, phân quyền, tìm kiếm, phân trang, bình chọn/lưu qua phiên đăng nhập, bình luận, XSS và dữ liệu liên quan sau khi xóa bài;
 - gợi ý chọn cây: CSRF, hai chế độ, giữ kết quả theo chế độ, báo lỗi nhập liệu và escape ghi chú (server test luôn tắt AI);
 - lỗi database trả response an toàn.
+
+Test riêng cho gửi email, không cần database hay tài khoản mail: client SMTP nói chuyện với một server giả trên 127.0.0.1 (xác thực, dot-stuffing, header mã hóa UTF-8, từ chối mật khẩu không mã hóa, driver log, chống Host giả). Đường TLS cần server thật nên chưa được test tự động.
+
+~~~powershell
+C:/xampp/php/php.exe tests/mail.php
+~~~
 
 Test riêng cho gợi ý chọn cây, không cần database hay API key (lịch âm, cung hoàng đạo, ngũ hành, kiểm tra câu trả lời AI, cache và giới hạn):
 
