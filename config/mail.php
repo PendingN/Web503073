@@ -24,6 +24,14 @@ function load_mail_config(): array
         'log_dir' => '',
         'timeout' => '15',
     ];
+    // Older mail.local.php files (written for the first activation mailer) used 'from_email' and had no
+    // 'driver': a filled-in host meant SMTP. Read them the same way so a deployed config keeps working.
+    if (!isset($local['from_address']) && isset($local['from_email'])) {
+        $local['from_address'] = $local['from_email'];
+    }
+    if (!isset($local['driver']) && trim((string) ($local['host'] ?? '')) !== '') {
+        $local['driver'] = 'smtp';
+    }
     $config = [];
     foreach ($defaults as $key => $value) {
         $environment = getenv('MAIL_' . strtoupper($key));
