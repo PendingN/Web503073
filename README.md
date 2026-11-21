@@ -219,6 +219,8 @@ C:/xampp/php/php.exe -S 127.0.0.1:8090 -t .
 | <code>plant-advisor.php?mode=zodiac</code> / <code>?mode=spiritual</code> | Gợi ý chọn cây theo 12 cung hoàng đạo (Chiêm tinh học) hoặc ngày sinh âm lịch, mệnh và hướng góc nhà (Một chút tâm linh) | Công khai |
 | <code>register.php</code> | Đăng ký thành viên | Công khai |
 | <code>login.php</code> | Đăng nhập | Công khai |
+| <code>forgot-password.php</code> | Quên mật khẩu: nhập email, rồi nhập mã 6 số trong email | Công khai |
+| <code>reset-password.php</code> | Đặt mật khẩu mới sau khi bấm link hoặc nhập đúng mã | Công khai, cần link/mã hợp lệ |
 | <code>favorites.php</code> | Danh sách cây yêu thích | Cần đăng nhập |
 | <code>profile.php</code> | Sửa thông tin và password | Cần đăng nhập |
 | <code>admin-dashboard.php</code> | Tổng quan tài khoản, cây, bài viết, lượt yêu thích và đăng ký trong 7 ngày | Chỉ admin |
@@ -260,6 +262,35 @@ Copy-Item config/ai.local.example.php config/ai.local.php
 Biến môi trường <code>DEEPSEEK_API_KEY</code>, <code>DEEPSEEK_MODEL</code>, <code>DEEPSEEK_BASE_URL</code>, <code>DEEPSEEK_TIMEOUT</code> được ưu tiên hơn file; đặt <code>DEEPSEEK_API_KEY</code> rỗng để tắt AI.
 
 Ảnh nền hai nút chế độ là <code>images/advisor/zodiac-sky.svg</code> và <code>images/advisor/five-elements.svg</code>. Muốn dùng ảnh chụp, lưu ảnh có bản quyền phù hợp thành <code>images/advisor/zodiac.jpg</code> hoặc <code>images/advisor/spiritual.jpg</code> (cũng nhận <code>.webp</code>, <code>.png</code>); trang sẽ tự dùng ảnh đó.
+
+
+### Quên mật khẩu và gửi email
+
+Ở trang đăng nhập, bấm **Quên mật khẩu?** rồi nhập email. Nếu email thuộc một tài khoản đang hoạt động, website gửi một email chứa **cả liên kết lẫn mã 6 số**; người dùng chọn một trong hai cách:
+
+1. Bấm liên kết → mở thẳng màn hình đặt mật khẩu mới.
+2. Nhập mã 6 số ở bước 2 của trang <code>forgot-password.php</code> → chuyển sang màn hình đặt mật khẩu mới.
+
+Mật khẩu mới phải nhập hai lần. Sau khi lưu, mọi phiên đăng nhập của tài khoản (kể cả trình duyệt hiện tại) bị đăng xuất và người dùng **phải tự đăng nhập lại**.
+
+Quy tắc bảo mật (<code>includes/password-reset.php</code>):
+
+- Link và mã hết hạn sau 15 phút, chỉ dùng một lần; yêu cầu mới thay thế yêu cầu cũ. Database chỉ lưu SHA-256 của token và bcrypt của mã.
+- Trang luôn trả lời giống nhau dù email có đăng ký hay không, nên không dò được email nào tồn tại. Tài khoản bị khóa không nhận email.
+- Nhập sai mã 5 lần thì mã bị khóa. Mỗi email chỉ được gửi lại sau 60 giây, và số lần yêu cầu được giới hạn theo email và IP (dùng chung bảng <code>login_attempts</code>).
+- Token trong link được đổi sang session rồi chuyển hướng ngay, nên không nằm lại trên thanh địa chỉ.
+
+Cấu hình gửi mail nằm ở <code>config/mail.local.php</code> (bị Git bỏ qua). Khi **chưa** có file này, website không gửi mail thật mà ghi từng email thành file <code>.txt</code> trong <code>.runtime/mail/</code>; mở file mới nhất để lấy link hoặc mã khi chạy local.
+
+Gửi mail thật qua Gmail:
+
+~~~powershell
+Copy-Item config/mail.local.example.php config/mail.local.php
+# Mở config/mail.local.php, điền username/from_address là địa chỉ Gmail
+# và password là App Password (Google Account > Security > 2-Step Verification > App passwords)
+~~~
+
+Biến môi trường <code>MAIL_DRIVER</code> (<code>log</code> hoặc <code>smtp</code>), <code>MAIL_HOST</code>, <code>MAIL_PORT</code>, <code>MAIL_ENCRYPTION</code> (<code>tls</code>, <code>ssl</code>, <code>none</code>), <code>MAIL_USERNAME</code>, <code>MAIL_PASSWORD</code>, <code>MAIL_FROM_ADDRESS</code>, <code>MAIL_FROM_NAME</code>, <code>MAIL_APP_URL</code>, <code>MAIL_LOG_DIR</code> được ưu tiên hơn file. Khi deploy lên server công khai, hãy đặt <code>MAIL_APP_URL</code> (ví dụ <code>https://example.com/</code>) để link trong email không phụ thuộc header <code>Host</code> do client gửi lên. Test không bao giờ gửi mail thật: <code>tests/run.php</code> ép <code>MAIL_DRIVER=log</code> vào một thư mục tạm.
 
 
 ### Blog: cách dùng và cấu trúc

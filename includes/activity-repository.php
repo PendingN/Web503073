@@ -33,6 +33,7 @@ function activity_labels(): array
 {
     return [
         'account.created' => 'Tạo tài khoản', 'auth.login' => 'Đăng nhập', 'auth.logout' => 'Đăng xuất',
+        'auth.password_reset_requested' => 'Yêu cầu đặt lại mật khẩu', 'auth.password_reset' => 'Đặt lại mật khẩu',
         'page.view' => 'Xem trang', 'profile.updated' => 'Sửa hồ sơ', 'user.updated' => 'Quản trị sửa tài khoản',
         'user.blocked' => 'Khóa tài khoản', 'user.unblocked' => 'Mở khóa tài khoản',
         'blog.created' => 'Đăng bài viết', 'blog.updated' => 'Sửa bài viết', 'blog.deleted' => 'Xóa bài viết',

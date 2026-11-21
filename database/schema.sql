@@ -160,3 +160,18 @@ CREATE TABLE IF NOT EXISTS login_attempts (
     KEY login_attempts_ip (ip, created_at),
     KEY login_attempts_created (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- One pending password reset per user. Only hashes are stored: the link token as SHA-256,
+-- the 6-digit code with password_hash(). A row is deleted once the password has been changed.
+CREATE TABLE IF NOT EXISTS password_resets (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNSIGNED NOT NULL,
+    token_hash CHAR(64) NOT NULL,
+    otp_hash VARCHAR(255) NOT NULL,
+    otp_attempts TINYINT UNSIGNED NOT NULL DEFAULT 0,
+    expires_at DATETIME NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY password_resets_user (user_id),
+    UNIQUE KEY password_resets_token (token_hash),
+    CONSTRAINT password_resets_user_fk FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

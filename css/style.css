@@ -1512,6 +1512,107 @@ input:focus-visible { outline-offset: 2px; }
     box-shadow: 0 12px 24px rgba(24, 48, 34, .28);
 }
 
+/* Forgot / reset password: one centred card on the same stage as the login slider. */
+.auth-forgot-link {
+    display: block;
+    width: fit-content;
+    margin: 8px 0 0 auto;
+    padding: 4px 0;
+    color: #255c3c;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.auth-forgot-link:hover,
+.auth-forgot-link:focus-visible {
+    color: #183022;
+    text-decoration: underline;
+}
+
+.auth-single-card {
+    position: relative;
+    z-index: 1;
+    width: min(100%, 460px);
+    display: flex;
+    justify-content: center;
+    padding: clamp(28px, 5vw, 48px) clamp(20px, 5vw, 44px);
+    border-radius: 28px;
+    background: #ffffff;
+    border: 1px solid rgba(24, 48, 34, .08);
+    box-shadow: 0 24px 60px rgba(24, 48, 34, .18);
+}
+
+.auth-single-card .auth-papercut-wrap {
+    width: min(100%, 340px);
+}
+
+.auth-single-card .auth-form-hint {
+    line-height: 1.6;
+}
+
+.auth-single-card .status-note,
+.auth-single-card .login-error {
+    margin-bottom: 16px;
+    line-height: 1.6;
+}
+
+.auth-single-card .login-error p {
+    margin: 0;
+}
+
+.auth-papercut-page .auth-code-input {
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: 0.4em;
+    font-variant-numeric: tabular-nums;
+}
+
+.auth-papercut-page .auth-code-input::placeholder {
+    font-size: 0.9rem;
+    font-weight: 400;
+    letter-spacing: normal;
+}
+
+.auth-single-action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: fit-content;
+    margin: 0 auto;
+    text-decoration: none;
+}
+
+.auth-resend-form p,
+.auth-single-switch {
+    margin: 16px 0 0;
+    text-align: center;
+    color: #526857;
+    font-size: 0.85rem;
+}
+
+.auth-resend-form a,
+.auth-single-switch a,
+.auth-text-button {
+    min-height: 44px;
+    padding: 0 4px;
+    border: 0;
+    background: none;
+    color: #255c3c;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.auth-resend-form a:hover,
+.auth-single-switch a:hover,
+.auth-text-button:hover,
+.auth-text-button:focus-visible {
+    color: #183022;
+    text-decoration: underline;
+}
+
 .auth-overlay-container {
     position: absolute;
     top: 0;
