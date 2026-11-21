@@ -8,6 +8,8 @@ if (PHP_SAPI !== 'cli') {
 require_once __DIR__ . '/../includes/database.php';
 require_once __DIR__ . '/../includes/repositories.php';
 require_once __DIR__ . '/../includes/activity-repository.php';
+require_once __DIR__ . '/../includes/tag-repository.php';
+require_once __DIR__ . '/../includes/plant-reviews.php';
 
 $checks = 0;
 function check(bool $condition, string $label): void
@@ -46,6 +48,39 @@ function run_cli(array $arguments): string
         throw new RuntimeException($output . $error);
     }
     return $output;
+}
+
+/** Links to $page the log mail driver wrote for $email, oldest first, as absolute URLs. */
+function mailed_links(string $directory, string $email, string $page): array
+{
+    $files = glob($directory . DIRECTORY_SEPARATOR . '*.txt') ?: [];
+    sort($files);
+    $links = [];
+    foreach ($files as $file) {
+        $content = (string) file_get_contents($file);
+        if (str_contains($content, "\nTo: $email\n") &&preg_match('#https?://\S+/' . preg_quote($page, '#') . '\?token=[a-f0-9]{64}#', $content, $match) === 1) {
+            $links[] = $match[0];
+        }
+    }
+    return $links;
+}
+
+function mailed_activation_links(string $directory, string $email): array
+{
+    return mailed_links($directory, $email, 'verify-email.php');
+}
+
+function mailed_reset_links(string $directory, string $email): array
+{
+    return mailed_links($directory, $email, 'reset-password.php');
+}
+
+/** Opens the newest activation link mailed to $email, the way a member would from their inbox. */
+function open_activation_link(TestBrowser $browser, string $directory, string $base, string $email): array
+{
+    $links = mailed_activation_links($directory, $email);
+    check($links !== [] && str_starts_with(end($links), $base . '/verify-email.php?token='), 'No activation link was mailed to ' . $email);
+    return $browser->request(substr(end($links), strlen($base) + 1));
 }
 
 final class TestBrowser
@@ -151,7 +186,8 @@ try {
     // Never send real email from tests; the log driver writes each message to a temporary folder.
     putenv('MAIL_DRIVER=log');
     putenv('MAIL_LOG_DIR=' . $mailDir);
-    putenv('MAIL_APP_URL=');
+    // Set, not emptied: on Windows an empty value unsets the variable and a local mail.local.php app_url would leak in.
+    putenv('MAIL_APP_URL=' . $base);
     $webProcess = proc_open([PHP_BINARY, '-S', $address, '-t', $documentRoot, 'server-router.php'], [0 => ['pipe', 'r'], 1 => ['file', $log, 'a'], 2 => ['file', $log, 'a']], $webPipes, dirname(__DIR__));
     if (!is_resource($webProcess)) {
         throw new RuntimeException('Cannot start test web server.');
@@ -208,7 +244,7 @@ try {
     $category = 'Cây trong nhà';
     $expected = count(list_plants('', $category));
     check(str_contains($guest->request('collection.php?category=' . rawurlencode($category))['body'], $expected . ' sản phẩm'), 'Category filter failed.');
-    foreach (['favorite-action.php', 'plant-advice-action.php', 'profile-action.php', 'user-action.php', 'blog-action.php', 'logout.php'] as $handler) {
+    foreach (['favorite-action.php', 'plant-advice-action.php', 'profile-action.php', 'avatar-action.php', 'user-action.php', 'blog-action.php', 'logout.php'] as $handler) {
         check($guest->request('actions/' . $handler)['status'] === 405, 'GET must not mutate: ' . $handler);
         check($guest->request('actions/' . $handler, [])['status'] === 403, 'Missing CSRF accepted: ' . $handler);
     }
@@ -219,9 +255,83 @@ try {
     check($invalid['status'] === 200 && find_user_by_email('bad') === null, 'Invalid registration created a user.');
     $aliceData = ['csrf_token' => $registerToken, 'name' => 'Alice Garden', 'email' => 'Alice@example.test', 'password' => 'Garden123!', 'password_confirmation' => 'Garden123!', 'role' => 'admin', 'return_to' => $prefix . '/collection.php?category=' . rawurlencode($category)];
     $response = $guest->request('register.php', $aliceData);
-    check($response['status'] === 303 && ($response['headers']['location'] ?? '') === $aliceData['return_to'], 'Registration must preserve a local return URL.');
+    check($response['status'] === 303 && ($response['headers']['location'] ?? '') === $prefix . '/login.php?return_to=' . rawurlencode($aliceData['return_to']),
+        'Registration must send the new member to the login page and preserve the local return URL.');
     $alice = find_user_by_email('alice@example.test');
     check($alice !== null && $alice['role'] === 'user' && $alice['password_hash'] !== 'Garden123!' && password_verify('Garden123!', $alice['password_hash']), 'Registration must normalize email, hash password, and prevent role escalation.');
+
+    // Account activation by email.
+    check($alice['email_verified_at'] === null, 'A new account must start unverified.');
+    check(str_contains($guest->request('login.php')['body'], 'đã gửi email kích hoạt tới alice@example.test'), 'The login page must tell the new member to check their email.');
+    check($guest->request('profile.php')['status'] === 303, 'Registration must not sign the new member in.');
+    $aliceLinks = mailed_activation_links($mailDir, 'alice@example.test');
+    check(count($aliceLinks) === 1 && str_starts_with($aliceLinks[0], $base . '/verify-email.php?token='), 'Registration must email one activation link built from the site address.');
+    $aliceFirstToken = substr($aliceLinks[0], -64);
+    $storedTokens = db()->query('SELECT token_hash FROM email_verifications WHERE user_id = ' . (int) $alice['id'])->fetchAll(PDO::FETCH_COLUMN);
+    check($storedTokens === [hash('sha256', $aliceFirstToken)], 'Only the hash of the activation token may be stored.');
+    $unverifiedGuest = new TestBrowser($base);
+    check(!str_contains($unverifiedGuest->login('alice@example.test', 'wrong-password')['body'], 'chưa được kích hoạt'), 'A wrong password must not reveal that the account is unverified.');
+    $blockedUnverified = $unverifiedGuest->login('alice@example.test', 'Garden123!');
+    check($blockedUnverified['status'] === 200 && str_contains($blockedUnverified['body'], 'chưa được kích hoạt')
+        && str_contains($blockedUnverified['body'], 'actions/resend-verification.php'), 'An unverified member must not sign in and must be offered a new link.');
+    check($unverifiedGuest->request('profile.php')['status'] === 303, 'An unverified login must not create a session.');
+    $resend = ['csrf_token' => $unverifiedGuest->token('login.php'), 'email' => 'alice@example.test'];
+    check($unverifiedGuest->request('actions/resend-verification.php', ['csrf_token' => 'bad'] + $resend)['status'] === 403, 'Resend must require a CSRF token.');
+    $genericResend = $unverifiedGuest->request('actions/resend-verification.php', $resend);
+    check($genericResend['status'] === 303 && count(mailed_activation_links($mailDir, 'alice@example.test')) === 1, 'A resend within a minute must not send another email.');
+    check(str_contains($unverifiedGuest->request('login.php')['body'], 'Nếu email này đang chờ kích hoạt'), 'Resend must answer with a neutral message.');
+    $unverifiedGuest->request('actions/resend-verification.php', ['csrf_token' => $unverifiedGuest->token('login.php'), 'email' => 'nobody@example.test']);
+    check(mailed_activation_links($mailDir, 'nobody@example.test') === [], 'Resend must not email an address that has no pending account.');
+    check(str_contains($unverifiedGuest->request('login.php')['body'], 'Nếu email này đang chờ kích hoạt'), 'Resend must answer the same for unknown addresses.');
+    db()->exec('UPDATE email_verifications SET created_at = created_at - INTERVAL 2 MINUTE');
+    $unverifiedGuest->request('actions/resend-verification.php', ['csrf_token' => $unverifiedGuest->token('login.php'), 'email' => 'alice@example.test']);
+    $aliceLinks = mailed_activation_links($mailDir, 'alice@example.test');
+    check(count($aliceLinks) === 2, 'Resend after the cooldown must send a new link.');
+    $oldLink = $unverifiedGuest->request(substr($aliceLinks[0], strlen($base) + 1));
+    check($oldLink['status'] === 303 && find_user((int) $alice['id'])['email_verified_at'] === null, 'A replaced link must stop working.');
+    check(str_contains($unverifiedGuest->request('login.php')['body'], 'không hợp lệ, đã được dùng hoặc đã hết hạn'), 'A dead link must explain itself.');
+    foreach (['bad-token', str_repeat('0', 64), str_repeat('A', 64)] as $badToken) {
+        $unverifiedGuest->request('verify-email.php?token=' . $badToken);
+        check(find_user((int) $alice['id'])['email_verified_at'] === null, 'A malformed or unknown token must not activate an account.');
+    }
+    db()->exec('UPDATE email_verifications SET expires_at = NOW() - INTERVAL 1 MINUTE');
+    open_activation_link($unverifiedGuest, $mailDir, $base, 'alice@example.test');
+    check(find_user((int) $alice['id'])['email_verified_at'] === null, 'An expired link must not activate an account.');
+    db()->exec('UPDATE email_verifications SET expires_at = NOW() + INTERVAL 1 HOUR');
+    $activated = open_activation_link($unverifiedGuest, $mailDir, $base, 'alice@example.test');
+    check($activated['status'] === 303 && ($activated['headers']['location'] ?? '') === $prefix . '/login.php'
+        && find_user((int) $alice['id'])['email_verified_at'] !== null, 'The emailed link must activate the account.');
+    check(str_contains($unverifiedGuest->request('login.php')['body'], 'Đã kích hoạt tài khoản'), 'Activation must confirm on the login page.');
+    check($unverifiedGuest->request('profile.php')['status'] === 303, 'Activating must not sign the member in by itself.');
+    check((int) db()->query('SELECT COUNT(*) FROM email_verifications WHERE user_id = ' . (int) $alice['id'])->fetchColumn() === 0, 'Activation must discard the links.');
+    open_activation_link($unverifiedGuest, $mailDir, $base, 'alice@example.test');
+    check(str_contains($unverifiedGuest->request('login.php')['body'], 'không hợp lệ, đã được dùng hoặc đã hết hạn'), 'An activation link must work only once.');
+    check($guest->login('alice@example.test', 'Garden123!')['status'] === 303, 'An activated member must be able to sign in.');
+
+    // An email nobody confirmed can be registered again: the newest registration owns it.
+    $squatter = new TestBrowser($base);
+    $squatter->request('register.php', ['csrf_token' => $squatter->token('register.php'), 'name' => 'Squatter', 'email' => 'carol@example.test', 'password' => 'Squatter123!', 'password_confirmation' => 'Squatter123!']);
+    $carolId = (int) find_user_by_email('carol@example.test')['id'];
+    $carolBrowser = new TestBrowser($base);
+    $carolBrowser->request('register.php', ['csrf_token' => $carolBrowser->token('register.php'), 'name' => 'Carol Garden', 'email' => 'carol@example.test', 'password' => 'Carol123!Garden', 'password_confirmation' => 'Carol123!Garden']);
+    $carol = find_user_by_email('carol@example.test');
+    check((int) $carol['id'] === $carolId && $carol['name'] === 'Carol Garden' && password_verify('Carol123!Garden', $carol['password_hash'])
+        && !password_verify('Squatter123!', $carol['password_hash']), 'Registering an unconfirmed email again must replace the earlier registration.');
+    check((int) db()->query("SELECT COUNT(*) FROM users WHERE email = 'carol@example.test'")->fetchColumn() === 1
+        && (int) db()->query('SELECT COUNT(*) FROM email_verifications WHERE user_id = ' . $carolId)->fetchColumn() === 1, 'Re-registering must keep one account and one live link.');
+    open_activation_link($carolBrowser, $mailDir, $base, 'carol@example.test');
+    check($carolBrowser->login('carol@example.test', 'Squatter123!')['status'] === 200 && $carolBrowser->login('carol@example.test', 'Carol123!Garden')['status'] === 303, 'Only the newest password may sign in.');
+    $duplicateRegistration = new TestBrowser($base);
+    $response = $duplicateRegistration->request('register.php', ['csrf_token' => $duplicateRegistration->token('register.php'), 'name' => 'Takeover', 'email' => 'carol@example.test', 'password' => 'Takeover123!', 'password_confirmation' => 'Takeover123!']);
+    check($response['status'] === 200 && str_contains($response['body'], 'đã được đăng ký') && password_verify('Carol123!Garden', find_user($carolId)['password_hash']),
+        'A confirmed account must not be taken over by registering its email again.');
+    // A member who never activated gets the activation link instead of a reset link.
+    $erin = new TestBrowser($base);
+    $erin->request('register.php', ['csrf_token' => $erin->token('register.php'), 'name' => 'Erin Garden', 'email' => 'erin@example.test', 'password' => 'ErinGarden123!', 'password_confirmation' => 'ErinGarden123!']);
+    db()->exec('UPDATE email_verifications SET created_at = created_at - INTERVAL 2 MINUTE');
+    $erin->request('forgot-password.php', ['csrf_token' => $erin->token('forgot-password.php'), 'operation' => 'request', 'email' => 'erin@example.test']);
+    check((int) db()->query("SELECT COUNT(*) FROM password_resets r JOIN users u ON u.id = r.user_id WHERE u.email = 'erin@example.test'")->fetchColumn() === 0
+        && count(mailed_activation_links($mailDir, 'erin@example.test')) === 2, 'An unverified account must receive an activation link, never a reset.');
     check($guest->request('admin.php')['status'] === 403, 'Ordinary user accessed admin.');
     $profilePage = $guest->request('profile.php');
     check(!str_contains($profilePage['body'], 'class="dashboard-shell"') && !str_contains($profilePage['body'], 'class="dashboard-sidebar"'), 'Profile must use its own layout.');
@@ -334,9 +444,59 @@ try {
         'Guessing the current password on the profile page must be throttled, even with the right password.');
     db()->exec('DELETE FROM login_attempts');
 
+    // User avatar upload, validation, replacement, and removal.
+    require_once __DIR__ . '/../includes/avatars.php';
+    $avatarFixture = tempnam(sys_get_temp_dir(), 'avatar-test-');
+    $avatarPaths = [];
+    $avatarPng = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a6foAAAAASUVORK5CYII=');
+    try {
+        $avatarToken = $aliceBrowser->token('account-settings.php');
+        $emptyAvatar = $aliceBrowser->request('actions/avatar-action.php', ['csrf_token' => $avatarToken, 'operation' => 'upload'], true);
+        check($emptyAvatar['status'] === 303 && find_user((int) $alice['id'])['avatar_path'] === null, 'Empty avatar upload must be rejected.');
+
+        file_put_contents($avatarFixture, '<?php echo "bad"; ?>');
+        $badAvatarFile = new CURLFile($avatarFixture, 'image/png', '../../bad.php.png');
+        $aliceBrowser->request('actions/avatar-action.php', ['csrf_token' => $avatarToken, 'operation' => 'upload', 'avatar' => $badAvatarFile], true);
+        check(find_user((int) $alice['id'])['avatar_path'] === null, 'Invalid avatar upload must not persist.');
+
+        file_put_contents($avatarFixture, $avatarPng);
+        $validAvatarFile = new CURLFile($avatarFixture, 'image/png', '../../avatar.php.png');
+        $uploadResponse = $aliceBrowser->request('actions/avatar-action.php', ['csrf_token' => $avatarToken, 'operation' => 'upload', 'avatar' => $validAvatarFile, 'return_to' => 'account-settings.php?section=avatar'], true);
+        $firstAvatar = find_user((int) $alice['id'])['avatar_path'];
+        if (is_string($firstAvatar)) {
+            $avatarPaths[] = $firstAvatar;
+        }
+        check($uploadResponse['status'] === 303 && is_string($firstAvatar) && preg_match('#^images/avatars/[a-f0-9]{32}\.png$#', $firstAvatar) === 1, 'Valid avatar upload must store a safe filename under images/avatars.');
+        $servedAvatar = $aliceBrowser->request($firstAvatar);
+        check($servedAvatar['status'] === 200 && $servedAvatar['body'] === $avatarPng && str_contains($servedAvatar['headers']['content-type'] ?? '', 'image/png'), 'Uploaded avatar must be served as an image.');
+        check(str_contains($aliceBrowser->request('profile.php')['body'], 'src="' . $firstAvatar . '"'), 'Uploaded avatar must appear on the profile page.');
+        check(str_contains($aliceBrowser->request('account-settings.php?section=avatar')['body'], 'src="' . $firstAvatar . '"'), 'Uploaded avatar must appear in account settings.');
+
+        $aliceBrowser->request('actions/avatar-action.php', ['csrf_token' => $avatarToken, 'operation' => 'upload', 'avatar' => $validAvatarFile], true);
+        $secondAvatar = find_user((int) $alice['id'])['avatar_path'];
+        if (is_string($secondAvatar)) {
+            $avatarPaths[] = $secondAvatar;
+        }
+        clearstatcache();
+        check(is_string($secondAvatar) && $secondAvatar !== $firstAvatar && !is_file(dirname(__DIR__) . '/' . $firstAvatar) && is_file(dirname(__DIR__) . '/' . $secondAvatar), 'Replacing an avatar must delete the previous avatar file.');
+
+        $aliceBrowser->request('actions/avatar-action.php', ['csrf_token' => $avatarToken, 'operation' => 'remove']);
+        clearstatcache();
+        check(find_user((int) $alice['id'])['avatar_path'] === null && !is_file(dirname(__DIR__) . '/' . $secondAvatar), 'Removing an avatar must clear avatar_path and delete the file.');
+    } finally {
+        if ($avatarFixture !== false && is_file($avatarFixture)) {
+            unlink($avatarFixture);
+        }
+        foreach ($avatarPaths as $path) {
+            delete_user_avatar($path);
+        }
+    }
+
     $bobBrowser = new TestBrowser($base);
     $response = $bobBrowser->request('register.php', ['csrf_token' => $bobBrowser->token('register.php'), 'name' => 'Bob Garden', 'email' => 'bob@example.test', 'password' => 'BobGarden123!', 'password_confirmation' => 'BobGarden123!', 'return_to' => 'https://example.invalid']);
-    check($response['status'] === 303 && $response['headers']['location'] === $prefix . '/profile.php', 'Registration must reject external redirects and open the profile.');
+    check($response['status'] === 303 && $response['headers']['location'] === $prefix . '/login.php?return_to=' . rawurlencode($prefix . '/profile.php'), 'Registration must reject external redirects and fall back to the profile.');
+    open_activation_link($bobBrowser, $mailDir, $base, 'bob@example.test');
+    check($bobBrowser->login('bob@example.test', 'BobGarden123!')['status'] === 303, 'Bob could not sign in after activating.');
     $bob = find_user_by_email('bob@example.test');
     check(user_favorite_ids((int) $bob['id']) === [], 'Another user inherited favorites.');
     $bobToken = $bobBrowser->token('profile.php');
@@ -362,12 +522,28 @@ try {
     $blockedLogin = new TestBrowser($base);
     check(str_contains($blockedLogin->login('bob@example.test', 'wrong-password')['body'], 'Email hoặc mật khẩu chưa đúng.'), 'Wrong password must not reveal blocked account status.');
     check(str_contains($blockedLogin->login('bob@example.test', 'BobGarden123!')['body'], 'đang bị khóa'), 'Blocked user could log in.');
+    $blockedForgot = new TestBrowser($base);
+    $blockedForgot->request('forgot-password.php', ['csrf_token' => $blockedForgot->token('forgot-password.php'), 'operation' => 'request', 'email' => 'bob@example.test']);
+    check(mailed_reset_links($mailDir, 'bob@example.test') === [] && (int) db()->query('SELECT COUNT(*) FROM password_resets WHERE user_id = ' . (int) $bob['id'])->fetchColumn() === 0, 'A blocked account must not receive a reset link.');
     check(str_contains($adminBrowser->request('admin.php?status=blocked')['body'], 'Bob Edited'), 'Blocked-user filter failed.');
     $block['operation'] = 'unblock';
     $adminBrowser->request('actions/user-action.php', $block);
     check(find_user((int) $bob['id'])['status'] === 'active', 'Unblocking failed.');
     check($bobBrowser->request('profile.php')['status'] === 303, 'Old session returned after unblock.');
     check($blockedLogin->login('bob@example.test', 'BobGarden123!')['status'] === 303, 'Unblocked user cannot log in again.');
+
+    // Manual activation by an administrator, for members whose email never arrives.
+    $daveBrowser = new TestBrowser($base);
+    $daveBrowser->request('register.php', ['csrf_token' => $daveBrowser->token('register.php'), 'name' => 'Dave Garden', 'email' => 'dave@example.test', 'password' => 'DaveGarden123!', 'password_confirmation' => 'DaveGarden123!']);
+    $dave = find_user_by_email('dave@example.test');
+    $pendingList = $adminBrowser->request('admin.php?search=dave')['body'];
+    check(str_contains($pendingList, 'Chưa kích hoạt email') && str_contains($pendingList, 'value="verify"'), 'The admin list must flag unverified members and offer activation.');
+    check(!str_contains($adminBrowser->request('admin.php?search=alice-new')['body'], 'Chưa kích hoạt email'), 'Verified members must not be flagged.');
+    check($blockedLogin->request('actions/user-action.php', ['csrf_token' => $blockedLogin->token('profile.php'), 'user_id' => $dave['id'], 'operation' => 'verify'])['status'] === 403 && find_user((int) $dave['id'])['email_verified_at'] === null, 'An ordinary user must not activate accounts.');
+    check($adminBrowser->request('actions/user-action.php', ['csrf_token' => $adminToken, 'user_id' => $dave['id'], 'operation' => 'verify'])['status'] === 303
+        && find_user((int) $dave['id'])['email_verified_at'] !== null && (int) db()->query('SELECT COUNT(*) FROM email_verifications WHERE user_id = ' . (int) $dave['id'])->fetchColumn() === 0, 'Administrator activation failed.');
+    check($daveBrowser->login('dave@example.test', 'DaveGarden123!')['status'] === 303, 'A manually activated member could not sign in.');
+    check(!str_contains($adminBrowser->request('admin.php?search=dave')['body'], 'value="verify"'), 'An activated member must lose the activation button.');
 
     require __DIR__ . '/blog.php';
     require __DIR__ . '/tags.php';
@@ -449,6 +625,12 @@ try {
     db()->exec("UPDATE plants SET name = 'Preserved plant' WHERE id = 21");
     run_cli(['scripts/setup-database.php']);
     check(find_plant(21)['name'] === 'Preserved plant' && find_user((int) $alice['id'])['name'] === 'Alice Updated' && user_favorite_ids((int) $alice['id']) === [22], 'Repeat setup overwrote existing records.');
+    check(find_user_by_email('fixture0@example.test')['email_verified_at'] === null && find_user((int) $alice['id'])['email_verified_at'] !== null, 'Repeat setup must not activate accounts that are still waiting for their email link.');
+    // A database from before activation existed has no column: the upgrade must keep its members able to sign in.
+    db()->exec('ALTER TABLE users DROP COLUMN email_verified_at');
+    check($adminBrowser->request('profile.php')['status'] === 200 && $adminBrowser->login('admin@example.test', 'TestAdmin123!')['status'] === 303, 'Sign-in must keep working on a schema without the activation column until setup runs.');
+    run_cli(['scripts/setup-database.php']);
+    check((int) db()->query('SELECT COUNT(*) FROM users WHERE email_verified_at IS NULL')->fetchColumn() === 0, 'Upgrading an existing database must treat its current members as verified.');
 
     require __DIR__ . '/admin-management.php';
     require __DIR__ . '/admin-dashboard.php';
@@ -457,6 +639,8 @@ try {
     check($adminBrowser->login('admin@example.test', 'TestAdmin123!')['status'] === 303, 'Missing history migration must not break existing login.');
 
     // Deliberately remove only a table in this disposable database to test 503 handling.
+    $server->exec('DROP TABLE `' . $testName . '`.plant_comments');
+    $server->exec('DROP TABLE `' . $testName . '`.plant_ratings');
     $server->exec('DROP TABLE `' . $testName . '`.favorites');
     $server->exec('DROP TABLE `' . $testName . '`.plants');
     check($guest->request('index.php')['status'] === 503, 'Database failure must give a clean 503 response.');

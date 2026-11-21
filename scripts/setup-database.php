@@ -16,10 +16,26 @@ try {
     if ($schema === false) {
         throw new RuntimeException('Cannot read database/schema.sql.');
     }
+    // An earlier draft of password reset (link only) created password_resets without otp_hash. Its rows are
+    // short-lived reset links, so the table is dropped and recreated by the schema below in the new shape.
+    if ($connection->query("SHOW TABLES LIKE 'password_resets'")->fetch()
+        && !$connection->query("SHOW COLUMNS FROM password_resets LIKE 'otp_hash'")->fetch()) {
+        $connection->exec('DROP TABLE password_resets');
+    }
     foreach (explode(';', $schema) as $sql) {
         if (trim($sql) !== '') {
             $connection->exec($sql);
         }
+    }
+    // One-off upgrade: accounts created before email activation existed count as verified,
+    // otherwise everyone would be locked out. Runs only when the column is added, so later runs never
+    // activate an account that is still waiting for its email link.
+    if (!$connection->query("SHOW COLUMNS FROM users LIKE 'email_verified_at'")->fetch()) {
+        $connection->exec('ALTER TABLE users ADD COLUMN email_verified_at DATETIME NULL AFTER status');
+        $connection->exec('UPDATE users SET email_verified_at = created_at WHERE email_verified_at IS NULL');
+    }
+    if (!$connection->query("SHOW COLUMNS FROM users LIKE 'avatar_path'")->fetch()) {
+        $connection->exec('ALTER TABLE users ADD COLUMN avatar_path VARCHAR(255) NULL AFTER email');
     }
     if (!$connection->query("SHOW COLUMNS FROM blog_posts LIKE 'image_path'")->fetch()) {
         $connection->exec('ALTER TABLE blog_posts ADD COLUMN image_path VARCHAR(255) NULL AFTER content');

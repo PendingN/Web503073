@@ -53,7 +53,7 @@ function load_mail_config(): array
     if ($config['driver'] === 'smtp' && ($config['host'] === '' || $config['password'] === 'REPLACE_WITH_APP_PASSWORD')) {
         throw new RuntimeException('Configure the SMTP host and password in config/mail.local.php or MAIL_* variables.');
     }
-    if ($config['app_url'] !== '' && !preg_match('#^https?://[^/\s?#]+(?:/[^\s?#]*)?$#i', $config['app_url'])) {
+    if ($config['app_url'] !== '' && !preg_match('#^https?://[^/\s?\#]+(?:/[^\s?\#]*)?$#i', $config['app_url'])) {
         throw new RuntimeException('MAIL_APP_URL must be an absolute http(s) URL such as https://example.com/.');
     }
     if ($config['log_dir'] === '') {

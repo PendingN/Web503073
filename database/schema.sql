@@ -2,15 +2,29 @@ CREATE TABLE IF NOT EXISTS users (
     id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     email VARCHAR(254) NOT NULL,
+    avatar_path VARCHAR(255) NULL,
     password_hash VARCHAR(255) NOT NULL,
     role ENUM('user', 'admin') NOT NULL DEFAULT 'user',
     status ENUM('active', 'blocked') NOT NULL DEFAULT 'active',
+    email_verified_at DATETIME NULL,
     session_version INT UNSIGNED NOT NULL DEFAULT 1,
     last_login_at DATETIME NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY users_email_unique (email),
     KEY users_role_status (role, status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Account activation links. Only the SHA-256 of the emailed token is stored, so a database leak cannot activate accounts.
+CREATE TABLE IF NOT EXISTS email_verifications (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNSIGNED NOT NULL,
+    token_hash CHAR(64) NOT NULL,
+    expires_at DATETIME NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY email_verifications_token (token_hash),
+    KEY email_verifications_user (user_id, created_at),
+    CONSTRAINT email_verifications_user_fk FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS plants (
@@ -161,7 +175,7 @@ CREATE TABLE IF NOT EXISTS login_attempts (
     KEY login_attempts_created (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- One 1-5 star rating per user and plant; the user can change or remove it.
+-- One 1-5 star rating per user and plant. The user can change or remove it.
 CREATE TABLE IF NOT EXISTS plant_ratings (
     plant_id INT UNSIGNED NOT NULL,
     user_id INT UNSIGNED NOT NULL,

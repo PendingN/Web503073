@@ -36,7 +36,9 @@ function test_submit_code(TestBrowser $browser, string $email, string $code): ar
 
 // Earlier suites leave failed logins from 127.0.0.1; start this suite with a clean throttle window.
 db()->exec('DELETE FROM login_attempts');
-$resetUserId = create_user('Reset Tester', 'reset@example.test', 'OldPassword1!');
+// Earlier suites (account activation) also write mail; this suite counts only its own messages.
+array_map('unlink', test_mail_files($mailDir));
+$resetUserId = create_user('Reset Tester', 'reset@example.test', 'OldPassword1!', 'user', true);
 $resetGuest = new TestBrowser($base);
 
 check(str_contains($resetGuest->request('login.php')['body'], 'href="forgot-password.php"'), 'Login must link to the forgot password page.');

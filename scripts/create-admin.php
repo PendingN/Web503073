@@ -41,7 +41,7 @@ try {
     }
     $connection = db();
     $connection->beginTransaction();
-    $id = create_user($name, $email, $password, 'admin');
+    $id = create_user($name, $email, $password, 'admin', true);
     record_activity(null, 'account.created', 'Tạo tài khoản quản trị bằng CLI', ['id' => $id, 'name' => $name]);
     $connection->commit();
     fwrite(STDOUT, 'Administrator created: ' . $email . PHP_EOL);

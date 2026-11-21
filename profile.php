@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/includes/init.php';
+require_once __DIR__ . '/includes/avatars.php';
 require_once __DIR__ . '/includes/blog-images.php';
 $user = require_login();
 
@@ -24,7 +25,8 @@ $posts = list_user_posts($userId, $search, $sort);
 // Vietnamese given names come last: "Nguyễn Thanh Loan" -> "Loan".
 $nameParts = preg_split('/\s+/u', trim((string) $user['name']), -1, PREG_SPLIT_NO_EMPTY) ?: [];
 $givenName = $nameParts === [] ? 'bạn' : (string) end($nameParts);
-$initial = mb_strtoupper(mb_substr((string) $user['name'], 0, 1, 'UTF-8'), 'UTF-8');
+$initial = user_initial((string) $user['name']);
+$avatarPath = user_avatar_path($user);
 
 $icons = [
     'heart' => '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78Z"/>',
@@ -51,7 +53,18 @@ require __DIR__ . '/includes/navbar.php';
             <aside class="profile-side" aria-label="Hồ sơ">
                 <div class="profile-side-inner">
                     <div class="profile-id">
-                        <div class="profile-avatar" aria-hidden="true"><?= e($initial) ?></div>
+                        <a class="profile-avatar-link" href="account-settings.php?section=avatar#settings-avatar" aria-label="Đổi ảnh đại diện">
+                            <span class="profile-avatar">
+                                <?php if ($avatarPath !== null): ?>
+                                    <img src="<?= e($avatarPath) ?>" alt="Ảnh đại diện của <?= e($user['name']) ?>" width="132" height="132" decoding="async">
+                                <?php else: ?>
+                                    <span aria-hidden="true"><?= e($initial) ?></span>
+                                <?php endif; ?>
+                            </span>
+                            <span class="profile-avatar-badge" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2Z"/><circle cx="12" cy="13" r="4"/></svg>
+                            </span>
+                        </a>
                         <h2><?= e($user['name']) ?></h2>
                         <p class="profile-role"><?= $user['role'] === 'admin' ? 'Quản trị viên' : 'Thành viên Là Lá La' ?></p>
                         <a class="profile-settings-link" href="account-settings.php">

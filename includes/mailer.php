@@ -51,7 +51,10 @@ function mail_write_log(array $config, string $to, string $subject, string $body
     }
     // Readable copy for developers: headers plus the decoded text body.
     $content = 'Date: ' . date(DATE_RFC2822) . "\nTo: " . $to . "\nSubject: " . $subject . "\n\n" . $body . "\n";
-    $file = $directory . DIRECTORY_SEPARATOR . date('Ymd-His') . '-' . bin2hex(random_bytes(4)) . '.txt';
+    // Microseconds keep the names in sending order, so "the newest file" is the newest message.
+    $now = microtime(true);
+    $file = $directory . DIRECTORY_SEPARATOR . date('Ymd-His', (int) $now) . sprintf('-%06d-', (int) (($now - floor($now)) * 1000000))
+        . bin2hex(random_bytes(4)) . '.txt';
     if (file_put_contents($file, $content, LOCK_EX) === false) {
         throw new RuntimeException('Cannot write the mail log file.');
     }
@@ -85,6 +88,11 @@ function smtp_command($socket, string $command, array $codes): string
 
 function smtp_send(array $config, string $to, string $message): void
 {
+    // Never send the SMTP password in clear text to another machine; "none" is only for a local test server.
+    if ($config['encryption'] === 'none' && $config['username'] !== ''
+        && !in_array(strtolower($config['host']), ['127.0.0.1', 'localhost', '::1', '[::1]'], true)) {
+        throw new RuntimeException('Refusing to send SMTP credentials without encryption to a remote server.');
+    }
     $scheme = $config['encryption'] === 'ssl' ? 'ssl://' : 'tcp://';
     $context = stream_context_create(['ssl' => ['verify_peer' => true, 'verify_peer_name' => true, 'peer_name' => $config['host']]]);
     $socket = @stream_socket_client($scheme . $config['host'] . ':' . $config['port'], $errorNumber, $errorText,

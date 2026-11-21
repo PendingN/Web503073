@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/includes/init.php';
+require_once __DIR__ . '/includes/avatars.php';
 $user = require_login();
 
 $pageTitle = 'Cài đặt tài khoản';
@@ -10,9 +11,17 @@ $activePage = 'profile';
 $errors = $_SESSION['profile_errors'] ?? [];
 $input = $_SESSION['profile_input'] ?? ['name' => $user['name'], 'email' => $user['email']];
 $openSection = $_SESSION['profile_section'] ?? '';
+if ($openSection === '') {
+    $requestedSection = request_string($_GET, 'section');
+    if (in_array($requestedSection, ['avatar', 'info', 'password'], true)) {
+        $openSection = $requestedSection;
+    }
+}
 unset($_SESSION['profile_errors'], $_SESSION['profile_input'], $_SESSION['profile_section']);
 $flashMessage = take_flash();
 $describedBy = $errors !== [] ? ' aria-describedby="profile-errors"' : '';
+$avatarPath = user_avatar_path($user);
+$userInitial = user_initial((string) $user['name']);
 
 function settings_error_box(array $errors): void
 {
@@ -51,6 +60,44 @@ require __DIR__ . '/includes/navbar.php';
             <section class="settings-card" aria-labelledby="settings-account-title">
                 <h2 id="settings-account-title">Tài khoản</h2>
                 <p class="settings-card-lead">Quản lý thông tin cá nhân và cách bạn đăng nhập.</p>
+
+                <details class="settings-row" id="settings-avatar"<?= $openSection === 'avatar' ? ' open' : '' ?>>
+                    <summary>
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2Z"/><circle cx="12" cy="13" r="4"/></svg>
+                        <span><strong>Ảnh đại diện</strong><small><?= $avatarPath !== null ? 'Đã thiết lập ảnh đại diện' : 'Đang dùng chữ cái đầu tên' ?></small></span>
+                        <svg class="settings-chevron" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+                    </summary>
+                    <div class="settings-form settings-avatar-editor">
+                        <?php if ($openSection === 'avatar') { settings_error_box($errors); } ?>
+                        <div class="settings-avatar-preview-row">
+                            <div class="settings-avatar-preview" aria-hidden="true">
+                                <img id="avatar-preview-img" src="<?= e($avatarPath ?? '') ?>" alt="" width="84" height="84"<?= $avatarPath === null ? ' hidden' : '' ?>>
+                                <span id="avatar-preview-initial"<?= $avatarPath !== null ? ' hidden' : '' ?>><?= e($userInitial) ?></span>
+                            </div>
+                            <form class="settings-avatar-upload-form" method="post" action="actions/avatar-action.php" enctype="multipart/form-data">
+                                <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+                                <input type="hidden" name="operation" value="upload">
+                                <input type="hidden" name="return_to" value="account-settings.php?section=avatar">
+                                <div class="form-group">
+                                    <label class="form-label" for="avatar-file">Chọn ảnh mới</label>
+                                    <input class="form-control" id="avatar-file" name="avatar" type="file" accept="image/jpeg,image/png,image/webp" required<?= $openSection === 'avatar' ? $describedBy : '' ?>>
+                                    <p class="settings-note">Hỗ trợ JPG, PNG hoặc WebP, dung lượng tối đa 2 MB.</p>
+                                </div>
+                                <div class="settings-avatar-actions">
+                                    <button class="btn-brand" type="submit">Lưu ảnh đại diện</button>
+                                </div>
+                            </form>
+                        </div>
+                        <?php if ($avatarPath !== null): ?>
+                            <form class="settings-avatar-remove-form" method="post" action="actions/avatar-action.php">
+                                <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+                                <input type="hidden" name="operation" value="remove">
+                                <input type="hidden" name="return_to" value="account-settings.php?section=avatar">
+                                <button class="btn-outline-brand settings-avatar-remove" type="submit">Xóa ảnh đại diện</button>
+                            </form>
+                        <?php endif; ?>
+                    </div>
+                </details>
 
                 <details class="settings-row"<?= $openSection === 'info' ? ' open' : '' ?>>
                     <summary>

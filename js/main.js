@@ -74,6 +74,27 @@
             });
         }
 
+        var avatarFile = document.getElementById('avatar-file');
+        var avatarPreviewImg = document.getElementById('avatar-preview-img');
+        var avatarPreviewInitial = document.getElementById('avatar-preview-initial');
+        if (avatarFile && avatarPreviewImg) {
+            var originalAvatar = avatarPreviewImg.getAttribute('src') || '';
+            var avatarPreviewUrl = null;
+            avatarFile.addEventListener('change', function () {
+                if (avatarPreviewUrl) URL.revokeObjectURL(avatarPreviewUrl);
+                var file = avatarFile.files[0];
+                var validImage = file && ['image/jpeg', 'image/png', 'image/webp'].includes(file.type) && file.size <= 2097152;
+                avatarFile.setCustomValidity(file && !validImage ? 'Chọn ảnh JPG, PNG hoặc WebP tối đa 2 MB.' : '');
+                avatarPreviewUrl = validImage ? URL.createObjectURL(file) : null;
+                var source = avatarPreviewUrl || originalAvatar;
+                avatarPreviewImg.hidden = !source;
+                if (avatarPreviewInitial) avatarPreviewInitial.hidden = !!source;
+                if (source) avatarPreviewImg.src = source;
+                else avatarPreviewImg.removeAttribute('src');
+                if (file && !validImage) avatarFile.reportValidity();
+            });
+        }
+
         function setReaction(button, active, animate) {
             var wasActive = button.getAttribute('aria-pressed') === 'true';
             button.setAttribute('aria-pressed', String(active));

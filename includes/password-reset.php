@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/mailer.php';
+require_once __DIR__ . '/email-verification.php';
 
 /**
  * Password reset by email. One request sends both a link and a 6-digit code; either one proves
@@ -21,6 +22,14 @@ function password_reset_request(string $email): void
 {
     $user = find_user_by_email($email);
     if ($user === null || $user['status'] !== 'active') {
+        return;
+    }
+    // Resetting a password must not skip email activation: an account that was never activated gets its
+    // activation link again instead (same neutral answer on the page, same one-minute cooldown).
+    if (!user_email_verified($user)) {
+        if (email_verification_resend_allowed((int) $user['id'])) {
+            send_verification_email($user, issue_email_verification((int) $user['id']));
+        }
         return;
     }
     $connection = db();

@@ -9,8 +9,16 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
     $sessionPath = is_string($configuredSessionPath) && $configuredSessionPath !== ''
         ? $configuredSessionPath
         : rtrim(sys_get_temp_dir(), '\\/') . DIRECTORY_SEPARATOR . 'web503073-sessions';
-    if (!is_dir($sessionPath)) {
+    if (!@is_dir($sessionPath)) {
         @mkdir($sessionPath, 0700, true);
+    }
+    // Shared hosts without environment variables (e.g. InfinityFree) may restrict the system temp
+    // directory with open_basedir; fall back to .runtime/sessions, which .htaccess keeps private.
+    if ((!@is_dir($sessionPath) || !@is_writable($sessionPath)) && ($configuredSessionPath === false || $configuredSessionPath === '')) {
+        $sessionPath = dirname(__DIR__) . DIRECTORY_SEPARATOR . '.runtime' . DIRECTORY_SEPARATOR . 'sessions';
+        if (!is_dir($sessionPath)) {
+            @mkdir($sessionPath, 0700, true);
+        }
     }
     if (!is_dir($sessionPath) || !is_writable($sessionPath)) {
         error_log('Secure session storage is unavailable: ' . $sessionPath);
@@ -39,6 +47,8 @@ require_once __DIR__ . '/post-access.php';
 require_once __DIR__ . '/activity-repository.php';
 require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/login-throttle.php';
+require_once __DIR__ . '/email-verification.php';
+require_once __DIR__ . '/password-reset.php';
 require_once __DIR__ . '/plant-reviews.php';
 
 function e(mixed $value): string

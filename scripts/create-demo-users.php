@@ -44,7 +44,7 @@ try {
         $name .= ' [Demo]';
         $email = sprintf('demo%02d@web503073.test', $number);
         $password = 'Demo!' . bin2hex(random_bytes(10));
-        $id = create_user($name, $email, $password);
+        $id = create_user($name, $email, $password, 'user', true);
         $subject = ['id' => $id, 'name' => $name];
         record_activity(null, 'account.created', 'Tạo tài khoản thành viên mẫu bằng CLI', $subject);
         $status = $number > 15 ? 'blocked' : 'active';

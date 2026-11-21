@@ -8,7 +8,7 @@ $admin = require_admin();
 $id = filter_var($_POST['user_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
 $operation = request_string($_POST, 'operation');
 $returnTo = safe_return_url($_POST['return_to'] ?? null, 'admin.php');
-if ($id === false || !in_array($operation, ['update', 'block', 'unblock', 'promote', 'demote'], true)) {
+if ($id === false || !in_array($operation, ['update', 'block', 'unblock', 'promote', 'demote', 'verify'], true)) {
     abort_request(400, 'Thao tác người dùng không hợp lệ.');
 }
 $connection = db();
@@ -35,6 +35,18 @@ if ($operation === 'promote' || $operation === 'demote') {
     }
     $connection->commit();
     set_flash($operation === 'promote' ? 'Đã nâng tài khoản lên quản trị viên.' : 'Đã hạ tài khoản xuống thành viên.');
+    redirect_to($returnTo);
+}
+if ($operation === 'verify') {
+    // Manual activation for members whose email never arrives (for example while SMTP is not configured).
+    if (!user_email_verified($user)) {
+        $statement = $connection->prepare('UPDATE users SET email_verified_at = CURRENT_TIMESTAMP WHERE id = ?');
+        $statement->execute([$id]);
+        $connection->prepare('DELETE FROM email_verifications WHERE user_id = ?')->execute([$id]);
+        record_activity($admin, 'user.verified', 'Quản trị viên kích hoạt tài khoản thủ công', $user);
+    }
+    $connection->commit();
+    set_flash('Đã kích hoạt tài khoản. Người dùng có thể đăng nhập.');
     redirect_to($returnTo);
 }
 if ($operation !== 'update') {

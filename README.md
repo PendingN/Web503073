@@ -334,6 +334,24 @@ Luồng xử lý: **trang PHP → biểu mẫu POST → `actions/blog-action.php
 
 Không thêm framework, thư viện hoặc công đoạn build.
 
+### Kích hoạt tài khoản qua email
+
+Đăng ký công khai tạo tài khoản **chưa kích hoạt** và gửi email chứa liên kết <code>verify-email.php?token=...</code>. Liên kết dùng được một lần, hiệu lực 24 giờ; chỉ SHA-256 của token được lưu trong bảng <code>email_verifications</code>. Tài khoản chưa kích hoạt không đăng nhập được: sau khi nhập đúng mật khẩu, trang đăng nhập báo "chưa được kích hoạt" kèm nút **Gửi lại email kích hoạt** (tối đa một email mỗi phút cho mỗi tài khoản, có giới hạn lượt thử theo IP). Đăng ký lại bằng email chưa từng được kích hoạt sẽ thay thế đăng ký trước, nên người lạ nhập nhầm hoặc cố ý nhập email của bạn không chặn được bạn đăng ký.
+
+Quản trị viên có nút **Kích hoạt** ở trang quản lý tài khoản cho trường hợp email không tới. Tài khoản tạo bằng <code>scripts/create-admin.php</code> và <code>scripts/create-demo-users.php</code> được kích hoạt sẵn.
+
+Email kích hoạt dùng chung cấu hình gửi mail với chức năng quên mật khẩu (<code>config/mail.local.php</code> hoặc các biến <code>MAIL_*</code>, xem phần đặt lại mật khẩu ở trên):
+
+- Liên kết kích hoạt không bao giờ lấy từ header <code>Host</code> (kẻ tấn công có thể giả để lấy token), trừ khi truy cập bằng <code>localhost</code>/<code>127.0.0.1</code>. Trên tên miền thật phải đặt <code>app_url</code> (hoặc <code>MAIL_APP_URL</code>), nếu không email kích hoạt sẽ không được gửi và lỗi được ghi vào log PHP.
+- Với <code>MAIL_ENCRYPTION=none</code>, mật khẩu SMTP chỉ được gửi tới server trên chính máy này; gửi tới máy khác bị từ chối.
+- Driver <code>log</code> ghi email vào <code>.runtime/mail/*.txt</code>; mở file mới nhất để lấy liên kết kích hoạt khi phát triển local.
+- Gửi mail lỗi không làm hỏng đăng ký: tài khoản vẫn được tạo, lỗi ghi vào log PHP (không chứa mật khẩu hay token) và người dùng có thể bấm gửi lại.
+- Quên mật khẩu với tài khoản chưa kích hoạt: hệ thống gửi lại liên kết kích hoạt thay vì mã đặt lại, vì đặt lại mật khẩu không được bỏ qua bước xác nhận email. Trang vẫn hiện cùng một thông báo trung lập.
+
+Sau khi cập nhật mã nguồn, chạy lại <code>scripts/setup-database.php</code>. Lệnh thêm cột <code>users.email_verified_at</code> và bảng <code>email_verifications</code>, đồng thời **đánh dấu mọi tài khoản đang có là đã kích hoạt** (một lần, khi thêm cột) để không ai bị khóa ngoài. Chạy lại setup sau đó không kích hoạt thêm tài khoản nào. Nếu database còn bảng <code>password_resets</code> kiểu cũ (chỉ có liên kết, không có mã 6 số), setup sẽ xóa và tạo lại bảng đó; chỉ các liên kết đặt lại đang chờ bị mất.
+
+Chưa làm: đổi email trong hồ sơ hoặc do quản trị viên sửa chưa yêu cầu xác nhận lại email mới.
+
 ## 6. Bảo mật quan trọng
 
 - SQL dùng PDO prepared statements; không nối trực tiếp dữ liệu người dùng vào câu lệnh SQL.
@@ -345,10 +363,12 @@ Không thêm framework, thư viện hoặc công đoạn build.
 - Apache và PHP router chặn metadata Git, secret, cấu hình, database schema, script CLI và runtime state.
 - App user không phải <code>root</code>, không có password rỗng và không được dùng password placeholder.
 - Khóa user làm mất hiệu lực các session cũ; đổi email hoặc password cũng kết thúc các session khác.
+- Tài khoản mới phải kích hoạt qua email trước khi đăng nhập; token kích hoạt chỉ lưu dạng hash và liên kết không dựa vào header <code>Host</code>.
 
 Không commit các file sau:
 
 - <code>config/database.local.php</code>;
+- <code>config/mail.local.php</code> (mật khẩu SMTP);
 - <code>.env</code> và <code>.env.*</code>;
 - password, private key, certificate private, credential JSON;
 - <code>.runtime/</code>, log, cache, database dump và file tạm.
@@ -382,6 +402,7 @@ Remove-Item Env:DB_SETUP_USER, Env:DB_SETUP_PASSWORD
 Bộ test kiểm tra các luồng:
 
 - đăng ký, đăng nhập và password hashing;
+- kích hoạt qua email: email chứa liên kết, token chỉ lưu dạng hash, chặn đăng nhập khi chưa kích hoạt, gửi lại và thời gian chờ, token hết hạn/dùng lại/sai, đăng ký lại email chưa kích hoạt, kích hoạt thủ công bởi admin, nâng cấp database cũ; quên mật khẩu với tài khoản chưa kích hoạt hoặc bị khóa (test ghi email vào thư mục tạm, không gửi mail thật);
 - bảo vệ route riêng tư và admin;
 - CSRF và cấm GET trên handler thay đổi dữ liệu;
 - tìm kiếm tiếng Việt và xử lý wildcard/chuỗi SQL injection thử nghiệm;
@@ -391,6 +412,12 @@ Bộ test kiểm tra các luồng:
 - blog: đăng/sửa/xóa, phân quyền, tìm kiếm, phân trang, bình chọn/lưu qua phiên đăng nhập, bình luận, XSS và dữ liệu liên quan sau khi xóa bài;
 - gợi ý chọn cây: CSRF, hai chế độ, giữ kết quả theo chế độ, báo lỗi nhập liệu và escape ghi chú (server test luôn tắt AI);
 - lỗi database trả response an toàn.
+
+Test riêng cho gửi email (<code>includes/mailer.php</code>), không cần database hay tài khoản mail: client SMTP nói chuyện với một server giả trên 127.0.0.1 (xác thực, header mã hóa UTF-8, từ chối mật khẩu không mã hóa, driver log, chống Host giả cho liên kết kích hoạt). Đường TLS cần server thật nên chưa được test tự động.
+
+~~~powershell
+C:/xampp/php/php.exe tests/mail.php
+~~~
 
 Test riêng cho gợi ý chọn cây, không cần database hay API key (lịch âm, cung hoàng đạo, ngũ hành, kiểm tra câu trả lời AI, cache và giới hạn):
 

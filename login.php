@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/includes/init.php';
 
 $loginError = null;
+$unverifiedEmail = null;
 $email = '';
 $returnTo = request_string($_POST, 'return_to', request_string($_GET, 'return_to'));
 $flashMessage = take_flash();
@@ -27,6 +28,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $loginError = 'Email hoặc mật khẩu chưa đúng.';
         } elseif ($user['status'] === 'blocked') {
             $loginError = 'Tài khoản đang bị khóa. Vui lòng liên hệ quản trị viên.';
+        } elseif (!user_email_verified($user)) {
+            // Shown only after the right password, so it does not reveal which emails are registered.
+            $loginError = 'Tài khoản chưa được kích hoạt. Hãy mở liên kết trong email kích hoạt, hoặc gửi lại email bên dưới.';
+            $unverifiedEmail = $user['email'];
         } else {
             login_throttle_succeeded(substr($email, 0, 254));
             if (password_needs_rehash($user['password_hash'], PASSWORD_DEFAULT)) {
