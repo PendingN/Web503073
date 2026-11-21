@@ -37,14 +37,9 @@ if ($layout === 'list') {
 // Topics worth offering: those with posts the reader can see, plus any already selected.
 $topicTags = array_values(array_filter($allTags, static fn (array $tag): bool => $tag['post_count'] > 0 || in_array($tag['id'], $tagIds, true)));
 $totalArchivePosts = count_blog_posts();
-$searchSuggestions = array_map(static fn (array $post): array => [
-    'name' => $post['title'],
-    'category' => implode(', ', array_column($post['tags'], 'name')),
-    'extra' => $post['excerpt'],
-    'image' => blog_cover_url($post),
-    'url' => 'blog-post.php?slug=' . rawurlencode($post['slug']),
-], blog_search_suggestions());
-$pageScripts = ['js/search-suggest.js'];
+// Live search (js/blog-live-search.js) refetches this page as the reader types and swaps every
+// [data-live-region] block, so the server stays the single place that filters and renders posts.
+$pageScripts = ['js/blog-live-search.js'];
 
 // The default front page opens with the newest four posts as a teaser; the list below always
 // holds every post, so nothing is missing from it.
@@ -132,7 +127,7 @@ require __DIR__ . '/includes/header.php';
 require __DIR__ . '/includes/navbar.php';
 ?>
 <main class="blog-feed-main" id="main-content" tabindex="-1">
-    <section class="mono-masthead-band" aria-labelledby="monograph-title">
+    <section class="mono-masthead-band" id="blog-masthead" data-live-region aria-labelledby="monograph-title">
         <div class="mono-container">
             <header class="mono-masthead">
                 <h1 id="monograph-title">Sổ Tay Thực Vật</h1>
@@ -186,7 +181,7 @@ require __DIR__ . '/includes/navbar.php';
 
     <section class="mono-archive-section all-section" id="all-posts" aria-labelledby="all-heading">
         <div class="mono-container">
-            <div class="all-section-head">
+            <div class="all-section-head" id="blog-results-head" data-live-region>
                 <h2 id="all-heading"><?= e($archiveHeading) ?></h2>
                 <p class="all-section-count"><?= e($result['total']) ?> kết quả</p>
                 <?php if ($search !== '' || $tagIds !== []): ?>
@@ -218,16 +213,15 @@ require __DIR__ . '/includes/navbar.php';
 
             <section class="mono-controls" id="blog-content" tabindex="-1" aria-label="Tìm kiếm và lọc bài viết">
                 <div class="mono-controls-row">
-                    <nav class="blog-tabs" aria-label="Chế độ xem bài viết">
+                    <nav class="blog-tabs" id="blog-tabs" data-live-region aria-label="Chế độ xem bài viết">
                         <?php foreach (['all' => 'Tất cả', 'mine' => 'Bài của tôi', 'saved' => 'Đã lưu'] as $key => $label): ?>
                             <a href="blog.php?<?= e(http_build_query(array_merge($query, ['view' => $key]))) ?>#blog-content"<?= $view === $key ? ' aria-current="page"' : '' ?>><?= e($label) ?></a>
                         <?php endforeach; ?>
                     </nav>
-                    <form class="blog-search" action="blog.php#blog-content" method="get" role="search">
-                        <div class="blog-search-field" data-search-suggest="<?= e(json_encode($searchSuggestions, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) ?>" data-empty-text="Không có bài nào khớp. Nhấn Enter để tìm trong nội dung.">
+                    <form class="blog-search" action="blog.php#blog-content" method="get" role="search" data-live-search>
+                        <div class="blog-search-field">
                             <label class="sr-only" for="blog-search">Tìm bài viết</label>
-                            <input id="blog-search" type="search" name="search" value="<?= e($search) ?>" placeholder="Tiêu đề, nội dung hoặc chủ đề" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="blog-search-list">
-                            <ul class="search-suggest" id="blog-search-list" role="listbox" aria-label="Gợi ý bài viết" hidden></ul>
+                            <input id="blog-search" type="search" name="search" value="<?= e($search) ?>" placeholder="Tìm trong tiêu đề, nội dung hoặc chủ đề" autocomplete="off" maxlength="200" aria-describedby="blog-search-status">
                         </div>
                         <div class="blog-sort-field">
                             <label class="sr-only" for="blog-sort">Sắp xếp</label>
@@ -243,9 +237,11 @@ require __DIR__ . '/includes/navbar.php';
                         <?php if ($layout === 'list'): ?>
                             <input type="hidden" name="layout" value="list">
                         <?php endif; ?>
-                        <button class="btn-brand" type="submit">Tìm kiếm</button>
+                        <noscript><button class="btn-brand" type="submit">Tìm kiếm</button></noscript>
                     </form>
+                    <p class="sr-only" id="blog-search-status" role="status" aria-live="polite"></p>
                 </div>
+                <div id="blog-topics" data-live-region>
                 <?php if ($topicTags !== []): ?>
                     <nav class="feed-topics" aria-label="Lọc theo chủ đề (chọn một hoặc nhiều)">
                         <?php foreach ($topicTags as $topicTag): ?>
@@ -259,8 +255,10 @@ require __DIR__ . '/includes/navbar.php';
                         <?php endforeach; ?>
                     </nav>
                 <?php endif; ?>
+                </div>
             </section>
 
+            <div id="blog-results" data-live-region>
             <?php $singleWide = $layout === 'grid' && count($result['posts']) === 1; ?>
             <div class="all-grid feed-list<?= $layout === 'list' ? ' all-grid--list' : '' ?><?= $singleWide ? ' all-grid--single' : '' ?>">
                 <?php foreach ($result['posts'] as $archivePost): ?>
@@ -359,6 +357,7 @@ require __DIR__ . '/includes/navbar.php';
                     <?php endif; ?>
                 </nav>
             <?php endif; ?>
+            </div>
         </div>
     </section>
 

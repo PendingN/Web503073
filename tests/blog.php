@@ -41,9 +41,11 @@ check(str_contains($listSearch, 'name="layout" value="list"')
     && str_contains($listPage, 'tag%5B0%5D=' . test_tag_id('Chăm cây') . '&amp;layout=list#blog-content'), 'Search, topic and card tag links must keep the list layout.');
 $searchPage = $reader->request('blog.php?search=' . rawurlencode('Tạo một nhịp sống chậm cùng cây'))['body'];
 check(substr_count($searchPage, 'class="post-card feed-post') === 1, 'Feed must follow the current search.');
-check(str_contains($feedPage, 'id="blog-search-list"')
-    && str_contains($feedPage, 'role="combobox"')
-    && str_contains($feedPage, 'blog-post.php?slug=bat-dau-mot-goc-xanh-tu-dau&quot;'), 'The blog search box must carry as-you-type suggestions.');
+check(str_contains($feedPage, 'data-live-search')
+    && str_contains($feedPage, 'js/blog-live-search.js')
+    && str_contains($feedPage, 'id="blog-results" data-live-region')
+    && str_contains($feedPage, '<noscript><button class="btn-brand" type="submit">Tìm kiếm</button></noscript>'),
+    'The blog search must run live as the reader types; the button is only a no-JavaScript fallback.');
 $accentless = $reader->request('blog.php?search=' . rawurlencode('bat dau mot goc'))['body'];
 check(substr_count($accentless, 'class="post-card feed-post') === 1
     && str_contains($accentless, 'Bắt đầu một góc xanh từ đâu?'), 'Searching without accents, including "đ" as "d", must find the post.');
