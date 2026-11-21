@@ -18,6 +18,10 @@ $detailUrl = 'plant-detail.php?' . http_build_query(['id' => (int) $plant['id'],
     <div class="plant-card-body">
         <p class="plant-category"><?= e($plant['category']) ?></p>
         <h3><a href="<?= e($detailUrl) ?>"><?= e($plant['name']) ?></a></h3>
+        <?php $cardRating = plant_rating_stats((int) $plant['id']); ?>
+        <?php if ($cardRating['count'] > 0): ?>
+            <p class="plant-card-rating"><?= plant_stars_html($cardRating['average'], 'star-meter--small') ?><span><?= e(number_format($cardRating['average'], 1, ',', '')) ?> <span class="plant-card-rating-count">(<?= $cardRating['count'] ?>)</span></span></p>
+        <?php endif; ?>
         <p><?= e($plant['description']) ?></p>
         <a class="plant-card-link" href="<?= e($detailUrl) ?>">Xem cách chăm</a>
     </div>

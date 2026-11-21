@@ -106,8 +106,8 @@ $registerAttr = static fn (string $fieldName): string => $isRegister
                             <input class="form-control auth-video-input" id="login-password" <?= $loginAttr('password') ?> type="password" autocomplete="current-password" maxlength="72" placeholder="Mật khẩu" required<?= $loginError !== null ? ' aria-invalid="true" aria-describedby="login-error"' : '' ?>>
                             <button class="password-toggle" type="button" data-password-toggle aria-controls="login-password" aria-label="Hiện mật khẩu" aria-pressed="false">Hiện</button>
                         </div>
+                        <a class="auth-forgot-link" href="forgot-password.php">Quên mật khẩu?</a>
                     </div>
-                    <a class="auth-forgot-link" href="forgot-password.php">Quên mật khẩu?</a>
                     <button class="btn-brand auth-video-submit" data-auth-submit type="<?= $isRegister ? 'button' : 'submit' ?>">Đăng nhập</button>
                 </form>
 

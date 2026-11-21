@@ -16,6 +16,12 @@ try {
     if ($schema === false) {
         throw new RuntimeException('Cannot read database/schema.sql.');
     }
+    // An earlier draft of password reset (link only) created password_resets without otp_hash. Its rows are
+    // short-lived reset links, so the table is dropped and recreated by the schema below in the new shape.
+    if ($connection->query("SHOW TABLES LIKE 'password_resets'")->fetch()
+        && !$connection->query("SHOW COLUMNS FROM password_resets LIKE 'otp_hash'")->fetch()) {
+        $connection->exec('DROP TABLE password_resets');
+    }
     foreach (explode(';', $schema) as $sql) {
         if (trim($sql) !== '') {
             $connection->exec($sql);

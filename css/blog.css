@@ -872,52 +872,6 @@
     min-width: 0;
 }
 
-/* As-you-type suggestions (js/search-suggest.js): wider than the field so titles stay readable */
-.blog-page .search-suggest {
-    right: auto;
-    width: min(440px, calc(100vw - 2 * var(--mono-gutter)));
-    padding: 4px;
-    border: 1px solid var(--mono-rule-strong);
-    border-radius: 4px;
-    background: var(--mono-plate);
-    box-shadow: 0 18px 36px -12px rgba(26, 33, 30, 0.18);
-}
-
-.blog-page .search-suggest [role="option"] {
-    min-height: 52px;
-    gap: 12px;
-    padding: 6px 8px;
-    border-radius: 3px;
-}
-
-.blog-page .search-suggest [role="option"][aria-selected="true"] {
-    background: var(--mono-accent-soft);
-}
-
-.blog-page .search-suggest img {
-    width: 44px;
-    height: 44px;
-    border-radius: 3px;
-    background: var(--mono-stone-soft);
-}
-
-.blog-page .search-suggest strong {
-    color: var(--mono-ink);
-    font-size: 0.9rem;
-    font-weight: 600;
-}
-
-.blog-page .search-suggest small {
-    color: var(--mono-muted);
-    font-size: 0.78rem;
-}
-
-.blog-page .search-suggest-empty {
-    padding: 12px;
-    color: var(--mono-muted);
-    font-size: 0.85rem;
-}
-
 .blog-page .blog-search :is(input, select) {
     width: 100%;
     min-width: 0;
@@ -2396,3 +2350,15 @@
 .blog-post-page .post-share-inline select { min-height: 40px; padding: 0 10px; border: 1px solid var(--mono-rule); border-radius: 6px; background: #fff; font: inherit; font-size: 13px; }
 .blog-post-page .post-share-revoke { min-height: 40px; padding: 0 12px; border: 1px solid var(--mono-danger-rule); border-radius: 6px; background: var(--mono-danger-bg); color: var(--mono-danger); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
 .blog-post-page .post-share-revoke:hover { background: var(--mono-danger); color: #fff; }
+
+/* Live search (js/blog-live-search.js): the topic row's swap wrapper is a grid item, so let it
+   shrink and keep the row's own sideways scroll on phones instead of widening the page */
+.blog-page #blog-topics {
+    min-width: 0;
+}
+
+/* Dim the old results while the new ones load */
+.blog-page #blog-results[aria-busy="true"] {
+    opacity: 0.55;
+    transition: opacity 160ms ease;
+}

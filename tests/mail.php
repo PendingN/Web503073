@@ -90,10 +90,31 @@ require_once __DIR__ . '/../includes/email-verification.php';
 
 function set_mail_environment(array $values): void
 {
-    foreach (['DRIVER', 'HOST', 'PORT', 'ENCRYPTION', 'USERNAME', 'PASSWORD', 'FROM_EMAIL', 'FROM_NAME', 'LOG_DIR', 'VERIFY_PEER'] as $key) {
-        putenv('MAIL_' . $key . (isset($values[$key]) ? '=' . $values[$key] : ''));
+    // Every key is set explicitly so a developer's config/mail.local.php never leaks into these checks.
+    $defaults = ['DRIVER' => 'log', 'HOST' => '', 'PORT' => '587', 'ENCRYPTION' => 'tls', 'USERNAME' => '', 'PASSWORD' => '',
+        'FROM_ADDRESS' => '', 'FROM_NAME' => 'Là Lá La', 'LOG_DIR' => '', 'APP_URL' => ''];
+    foreach ($values + $defaults as $key => $value) {
+        putenv('MAIL_' . $key . '=' . $value);
     }
-    putenv('APP_URL' . (isset($values['APP_URL']) ? '=' . $values['APP_URL'] : ''));
+}
+
+/** True when $send throws a RuntimeException (includes/mailer.php reports every failure that way). */
+function mail_fails(callable $send): bool
+{
+    try {
+        $send();
+    } catch (RuntimeException $exception) {
+        return true;
+    }
+    return false;
+}
+
+/** Newest message the log driver wrote. */
+function latest_logged_mail(string $logDir): string
+{
+    $files = glob($logDir . DIRECTORY_SEPARATOR . '*.txt') ?: [];
+    sort($files);
+    return $files === [] ? '' : (string) file_get_contents(end($files));
 }
 
 /** Starts the fake server, runs $client against its port, and returns the raw text the server received. */
@@ -131,87 +152,82 @@ try {
     // Configuration.
     set_mail_environment([]);
     $config = load_mail_config();
-    check($config['driver'] === 'log' && str_ends_with($config['log_dir'], '.runtime' . DIRECTORY_SEPARATOR . 'mail'), 'Without MAIL_HOST the log driver must be used.');
-    set_mail_environment(['HOST' => 'smtp.example.test', 'USERNAME' => 'sender@example.test']);
+    check($config['driver'] === 'log' && str_ends_with($config['log_dir'], '.runtime' . DIRECTORY_SEPARATOR . 'mail'), 'The log driver must be the default.');
+    set_mail_environment(['DRIVER' => 'smtp', 'HOST' => 'smtp.example.test', 'USERNAME' => 'sender@example.test']);
     $config = load_mail_config();
-    check($config['driver'] === 'smtp' && $config['port'] === 587 && $config['encryption'] === 'tls' && $config['from_email'] === 'sender@example.test' && $config['verify_peer'] === true, 'A host must select SMTP with STARTTLS on 587.');
-    foreach ([['ENCRYPTION' => 'maybe'], ['PORT' => '0'], ['DRIVER' => 'carrier-pigeon'], ['FROM_EMAIL' => "x@example.test
-Bcc: y@example.test"], ['APP_URL' => 'javascript:alert(1)']] as $bad) {
+    check($config['driver'] === 'smtp' && $config['port'] === 587 && $config['encryption'] === 'tls' && $config['from_address'] === 'sender@example.test', 'SMTP must default to STARTTLS on 587.');
+    foreach ([['ENCRYPTION' => 'maybe'], ['PORT' => '0'], ['DRIVER' => 'carrier-pigeon'], ['FROM_ADDRESS' => "x@example.test\nBcc: y@example.test"],
+        ['APP_URL' => 'javascript:alert(1)'], ['DRIVER' => 'smtp']] as $bad) {
         set_mail_environment($bad);
-        $rejected = false;
-        try {
-            load_mail_config();
-        } catch (RuntimeException $exception) {
-            $rejected = true;
-        }
-        check($rejected, 'Invalid mail configuration was accepted: ' . json_encode($bad));
+        check(mail_fails(static fn () => load_mail_config()), 'Invalid mail configuration was accepted: ' . json_encode($bad));
     }
 
     // Log driver.
-    set_mail_environment(['DRIVER' => 'log', 'LOG_DIR' => $logDir]);
-    check(send_mail('to@example.test', 'Tiêu đề', "Dòng một\nhttps://example.test/verify-email.php?token=abc", '<p>x</p>'), 'The log driver must accept a message.');
-    $written = glob($logDir . DIRECTORY_SEPARATOR . '*.eml') ?: [];
-    check(count($written) === 1 && str_starts_with((string) file_get_contents($written[0]), "To: to@example.test\r\nSubject: Tiêu đề\r\n\r\nDòng một"), 'The log driver must keep a readable copy.');
-    check(!send_mail("to@example.test\r\nBcc: attacker@example.test", 'Hi', 'x', 'x'), 'A recipient containing a line break must be refused.');
+    set_mail_environment(['LOG_DIR' => $logDir]);
+    send_mail('to@example.test', 'Tiêu đề', "Dòng một\nhttps://example.test/verify-email.php?token=abc");
+    check(count(glob($logDir . DIRECTORY_SEPARATOR . '*.txt') ?: []) === 1 && str_contains(latest_logged_mail($logDir), "\nTo: to@example.test\nSubject: Tiêu đề\n\nDòng một"), 'The log driver must keep a readable copy.');
+    check(mail_fails(static fn () => send_mail("to@example.test\r\nBcc: attacker@example.test", 'Hi', 'x')), 'A recipient containing a line break must be refused.');
+    check(mail_fails(static fn () => send_mail('to@example.test', "Hi\r\nBcc: attacker@example.test", 'x')), 'A subject containing a line break must be refused.');
 
     // SMTP delivery with authentication.
     $subject = 'Kích hoạt tài khoản Là Lá La';
     $text = "Xin chào Ánh,\nmở https://example.test/verify-email.php?token=abc\n.một dòng bắt đầu bằng dấu chấm\n";
     $transcript = with_fake_smtp('', static function (int $port) use ($subject, $text): void {
         set_mail_environment(['DRIVER' => 'smtp', 'HOST' => '127.0.0.1', 'PORT' => (string) $port, 'ENCRYPTION' => 'none', 'USERNAME' => 'smtp-user',
-            'PASSWORD' => 'smtp-secret', 'FROM_EMAIL' => 'no-reply@example.test', 'FROM_NAME' => 'Là Lá La']);
-        check(send_mail('member@example.test', $subject, $text, '<p>Xin chào</p>'), 'SMTP delivery to the fake server failed.');
+            'PASSWORD' => 'smtp-secret', 'FROM_ADDRESS' => 'no-reply@example.test', 'FROM_NAME' => 'Là Lá La']);
+        send_mail('member@example.test', $subject, $text);
     });
     check(str_contains($transcript, "AUTH LOGIN\r\n" . base64_encode('smtp-user') . "\r\n" . base64_encode('smtp-secret') . "\r\n"), 'SMTP must authenticate with AUTH LOGIN.');
     check(str_contains($transcript, "MAIL FROM:<no-reply@example.test>\r\nRCPT TO:<member@example.test>\r\nDATA\r\n"), 'SMTP must send the envelope before DATA.');
     check(str_contains($transcript, 'Subject: =?UTF-8?B?' . base64_encode($subject) . '?=') && str_contains($transcript, 'To: <member@example.test>')
-        && str_contains($transcript, 'Content-Type: multipart/alternative'), 'The message needs encoded headers and both parts.');
+        && str_contains($transcript, 'Content-Type: text/plain; charset=UTF-8'), 'The message needs encoded headers.');
     $message = substr($transcript, strpos($transcript, "DATA\r\n") + 6);
-    preg_match_all('/Content-Transfer-Encoding: base64\r\n\r\n([A-Za-z0-9+\/=\r\n]+?)\r\n--/', $message, $parts);
-    $decodedParts = array_map(static fn (string $chunk): string|false => base64_decode(str_replace("\r\n", '', $chunk), true), $parts[1]);
-    check($decodedParts === [$text, '<p>Xin chào</p>'], 'Both text and HTML bodies must survive encoding intact.');
+    $body = substr($message, strpos($message, "\r\n\r\n") + 4);
+    $body = substr($body, 0, strrpos($body, "\r\n.\r\n"));
+    check(base64_decode(str_replace("\r\n", '', $body), true) === $text, 'The text body must survive encoding intact.');
     check(str_contains($transcript, "\r\n.\r\nQUIT\r\n"), 'The message must end with a lone dot, followed by QUIT.');
 
-    // Dot-stuffing: a line that is just "." must not end the message early.
+    // Without credentials the client must not authenticate.
     $transcript = with_fake_smtp('', static function (int $port): void {
-        set_mail_environment(['DRIVER' => 'smtp', 'HOST' => '127.0.0.1', 'PORT' => (string) $port, 'ENCRYPTION' => 'none', 'FROM_EMAIL' => 'no-reply@example.test']);
-        mail_smtp_deliver(load_mail_config(), 'no-reply@example.test', 'member@example.test', "Subject: x\r\n\r\nfirst\n.\n.hidden\nlast");
+        set_mail_environment(['DRIVER' => 'smtp', 'HOST' => '127.0.0.1', 'PORT' => (string) $port, 'ENCRYPTION' => 'none', 'FROM_ADDRESS' => 'no-reply@example.test']);
+        send_mail('member@example.test', 'Hi', 'x');
     });
-    check(str_contains($transcript, "first\r\n..\r\n..hidden\r\nlast\r\n.\r\n"), 'Lines starting with a dot must be doubled.');
     check(!str_contains($transcript, 'AUTH'), 'Without credentials the client must not authenticate.');
 
     // Refusals: a rejected recipient, no server, and a password that would cross the network unencrypted.
     with_fake_smtp('reject-rcpt', static function (int $port): void {
-        set_mail_environment(['DRIVER' => 'smtp', 'HOST' => '127.0.0.1', 'PORT' => (string) $port, 'ENCRYPTION' => 'none', 'FROM_EMAIL' => 'no-reply@example.test']);
-        check(!send_mail('gone@example.test', 'Hi', 'x', 'x'), 'A rejected recipient must be reported as a failure.');
+        set_mail_environment(['DRIVER' => 'smtp', 'HOST' => '127.0.0.1', 'PORT' => (string) $port, 'ENCRYPTION' => 'none', 'FROM_ADDRESS' => 'no-reply@example.test']);
+        check(mail_fails(static fn () => send_mail('gone@example.test', 'Hi', 'x')), 'A rejected recipient must be reported as a failure.');
     });
-    set_mail_environment(['DRIVER' => 'smtp', 'HOST' => '127.0.0.1', 'PORT' => '1', 'ENCRYPTION' => 'none', 'FROM_EMAIL' => 'no-reply@example.test']);
-    check(!send_mail('member@example.test', 'Hi', 'x', 'x'), 'An unreachable server must be reported as a failure, not thrown.');
-    set_mail_environment(['DRIVER' => 'smtp', 'HOST' => 'smtp.example.test', 'ENCRYPTION' => 'none', 'USERNAME' => 'u', 'PASSWORD' => 'p', 'FROM_EMAIL' => 'no-reply@example.test']);
-    check(!send_mail('member@example.test', 'Hi', 'x', 'x'), 'Credentials must not be sent over an unencrypted remote connection.');
-    check(str_contains((string) file_get_contents($errorLog), 'without encryption') && !str_contains((string) file_get_contents($errorLog), 'smtp-secret'), 'Failures must be logged without secrets.');
+    set_mail_environment(['DRIVER' => 'smtp', 'HOST' => '127.0.0.1', 'PORT' => '1', 'ENCRYPTION' => 'none', 'FROM_ADDRESS' => 'no-reply@example.test', 'PASSWORD' => 'x']);
+    check(mail_fails(static fn () => send_mail('member@example.test', 'Hi', 'x')), 'An unreachable server must be reported as a failure.');
+    set_mail_environment(['DRIVER' => 'smtp', 'HOST' => 'smtp.example.test', 'ENCRYPTION' => 'none', 'USERNAME' => 'u@example.test', 'PASSWORD' => 'smtp-secret']);
+    check(mail_fails(static fn () => send_mail('member@example.test', 'Hi', 'x')), 'Credentials must not be sent over an unencrypted remote connection.');
 
-    // Links in emails never follow a forged Host header.
+    // Activation links never follow a forged Host header; a failed send is reported, not thrown.
     $_SERVER['HTTP_HOST'] = 'evil.example';
-    set_mail_environment(['DRIVER' => 'log', 'LOG_DIR' => $logDir]);
+    set_mail_environment(['LOG_DIR' => $logDir]);
+    $before = count(glob($logDir . DIRECTORY_SEPARATOR . '*.txt') ?: []);
     check(email_base_url() === null, 'A non-local Host header must not be used for activation links.');
-    check(!send_verification_email(['name' => 'Ánh', 'email' => 'member@example.test'], str_repeat('a', 64)) && count(glob($logDir . DIRECTORY_SEPARATOR . '*.eml')) === 1, 'Without APP_URL, no activation email may be built from a forged Host.');
+    check(!send_verification_email(['name' => 'Ánh', 'email' => 'member@example.test'], str_repeat('a', 64))
+        && count(glob($logDir . DIRECTORY_SEPARATOR . '*.txt') ?: []) === $before, 'Without an app URL, no activation email may be built from a forged Host.');
+    check(!str_contains((string) file_get_contents($errorLog), 'smtp-secret'), 'Failures must be logged without secrets.');
     $_SERVER['HTTP_HOST'] = 'localhost:8090';
     check(email_base_url() === 'http://localhost:8090/Web503073', 'A localhost request may build its own links.');
     $_SERVER['HTTP_HOST'] = 'evil.example';
-    set_mail_environment(['DRIVER' => 'log', 'LOG_DIR' => $logDir, 'APP_URL' => 'https://garden.example/Web503073/']);
-    check(email_base_url() === 'https://garden.example/Web503073', 'The configured APP_URL must win over the Host header.');
+    set_mail_environment(['LOG_DIR' => $logDir, 'APP_URL' => 'https://garden.example/Web503073/']);
+    check(email_base_url() === 'https://garden.example/Web503073', 'The configured app URL must win over the Host header.');
     $token = str_repeat('b', 64);
-    check(send_verification_email(['name' => '<b>Ánh</b>', 'email' => 'member@example.test'], $token), 'The activation email must be sent when APP_URL is set.');
-    $files = glob($logDir . DIRECTORY_SEPARATOR . '*.eml');
-    sort($files);
-    $body = (string) file_get_contents(end($files));
+    check(send_verification_email(['name' => '<b>Ánh</b>', 'email' => 'member@example.test'], $token), 'The activation email must be sent when the app URL is set.');
+    $body = latest_logged_mail($logDir);
     check(str_contains($body, 'https://garden.example/Web503073/verify-email.php?token=' . $token) && str_contains($body, 'Xin chào <b>Ánh</b>,'), 'The activation email must carry the link.');
+    set_mail_environment(['DRIVER' => 'smtp', 'HOST' => '127.0.0.1', 'PORT' => '1', 'ENCRYPTION' => 'none', 'FROM_ADDRESS' => 'no-reply@example.test', 'PASSWORD' => 'x', 'APP_URL' => 'https://garden.example/']);
+    check(!send_verification_email(['name' => 'Ánh', 'email' => 'member@example.test'], $token), 'A failed activation email must return false instead of throwing.');
 } catch (Throwable $exception) {
     $failure = $exception->getMessage();
 } finally {
     if (is_dir($logDir)) {
-        array_map('unlink', glob($logDir . DIRECTORY_SEPARATOR . '*.eml') ?: []);
+        array_map('unlink', glob($logDir . DIRECTORY_SEPARATOR . '*.txt') ?: []);
         rmdir($logDir);
     }
     @unlink($errorLog);

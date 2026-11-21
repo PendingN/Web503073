@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/mail.php';
+require_once __DIR__ . '/mailer.php';
 
 const EMAIL_VERIFICATION_HOURS = 24;
 const EMAIL_VERIFICATION_RESEND_SECONDS = 60;
@@ -40,7 +40,7 @@ function email_verification_resend_allowed(int $userId): bool
  */
 function email_base_url(): ?string
 {
-    $configured = load_mail_config()['app_url'];
+    $configured = rtrim(load_mail_config()['app_url'], '/');
     if ($configured !== '') {
         return $configured;
     }
@@ -62,7 +62,7 @@ function send_verification_email(array $user, string $token): bool
         return false;
     }
     if ($baseUrl === null) {
-        error_log('Cannot send activation email: set APP_URL (or MAIL app_url in config/mail.local.php) so links do not depend on the Host header.');
+        error_log('Cannot send activation email: set MAIL_APP_URL (or app_url in config/mail.local.php) so links do not depend on the Host header.');
         return false;
     }
     $link = $baseUrl . '/verify-email.php?token=' . $token;
@@ -71,10 +71,13 @@ function send_verification_email(array $user, string $token): bool
         . "Cảm ơn bạn đã đăng ký tài khoản tại Là Lá La. Hãy mở liên kết dưới đây để kích hoạt tài khoản (có hiệu lực trong "
         . EMAIL_VERIFICATION_HOURS . " giờ):\n\n$link\n\n"
         . "Nếu bạn không đăng ký, hãy bỏ qua email này. Tài khoản sẽ không được kích hoạt.\n\nLà Lá La\n";
-    $html = mail_button_html('Kích hoạt tài khoản', $name,
-        'Cảm ơn bạn đã đăng ký tài khoản tại Là Lá La. Nhấn nút bên dưới để kích hoạt tài khoản (có hiệu lực trong ' . EMAIL_VERIFICATION_HOURS . ' giờ).',
-        $link, 'Kích hoạt tài khoản', 'Nếu bạn không đăng ký, hãy bỏ qua email này.');
-    return send_mail((string) $user['email'], 'Kích hoạt tài khoản Là Lá La', $text, $html);
+    try {
+        send_mail((string) $user['email'], 'Kích hoạt tài khoản Là Lá La', $text);
+        return true;
+    } catch (Throwable $exception) {
+        error_log('Cannot send activation email: ' . $exception->getMessage());
+        return false;
+    }
 }
 
 /**

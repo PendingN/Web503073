@@ -219,6 +219,8 @@ C:/xampp/php/php.exe -S 127.0.0.1:8090 -t .
 | <code>plant-advisor.php?mode=zodiac</code> / <code>?mode=spiritual</code> | Gợi ý chọn cây theo 12 cung hoàng đạo (Chiêm tinh học) hoặc ngày sinh âm lịch, mệnh và hướng góc nhà (Một chút tâm linh) | Công khai |
 | <code>register.php</code> | Đăng ký thành viên | Công khai |
 | <code>login.php</code> | Đăng nhập | Công khai |
+| <code>forgot-password.php</code> | Quên mật khẩu: nhập email, rồi nhập mã 6 số trong email | Công khai |
+| <code>reset-password.php</code> | Đặt mật khẩu mới sau khi bấm link hoặc nhập đúng mã | Công khai, cần link/mã hợp lệ |
 | <code>favorites.php</code> | Danh sách cây yêu thích | Cần đăng nhập |
 | <code>profile.php</code> | Sửa thông tin và password | Cần đăng nhập |
 | <code>admin-dashboard.php</code> | Tổng quan tài khoản, cây, bài viết, lượt yêu thích và đăng ký trong 7 ngày | Chỉ admin |
@@ -229,6 +231,7 @@ C:/xampp/php/php.exe -S 127.0.0.1:8090 -t .
 | <code>blog-post.php?slug=...</code> | Chi tiết bài viết | Công khai |
 | <code>actions/favorite-action.php</code> | Thêm/xóa yêu thích | POST + CSRF + đăng nhập |
 | <code>actions/plant-advice-action.php</code> | Tạo gợi ý chọn cây | POST + CSRF |
+| <code>actions/plant-review-action.php</code> | Chấm 1–5 sao (sửa/xóa được), gửi và xóa bình luận dưới mỗi cây (người viết hoặc admin mới xóa được) | POST + CSRF + đăng nhập |
 | <code>actions/profile-action.php</code> | Cập nhật cá nhân | POST + CSRF + đăng nhập |
 | <code>actions/user-action.php</code> | Sửa/khóa/mở khóa user | POST + CSRF + admin |
 | <code>actions/blog-action.php</code> | Đăng/sửa/xóa bài, bình chọn, lưu và bình luận | POST + CSRF + đăng nhập |
@@ -260,6 +263,35 @@ Copy-Item config/ai.local.example.php config/ai.local.php
 Biến môi trường <code>DEEPSEEK_API_KEY</code>, <code>DEEPSEEK_MODEL</code>, <code>DEEPSEEK_BASE_URL</code>, <code>DEEPSEEK_TIMEOUT</code> được ưu tiên hơn file; đặt <code>DEEPSEEK_API_KEY</code> rỗng để tắt AI.
 
 Ảnh nền hai nút chế độ là <code>images/advisor/zodiac-sky.svg</code> và <code>images/advisor/five-elements.svg</code>. Muốn dùng ảnh chụp, lưu ảnh có bản quyền phù hợp thành <code>images/advisor/zodiac.jpg</code> hoặc <code>images/advisor/spiritual.jpg</code> (cũng nhận <code>.webp</code>, <code>.png</code>); trang sẽ tự dùng ảnh đó.
+
+
+### Quên mật khẩu và gửi email
+
+Ở trang đăng nhập, bấm **Quên mật khẩu?** rồi nhập email. Nếu email thuộc một tài khoản đang hoạt động, website gửi một email chứa **cả liên kết lẫn mã 6 số**; người dùng chọn một trong hai cách:
+
+1. Bấm liên kết → mở thẳng màn hình đặt mật khẩu mới.
+2. Nhập mã 6 số ở bước 2 của trang <code>forgot-password.php</code> → chuyển sang màn hình đặt mật khẩu mới.
+
+Mật khẩu mới phải nhập hai lần. Sau khi lưu, mọi phiên đăng nhập của tài khoản (kể cả trình duyệt hiện tại) bị đăng xuất và người dùng **phải tự đăng nhập lại**.
+
+Quy tắc bảo mật (<code>includes/password-reset.php</code>):
+
+- Link và mã hết hạn sau 15 phút, chỉ dùng một lần; yêu cầu mới thay thế yêu cầu cũ. Database chỉ lưu SHA-256 của token và bcrypt của mã.
+- Trang luôn trả lời giống nhau dù email có đăng ký hay không, nên không dò được email nào tồn tại. Tài khoản bị khóa không nhận email.
+- Nhập sai mã 5 lần thì mã bị khóa. Mỗi email chỉ được gửi lại sau 60 giây, và số lần yêu cầu được giới hạn theo email và IP (dùng chung bảng <code>login_attempts</code>).
+- Token trong link được đổi sang session rồi chuyển hướng ngay, nên không nằm lại trên thanh địa chỉ.
+
+Cấu hình gửi mail nằm ở <code>config/mail.local.php</code> (bị Git bỏ qua). Khi **chưa** có file này, website không gửi mail thật mà ghi từng email thành file <code>.txt</code> trong <code>.runtime/mail/</code>; mở file mới nhất để lấy link hoặc mã khi chạy local.
+
+Gửi mail thật qua Gmail:
+
+~~~powershell
+Copy-Item config/mail.local.example.php config/mail.local.php
+# Mở config/mail.local.php, điền username/from_address là địa chỉ Gmail
+# và password là App Password (Google Account > Security > 2-Step Verification > App passwords)
+~~~
+
+Biến môi trường <code>MAIL_DRIVER</code> (<code>log</code> hoặc <code>smtp</code>), <code>MAIL_HOST</code>, <code>MAIL_PORT</code>, <code>MAIL_ENCRYPTION</code> (<code>tls</code>, <code>ssl</code>, <code>none</code>), <code>MAIL_USERNAME</code>, <code>MAIL_PASSWORD</code>, <code>MAIL_FROM_ADDRESS</code>, <code>MAIL_FROM_NAME</code>, <code>MAIL_APP_URL</code>, <code>MAIL_LOG_DIR</code> được ưu tiên hơn file. Khi deploy lên server công khai, hãy đặt <code>MAIL_APP_URL</code> (ví dụ <code>https://example.com/</code>) để link trong email không phụ thuộc header <code>Host</code> do client gửi lên. Test không bao giờ gửi mail thật: <code>tests/run.php</code> ép <code>MAIL_DRIVER=log</code> vào một thư mục tạm.
 
 
 ### Blog: cách dùng và cấu trúc
@@ -308,29 +340,15 @@ Không thêm framework, thư viện hoặc công đoạn build.
 
 Quản trị viên có nút **Kích hoạt** ở trang quản lý tài khoản cho trường hợp email không tới. Tài khoản tạo bằng <code>scripts/create-admin.php</code> và <code>scripts/create-demo-users.php</code> được kích hoạt sẵn.
 
-Cấu hình gửi mail (file <code>config/mail.local.php</code> bị Git bỏ qua, hoặc biến môi trường <code>MAIL_HOST</code>, <code>MAIL_PORT</code>, <code>MAIL_ENCRYPTION</code>, <code>MAIL_USERNAME</code>, <code>MAIL_PASSWORD</code>, <code>MAIL_FROM_EMAIL</code>, <code>MAIL_FROM_NAME</code>, <code>APP_URL</code>):
+Email kích hoạt dùng chung cấu hình gửi mail với chức năng quên mật khẩu (<code>config/mail.local.php</code> hoặc các biến <code>MAIL_*</code>, xem phần đặt lại mật khẩu ở trên):
 
-~~~powershell
-Copy-Item config/mail.local.example.php config/mail.local.php
-# Điền SMTP và app_url (địa chỉ công khai của website, ví dụ https://example.com/Web503073)
-~~~
-
-- <code>MAIL_ENCRYPTION</code>: <code>tls</code> (STARTTLS, cổng 587), <code>ssl</code> (cổng 465) hoặc <code>none</code> (chỉ cho server test cục bộ; mật khẩu SMTP không bao giờ được gửi không mã hóa tới máy khác). Chứng chỉ máy chủ được kiểm tra; nếu PHP trên XAMPP chưa có CA bundle, đặt <code>openssl.cafile</code> trong <code>php.ini</code> thay vì tắt kiểm tra.
-- <code>APP_URL</code> bắt buộc khi chạy trên tên miền thật. Liên kết trong email không bao giờ lấy từ header <code>Host</code> của request (kẻ tấn công có thể giả để lấy token), trừ khi truy cập bằng <code>localhost</code>/<code>127.0.0.1</code>.
-- Khi chưa có <code>MAIL_HOST</code>, website dùng driver <code>log</code>: email không được gửi mà ghi vào <code>.runtime/mail/*.eml</code>; mở file mới nhất để lấy liên kết kích hoạt khi phát triển local.
+- Liên kết kích hoạt không bao giờ lấy từ header <code>Host</code> (kẻ tấn công có thể giả để lấy token), trừ khi truy cập bằng <code>localhost</code>/<code>127.0.0.1</code>. Trên tên miền thật phải đặt <code>app_url</code> (hoặc <code>MAIL_APP_URL</code>), nếu không email kích hoạt sẽ không được gửi và lỗi được ghi vào log PHP.
+- Với <code>MAIL_ENCRYPTION=none</code>, mật khẩu SMTP chỉ được gửi tới server trên chính máy này; gửi tới máy khác bị từ chối.
+- Driver <code>log</code> ghi email vào <code>.runtime/mail/*.txt</code>; mở file mới nhất để lấy liên kết kích hoạt khi phát triển local.
 - Gửi mail lỗi không làm hỏng đăng ký: tài khoản vẫn được tạo, lỗi ghi vào log PHP (không chứa mật khẩu hay token) và người dùng có thể bấm gửi lại.
+- Quên mật khẩu với tài khoản chưa kích hoạt: hệ thống gửi lại liên kết kích hoạt thay vì mã đặt lại, vì đặt lại mật khẩu không được bỏ qua bước xác nhận email. Trang vẫn hiện cùng một thông báo trung lập.
 
-Sau khi cập nhật mã nguồn, chạy lại <code>scripts/setup-database.php</code>. Lệnh thêm cột <code>users.email_verified_at</code> và bảng <code>email_verifications</code>, đồng thời **đánh dấu mọi tài khoản đang có là đã kích hoạt** (một lần, khi thêm cột) để không ai bị khóa ngoài. Chạy lại setup sau đó không kích hoạt thêm tài khoản nào.
-
-### Quên mật khẩu
-
-Trang đăng nhập có liên kết **Quên mật khẩu?** tới <code>forgot-password.php</code>. Nhập email, hệ thống luôn trả cùng một thông báo dù email có tồn tại hay không, và chỉ gửi mail khi tài khoản có thật:
-
-- tài khoản đã kích hoạt nhận liên kết <code>reset-password.php?token=...</code>, **hết hạn sau 60 phút** (hằng số <code>PASSWORD_RESET_MINUTES</code> trong <code>includes/password-reset.php</code>), dùng được một lần;
-- tài khoản chưa kích hoạt nhận lại liên kết kích hoạt thay vì liên kết đặt lại, vì đặt lại mật khẩu không được bỏ qua bước xác nhận email;
-- tài khoản bị khóa không nhận gì.
-
-Mỗi tài khoản chỉ có một liên kết còn hiệu lực (yêu cầu mới thay liên kết cũ), tối đa một email mỗi phút, và mọi yêu cầu tính vào giới hạn lượt thử theo IP/email của đăng nhập. Chỉ SHA-256 của token nằm trong bảng <code>password_resets</code>. Đặt mật khẩu mới thành công sẽ đăng xuất mọi phiên đang mở của tài khoản đó, xóa các liên kết còn lại và không tự đăng nhập. Cần chạy lại <code>scripts/setup-database.php</code> để tạo bảng <code>password_resets</code>.
+Sau khi cập nhật mã nguồn, chạy lại <code>scripts/setup-database.php</code>. Lệnh thêm cột <code>users.email_verified_at</code> và bảng <code>email_verifications</code>, đồng thời **đánh dấu mọi tài khoản đang có là đã kích hoạt** (một lần, khi thêm cột) để không ai bị khóa ngoài. Chạy lại setup sau đó không kích hoạt thêm tài khoản nào. Nếu database còn bảng <code>password_resets</code> kiểu cũ (chỉ có liên kết, không có mã 6 số), setup sẽ xóa và tạo lại bảng đó; chỉ các liên kết đặt lại đang chờ bị mất.
 
 Chưa làm: đổi email trong hồ sơ hoặc do quản trị viên sửa chưa yêu cầu xác nhận lại email mới.
 
@@ -384,7 +402,7 @@ Remove-Item Env:DB_SETUP_USER, Env:DB_SETUP_PASSWORD
 Bộ test kiểm tra các luồng:
 
 - đăng ký, đăng nhập và password hashing;
-- kích hoạt qua email: email chứa liên kết, token chỉ lưu dạng hash, chặn đăng nhập khi chưa kích hoạt, gửi lại và thời gian chờ, token hết hạn/dùng lại/sai, đăng ký lại email chưa kích hoạt, kích hoạt thủ công bởi admin, nâng cấp database cũ; quên mật khẩu: liên kết một lần, hết hạn, bị thay thế, đăng xuất phiên cũ, thông báo trung lập, tài khoản chưa kích hoạt và bị khóa (test ghi email vào thư mục tạm, không gửi mail thật);
+- kích hoạt qua email: email chứa liên kết, token chỉ lưu dạng hash, chặn đăng nhập khi chưa kích hoạt, gửi lại và thời gian chờ, token hết hạn/dùng lại/sai, đăng ký lại email chưa kích hoạt, kích hoạt thủ công bởi admin, nâng cấp database cũ; quên mật khẩu với tài khoản chưa kích hoạt hoặc bị khóa (test ghi email vào thư mục tạm, không gửi mail thật);
 - bảo vệ route riêng tư và admin;
 - CSRF và cấm GET trên handler thay đổi dữ liệu;
 - tìm kiếm tiếng Việt và xử lý wildcard/chuỗi SQL injection thử nghiệm;
@@ -395,7 +413,7 @@ Bộ test kiểm tra các luồng:
 - gợi ý chọn cây: CSRF, hai chế độ, giữ kết quả theo chế độ, báo lỗi nhập liệu và escape ghi chú (server test luôn tắt AI);
 - lỗi database trả response an toàn.
 
-Test riêng cho gửi email, không cần database hay tài khoản mail: client SMTP nói chuyện với một server giả trên 127.0.0.1 (xác thực, dot-stuffing, header mã hóa UTF-8, từ chối mật khẩu không mã hóa, driver log, chống Host giả). Đường TLS cần server thật nên chưa được test tự động.
+Test riêng cho gửi email (<code>includes/mailer.php</code>), không cần database hay tài khoản mail: client SMTP nói chuyện với một server giả trên 127.0.0.1 (xác thực, header mã hóa UTF-8, từ chối mật khẩu không mã hóa, driver log, chống Host giả cho liên kết kích hoạt). Đường TLS cần server thật nên chưa được test tự động.
 
 ~~~powershell
 C:/xampp/php/php.exe tests/mail.php

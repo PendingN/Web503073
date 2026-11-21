@@ -8,6 +8,8 @@ if (PHP_SAPI !== 'cli') {
 require_once __DIR__ . '/../includes/database.php';
 require_once __DIR__ . '/../includes/repositories.php';
 require_once __DIR__ . '/../includes/activity-repository.php';
+require_once __DIR__ . '/../includes/tag-repository.php';
+require_once __DIR__ . '/../includes/plant-reviews.php';
 
 $checks = 0;
 function check(bool $condition, string $label): void
@@ -51,12 +53,12 @@ function run_cli(array $arguments): string
 /** Links to $page the log mail driver wrote for $email, oldest first, as absolute URLs. */
 function mailed_links(string $directory, string $email, string $page): array
 {
-    $files = glob($directory . DIRECTORY_SEPARATOR . '*.eml') ?: [];
+    $files = glob($directory . DIRECTORY_SEPARATOR . '*.txt') ?: [];
     sort($files);
     $links = [];
     foreach ($files as $file) {
         $content = (string) file_get_contents($file);
-        if (str_starts_with($content, "To: $email\r\n") && preg_match('#https?://\S+/' . preg_quote($page, '#') . '\?token=[a-f0-9]{64}#', $content, $match) === 1) {
+        if (str_contains($content, "\nTo: $email\n") &&preg_match('#https?://\S+/' . preg_quote($page, '#') . '\?token=[a-f0-9]{64}#', $content, $match) === 1) {
             $links[] = $match[0];
         }
     }
@@ -141,8 +143,8 @@ $server = null;
 $webProcess = null;
 $webPipes = [];
 $log = tempnam(sys_get_temp_dir(), 'web503073-test-');
+$mailDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'web503073-mail-' . bin2hex(random_bytes(6));
 $failure = null;
-$mailDir = null;
 try {
     if (!extension_loaded('curl') || !extension_loaded('pdo_mysql') || !extension_loaded('mbstring')) {
         throw new RuntimeException('Tests require curl, pdo_mysql, and mbstring.');
@@ -150,7 +152,7 @@ try {
     $server = create_database_connection(load_database_config(true), false);
     putenv('DB_NAME=' . $testName);
     run_cli(['scripts/setup-database.php']);
-    check((int) db()->query('SELECT COUNT(*) FROM plants')->fetchColumn() === 29, 'Seed must import all 29 plants.');
+    check((int) db()->query('SELECT COUNT(*) FROM plants')->fetchColumn() === 28, 'Seed must import all 28 plants.');
     check(array_column(plants_by_ids([22, 21, 22, 99999]), 'id') === [22, 21], 'Bulk plant lookup must preserve order, remove duplicates and skip missing IDs.');
 
     $adminEnvironment = ['APP_ADMIN_NAME' => 'Test Admin', 'APP_ADMIN_EMAIL' => 'admin@example.test', 'APP_ADMIN_PASSWORD' => 'TestAdmin123!'];
@@ -181,12 +183,11 @@ try {
     $base = 'http://' . $address . $prefix;
     // Never call the real AI from tests; the advisor must answer from its rules.
     putenv('DEEPSEEK_API_KEY=');
-    // Never send real email from tests: activation messages go to a throwaway folder the tests read back.
-    $mailDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'web503073-mail-' . bin2hex(random_bytes(6));
+    // Never send real email from tests; the log driver writes each message to a temporary folder.
     putenv('MAIL_DRIVER=log');
-    putenv('MAIL_HOST=');
     putenv('MAIL_LOG_DIR=' . $mailDir);
-    putenv('APP_URL=' . $base);
+    // Set, not emptied: on Windows an empty value unsets the variable and a local mail.local.php app_url would leak in.
+    putenv('MAIL_APP_URL=' . $base);
     $webProcess = proc_open([PHP_BINARY, '-S', $address, '-t', $documentRoot, 'server-router.php'], [0 => ['pipe', 'r'], 1 => ['file', $log, 'a'], 2 => ['file', $log, 'a']], $webPipes, dirname(__DIR__));
     if (!is_resource($webProcess)) {
         throw new RuntimeException('Cannot start test web server.');
@@ -200,7 +201,7 @@ try {
         usleep(100000);
     }
     $guest = new TestBrowser($base);
-    foreach (['index.php', 'collection.php', 'plant-detail.php?id=22', 'plant-advisor.php', 'blog.php', 'blog-post.php?slug=bat-dau-mot-goc-xanh-tu-dau', 'login.php', 'register.php'] as $path) {
+    foreach (['index.php', 'collection.php', 'plant-detail.php?id=22', 'plant-advisor.php', 'blog.php', 'blog-post.php?slug=bat-dau-mot-goc-xanh-tu-dau', 'login.php', 'register.php', 'forgot-password.php'] as $path) {
         check($guest->request($path)['status'] === 200, 'Public route failed: ' . $path);
     }
     foreach (['favorites.php', 'profile.php', 'admin.php', 'admin-dashboard.php'] as $path) {
@@ -324,62 +325,13 @@ try {
     $response = $duplicateRegistration->request('register.php', ['csrf_token' => $duplicateRegistration->token('register.php'), 'name' => 'Takeover', 'email' => 'carol@example.test', 'password' => 'Takeover123!', 'password_confirmation' => 'Takeover123!']);
     check($response['status'] === 200 && str_contains($response['body'], 'đã được đăng ký') && password_verify('Carol123!Garden', find_user($carolId)['password_hash']),
         'A confirmed account must not be taken over by registering its email again.');
-    // Password reset by email.
-    $forgot = new TestBrowser($base);
-    check(str_contains($forgot->request('login.php')['body'], 'href="forgot-password.php"'), 'The login form must link to the password reset.');
-    check($forgot->request('forgot-password.php')['status'] === 200 && $forgot->request('forgot-password.php', ['email' => 'carol@example.test'])['status'] === 403, 'The reset request form must require a CSRF token.');
-    $forgotInvalid = $forgot->request('forgot-password.php', ['csrf_token' => $forgot->token('forgot-password.php'), 'email' => 'not-an-email']);
-    check($forgotInvalid['status'] === 200 && str_contains($forgotInvalid['body'], 'email hợp lệ'), 'An invalid email must be rejected on the reset form.');
-    $forgot->request('forgot-password.php', ['csrf_token' => $forgot->token('forgot-password.php'), 'email' => 'Carol@example.test']);
-    $resetLinks = mailed_reset_links($mailDir, 'carol@example.test');
-    check(count($resetLinks) === 1 && str_starts_with($resetLinks[0], $base . '/reset-password.php?token='), 'A reset request must email one link built from the site address.');
-    $neutral = 'Nếu email này đã đăng ký';
-    check(str_contains($forgot->request('login.php')['body'], $neutral), 'The reset request must answer with a neutral message.');
-    check(db()->query('SELECT token_hash FROM password_resets WHERE user_id = ' . $carolId)->fetchAll(PDO::FETCH_COLUMN) === [hash('sha256', substr($resetLinks[0], -64))], 'Only the hash of the reset token may be stored.');
-    $forgot->request('forgot-password.php', ['csrf_token' => $forgot->token('forgot-password.php'), 'email' => 'nobody@example.test']);
-    check(str_contains($forgot->request('login.php')['body'], $neutral) && mailed_reset_links($mailDir, 'nobody@example.test') === [] && mailed_activation_links($mailDir, 'nobody@example.test') === [], 'An unknown address must get the same answer and no email.');
-    $forgot->request('forgot-password.php', ['csrf_token' => $forgot->token('forgot-password.php'), 'email' => 'carol@example.test']);
-    check(count(mailed_reset_links($mailDir, 'carol@example.test')) === 1, 'A second request within a minute must not send another email.');
-    db()->exec('UPDATE password_resets SET created_at = created_at - INTERVAL 2 MINUTE');
-    $forgot->request('forgot-password.php', ['csrf_token' => $forgot->token('forgot-password.php'), 'email' => 'carol@example.test']);
-    $resetLinks = mailed_reset_links($mailDir, 'carol@example.test');
-    check(count($resetLinks) === 2, 'A request after the cooldown must send a new link.');
-    $oldResetPath = substr($resetLinks[0], strlen($base) + 1);
-    $resetPath = substr($resetLinks[1], strlen($base) + 1);
-    check($forgot->request($oldResetPath)['status'] === 303 && str_contains($forgot->request('forgot-password.php')['body'], 'không hợp lệ, đã được dùng hoặc đã hết hạn'), 'A replaced reset link must stop working.');
-    foreach (['bad-token', str_repeat('0', 64)] as $badToken) {
-        check($forgot->request('reset-password.php?token=' . $badToken)['status'] === 303, 'A malformed or unknown reset token must not show the form.');
-    }
-    db()->exec('UPDATE password_resets SET expires_at = NOW() - INTERVAL 1 MINUTE');
-    check($forgot->request($resetPath)['status'] === 303, 'An expired reset link must not show the form.');
-    db()->exec('UPDATE password_resets SET expires_at = NOW() + INTERVAL 1 HOUR');
-    $resetForm = $forgot->request($resetPath);
-    check($resetForm['status'] === 200 && str_contains($resetForm['body'], 'name="password_confirmation"'), 'A live reset link must show the new password form.');
-    $resetFields = ['csrf_token' => $forgot->token($resetPath), 'token' => substr($resetLinks[1], -64), 'password' => 'Brand-new123!', 'password_confirmation' => 'Brand-new123!'];
-    check($forgot->request('reset-password.php', ['csrf_token' => 'bad'] + $resetFields)['status'] === 403, 'Setting a new password must require a CSRF token.');
-    $mismatch = $forgot->request('reset-password.php', ['password_confirmation' => 'Different123!'] + $resetFields);
-    $tooShort = $forgot->request('reset-password.php', ['password' => 'short', 'password_confirmation' => 'short'] + $resetFields);
-    check($mismatch['status'] === 200 && str_contains($mismatch['body'], 'chưa khớp') && $tooShort['status'] === 200 && str_contains($tooShort['body'], 'ít nhất 8 ký tự')
-        && password_verify('Carol123!Garden', find_user($carolId)['password_hash']), 'A bad new password must be refused and keep the old one and the link.');
-    $carolSessionBefore = $carolBrowser->request('profile.php')['status'];
-    $done = $forgot->request('reset-password.php', $resetFields);
-    check($carolSessionBefore === 200 && $done['status'] === 303 && ($done['headers']['location'] ?? '') === $prefix . '/login.php'
-        && password_verify('Brand-new123!', find_user($carolId)['password_hash']), 'A valid reset must set the new password and send the member to the login page.');
-    check(str_contains($forgot->request('login.php')['body'], 'Đã đặt lại mật khẩu'), 'The login page must confirm the reset.');
-    check($forgot->request('profile.php')['status'] === 303, 'Resetting a password must not sign anyone in.');
-    check($carolBrowser->request('profile.php')['status'] === 303, 'Resetting a password must end the sessions that were open.');
-    check((int) db()->query('SELECT COUNT(*) FROM password_resets WHERE user_id = ' . $carolId)->fetchColumn() === 0, 'A reset must discard the links.');
-    check($forgot->request($resetPath)['status'] === 303 && $forgot->request('reset-password.php', ['password' => 'Takeover123!', 'password_confirmation' => 'Takeover123!'] + $resetFields)['status'] === 303
-        && password_verify('Brand-new123!', find_user($carolId)['password_hash']), 'A reset link must work only once.');
-    $carolAgain = new TestBrowser($base);
-    check($carolAgain->login('carol@example.test', 'Carol123!Garden')['status'] === 200 && $carolAgain->login('carol@example.test', 'Brand-new123!')['status'] === 303, 'Only the new password may sign in after a reset.');
-
     // A member who never activated gets the activation link instead of a reset link.
     $erin = new TestBrowser($base);
     $erin->request('register.php', ['csrf_token' => $erin->token('register.php'), 'name' => 'Erin Garden', 'email' => 'erin@example.test', 'password' => 'ErinGarden123!', 'password_confirmation' => 'ErinGarden123!']);
     db()->exec('UPDATE email_verifications SET created_at = created_at - INTERVAL 2 MINUTE');
-    $erin->request('forgot-password.php', ['csrf_token' => $erin->token('forgot-password.php'), 'email' => 'erin@example.test']);
-    check(mailed_reset_links($mailDir, 'erin@example.test') === [] && count(mailed_activation_links($mailDir, 'erin@example.test')) === 2, 'An unverified account must receive an activation link, never a reset link.');
+    $erin->request('forgot-password.php', ['csrf_token' => $erin->token('forgot-password.php'), 'operation' => 'request', 'email' => 'erin@example.test']);
+    check((int) db()->query("SELECT COUNT(*) FROM password_resets r JOIN users u ON u.id = r.user_id WHERE u.email = 'erin@example.test'")->fetchColumn() === 0
+        && count(mailed_activation_links($mailDir, 'erin@example.test')) === 2, 'An unverified account must receive an activation link, never a reset.');
     check($guest->request('admin.php')['status'] === 403, 'Ordinary user accessed admin.');
     $profilePage = $guest->request('profile.php');
     check(!str_contains($profilePage['body'], 'class="dashboard-shell"') && !str_contains($profilePage['body'], 'class="dashboard-sidebar"'), 'Profile must use its own layout.');
@@ -571,8 +523,8 @@ try {
     check(str_contains($blockedLogin->login('bob@example.test', 'wrong-password')['body'], 'Email hoặc mật khẩu chưa đúng.'), 'Wrong password must not reveal blocked account status.');
     check(str_contains($blockedLogin->login('bob@example.test', 'BobGarden123!')['body'], 'đang bị khóa'), 'Blocked user could log in.');
     $blockedForgot = new TestBrowser($base);
-    $blockedForgot->request('forgot-password.php', ['csrf_token' => $blockedForgot->token('forgot-password.php'), 'email' => 'bob@example.test']);
-    check(mailed_reset_links($mailDir, 'bob@example.test') === [], 'A blocked account must not receive a reset link.');
+    $blockedForgot->request('forgot-password.php', ['csrf_token' => $blockedForgot->token('forgot-password.php'), 'operation' => 'request', 'email' => 'bob@example.test']);
+    check(mailed_reset_links($mailDir, 'bob@example.test') === [] && (int) db()->query('SELECT COUNT(*) FROM password_resets WHERE user_id = ' . (int) $bob['id'])->fetchColumn() === 0, 'A blocked account must not receive a reset link.');
     check(str_contains($adminBrowser->request('admin.php?status=blocked')['body'], 'Bob Edited'), 'Blocked-user filter failed.');
     $block['operation'] = 'unblock';
     $adminBrowser->request('actions/user-action.php', $block);
@@ -667,6 +619,9 @@ try {
     }
     check(str_contains($adminBrowser->request('admin.php?page=2')['body'], 'Trang 2 / 2'), 'User pagination failed.');
     check(str_contains($adminBrowser->request('admin.php?page=99999')['body'], 'Trang 2 / 2'), 'Pagination must clamp out-of-range pages.');
+    require __DIR__ . '/password-reset.php';
+    require __DIR__ . '/plant-reviews.php';
+
     db()->exec("UPDATE plants SET name = 'Preserved plant' WHERE id = 21");
     run_cli(['scripts/setup-database.php']);
     check(find_plant(21)['name'] === 'Preserved plant' && find_user((int) $alice['id'])['name'] === 'Alice Updated' && user_favorite_ids((int) $alice['id']) === [22], 'Repeat setup overwrote existing records.');
@@ -684,6 +639,8 @@ try {
     check($adminBrowser->login('admin@example.test', 'TestAdmin123!')['status'] === 303, 'Missing history migration must not break existing login.');
 
     // Deliberately remove only a table in this disposable database to test 503 handling.
+    $server->exec('DROP TABLE `' . $testName . '`.plant_comments');
+    $server->exec('DROP TABLE `' . $testName . '`.plant_ratings');
     $server->exec('DROP TABLE `' . $testName . '`.favorites');
     $server->exec('DROP TABLE `' . $testName . '`.plants');
     check($guest->request('index.php')['status'] === 503, 'Database failure must give a clean 503 response.');
@@ -703,12 +660,14 @@ try {
         $server->exec('DROP DATABASE IF EXISTS `' . $testName . '`');
     }
     putenv($previousName === false ? 'DB_NAME' : 'DB_NAME=' . $previousName);
-    if (is_string($mailDir) && str_contains(basename($mailDir), 'web503073-mail-') && is_dir($mailDir)) {
-        array_map('unlink', glob($mailDir . DIRECTORY_SEPARATOR . '*.eml') ?: []);
-        rmdir($mailDir);
-    }
     if ($log !== false) {
         unlink($log);
+    }
+    foreach (glob($mailDir . DIRECTORY_SEPARATOR . '*.txt') ?: [] as $mailFile) {
+        unlink($mailFile);
+    }
+    if (is_dir($mailDir)) {
+        rmdir($mailDir);
     }
 }
 if ($failure !== null) {

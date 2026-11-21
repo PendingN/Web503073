@@ -1,17 +1,18 @@
 <?php
 declare(strict_types=1);
 
-// Copy to mail.local.php. Leave 'host' empty to keep messages in .runtime/mail/ (development).
+// Copy to mail.local.php (ignored by Git). Without it, emails are written to .runtime/mail/ instead of being sent.
+// Gmail: turn on 2-Step Verification, create an App Password, and paste it below (not your normal password).
 return [
-    // Public address of the site, used in activation links. Required behind a real domain;
-    // only localhost can be guessed from the request, so a forged Host header can never poison a link.
-    'app_url' => 'https://example.com/Web503073',
-    'host' => 'smtp.example.com',
+    'driver' => 'smtp',
+    'host' => 'smtp.gmail.com',
     'port' => 587,
-    // tls = STARTTLS (port 587), ssl = implicit TLS (port 465), none = plain text (only for a local test server).
     'encryption' => 'tls',
-    'username' => 'REPLACE_WITH_SMTP_USERNAME',
-    'password' => 'REPLACE_WITH_SMTP_PASSWORD',
-    'from_email' => 'no-reply@example.com',
+    'username' => 'your-account@gmail.com',
+    'password' => 'REPLACE_WITH_APP_PASSWORD',
+    'from_address' => 'your-account@gmail.com',
     'from_name' => 'Là Lá La',
+    // Public address of the site, used for links inside emails. Set it on a deployed server
+    // (e.g. 'https://example.com/'); leave empty to build links from the current request.
+    'app_url' => '',
 ];

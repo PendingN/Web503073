@@ -22,7 +22,6 @@ $unseenShares = $navbarUser !== null && $activePage !== 'shared' ? count_unseen_
         <a class="nav-link<?= $activePage === 'collection' ? ' active' : '' ?>" <?= $activePage === 'collection' ? 'aria-current="page"' : '' ?> href="collection.php">Bộ sưu tập</a>
         <a class="nav-link<?= $activePage === 'blog' ? ' active' : '' ?>" <?= $activePage === 'blog' ? 'aria-current="page"' : '' ?> href="blog.php">Blog</a>
         <a class="nav-link<?= $activePage === 'profile' ? ' active' : '' ?>" <?= $activePage === 'profile' ? 'aria-current="page"' : '' ?> href="profile.php">Trang cá nhân</a>
-        <?php if ($navbarUser !== null): ?><a class="nav-link<?= $activePage === 'shared' ? ' active' : '' ?>" <?= $activePage === 'shared' ? 'aria-current="page"' : '' ?> href="shared.php">Được chia sẻ<?php if ($unseenShares > 0): ?> <span class="nav-badge"><?= $unseenShares ?><span class="sr-only"> bài mới</span></span><?php endif; ?></a><?php endif; ?>
         <?php if ($isBlogHeader): ?><a class="nav-link nav-link--mobile-write" href="blog-editor.php">Viết bài mới</a><?php endif; ?>
         <?php if (is_admin()): ?><a class="nav-link<?= $activePage === 'admin' ? ' active' : '' ?>" <?= $activePage === 'admin' ? 'aria-current="page"' : '' ?> href="admin-dashboard.php">Quản trị</a><?php endif; ?>
     </nav>
