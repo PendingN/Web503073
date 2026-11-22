@@ -2,9 +2,10 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/notes-qa.php';
+require_once __DIR__ . '/site-guide.php';
 
 // Sâu AI: a small tool-calling agent. The model decides which tools to call (notes, favourite plants,
-// catalog, public blog, web search through Tavily), PHP runs them, and the model finishes with the
+// catalog and its overview, public blog and its overview, the site's usage guide, web search through Tavily), PHP runs them, and the model finishes with the
 // tra_loi tool. Every tool result carries a reference such as "note:12" or "web:2"; the final answer
 // may only cite references that a tool really returned in this request, so the model cannot invent sources.
 // Out-of-scope questions get a fixed reply written here, not by the model.
@@ -12,7 +13,7 @@ require_once __DIR__ . '/notes-qa.php';
 const SAU_MAX_STEPS = 4;
 const SAU_NOTE_CHARS = 1500;
 const SAU_WEB_CHARS = 700;
-const SAU_OUT_OF_SCOPE = 'Mình là Sâu AI của Vũ Điệu Rừng Xanh nên chỉ trả lời về cây cảnh, cách chăm cây và sổ tay của bạn thôi. Bạn hỏi mình về cây nhé! 🌿';
+const SAU_OUT_OF_SCOPE = 'Mình là Sâu AI của ' . SITE_NAME . ' nên chỉ trả lời về cây cảnh, cách chăm cây, sổ tay của bạn, bộ sưu tập cây, blog và cách dùng website thôi. Bạn hỏi mình về những điều đó nhé! 🌿';
 
 /** Masks personal data before anything reaches the model or the web search (phone, email, card or ID numbers). */
 function sau_mask_personal(string $text): string
@@ -27,16 +28,20 @@ function sau_system_prompt(bool $webEnabled): string
     $web = $webEnabled
         ? '- tim_tren_web: tìm trên Internet cho câu hỏi chung về cây cảnh mà dữ liệu của website không có. Chỉ đưa vào truy vấn tên cây và vấn đề, không đưa dữ liệu cá nhân.'
         : '- (Không có tìm kiếm web.) Với câu hỏi chung mà dữ liệu website không có, được trả lời bằng kiến thức phổ biến, đáng tin cậy và đặt kien_thuc_chung = true.';
+    $site = SITE_NAME;
     return <<<PROMPT
-Bạn là "Sâu AI", trợ lý thân thiện của website cây cảnh "Vũ Điệu Rừng Xanh". Người dùng hỏi về cây cảnh, cách chăm cây và sổ tay của họ.
+Bạn là "Sâu AI", trợ lý thân thiện của website cây cảnh "{$site}". Người dùng hỏi về cây cảnh, cách chăm cây, sổ tay của họ, bộ sưu tập cây, blog và cách sử dụng website.
 Hãy gọi công cụ để lấy dữ liệu trước khi trả lời. Có thể gọi nhiều công cụ trong một lượt.
 - tim_so_tay: sổ tay của người dùng (bài họ viết và bài được chia sẻ). Nguồn chính cho mọi câu hỏi về việc họ đã làm, đã ghi.
 - xem_cay_yeu_thich: các cây người dùng đã bấm yêu thích. Dùng cho câu hỏi về sở thích ("tôi thích cây nào").
-- tra_danh_muc_cay: thông tin cây trong danh mục của website (mô tả, cách chăm).
-- tim_blog: bài blog công khai của cộng đồng.
+- tra_danh_muc_cay: tìm cây cụ thể trong bộ sưu tập của website (mô tả, cách chăm) theo tên hoặc nhu cầu.
+- tong_quan_bo_suu_tap: bộ sưu tập có bao nhiêu cây, những loại nào, tên các cây. Dùng cho câu hỏi chung về bộ sưu tập ("có những cây gì", "bao nhiêu cây").
+- tim_blog: tìm bài blog công khai của cộng đồng theo nội dung.
+- tong_quan_blog: blog có bao nhiêu bài, các chủ đề, bài mới nhất và bài được yêu thích nhất. Dùng cho câu hỏi chung về blog.
+- huong_dan_su_dung: hướng dẫn dùng website {$site} (tài khoản, quên mật khẩu, trang cá nhân, bộ sưu tập, yêu thích, gợi ý chọn cây, đọc/tìm/viết bài, khoá bài, chia sẻ, cùng sửa, tóm tắt AI, Sâu AI). Dùng cho mọi câu hỏi "làm sao", "ở đâu", "cách" dùng website; chỉ trả lời theo đúng hướng dẫn trả về, không tự bịa nút hay trang.
 {$web}
-Khi đủ thông tin, gọi tra_loi với câu trả lời và danh sách mã nguồn ("ref") đã dùng, lấy đúng từ kết quả công cụ.
-Nếu câu hỏi không liên quan tới cây cảnh, chăm sóc cây hay website, gọi ngoai_pham_vi.
+Khi đủ thông tin, luôn gọi tra_loi với câu trả lời và danh sách mã nguồn ("ref") đã dùng, lấy đúng từ kết quả công cụ (kể cả ref "guide:..." của hướng dẫn, để người dùng bấm mở đúng trang). Không viết câu trả lời ra ngoài tra_loi.
+Nếu câu hỏi không liên quan tới cây cảnh, chăm sóc cây, bộ sưu tập, blog hay cách dùng website, gọi ngoai_pham_vi.
 Quy tắc:
 - Không bao giờ bịa về dữ liệu riêng của người dùng: sổ tay hay cây yêu thích không có thì nói là chưa có.
 - Trả lời thẳng vào trọng tâm: mặc định 1 đến 3 câu ngắn (dưới 60 từ), nêu ngay điều người dùng cần, không chào hỏi, không mở bài, không nhắc lại câu hỏi, không liệt kê thêm điều họ không hỏi.
@@ -61,7 +66,10 @@ function sau_tools(bool $webEnabled): array
         $tool('tim_so_tay', 'Tìm trong sổ tay của người dùng: bài họ viết và bài được chia sẻ với họ.', $query, ['truy_van']),
         $tool('xem_cay_yeu_thich', 'Danh sách cây người dùng đã yêu thích, kèm mô tả và cách chăm.'),
         $tool('tra_danh_muc_cay', 'Tra cây trong danh mục của website theo tên, nhu cầu ánh sáng, cách chăm.', $query, ['truy_van']),
+        $tool('tong_quan_bo_suu_tap', 'Tổng quan bộ sưu tập cây: số cây, các loại và tên cây theo từng loại.'),
         $tool('tim_blog', 'Tìm bài blog công khai của cộng đồng.', $query, ['truy_van']),
+        $tool('tong_quan_blog', 'Tổng quan blog: số bài, các chủ đề kèm số bài, bài mới nhất và bài được yêu thích nhất.'),
+        $tool('huong_dan_su_dung', 'Hướng dẫn sử dụng website: tính năng nằm ở đâu và dùng thế nào.', $query, ['truy_van']),
     ];
     if ($webEnabled) {
         $tools[] = $tool('tim_tren_web', 'Tìm thông tin chăm sóc cây cảnh trên Internet.', $query, ['truy_van']);
@@ -145,6 +153,40 @@ final class SauContext
                 $items = array_map(fn(array $plant): array => $this->remember(sau_plant_item($plant), $plant, 'plant'), $matches);
                 // Without a match the model still sees every plant name, so it can try a better query.
                 return $items !== [] ? ['ket_qua' => $items] : ['ket_qua' => [], 'ten_cac_cay' => array_column($catalog, 'name')];
+            case 'tong_quan_bo_suu_tap':
+                $catalog = $this->load('catalog');
+                $groups = [];
+                foreach ($catalog as $plant) {
+                    $groups[(string) $plant['category']][] = (string) $plant['name'];
+                }
+                $this->sources['guide:bo-suu-tap-tong-quan'] = ['kind' => 'guide', 'url' => 'collection.php', 'title' => 'Bộ sưu tập', 'meta' => SITE_NAME];
+                return ['ref' => 'guide:bo-suu-tap-tong-quan', 'tong_so_cay' => count($catalog),
+                    'theo_loai' => array_map(static fn(string $category, array $names): array => ['loai' => $category, 'so_cay' => count($names), 'ten_cay' => $names],
+                        array_keys($groups), array_values($groups))];
+            case 'tong_quan_blog':
+                $overview = $this->load('blog_overview');
+                $this->sources['guide:blog-tong-quan'] = ['kind' => 'guide', 'url' => 'blog.php', 'title' => 'Blog', 'meta' => SITE_NAME];
+                $titles = fn(array $posts): array => array_map(function (array $post): array {
+                    $ref = 'blog:' . (int) $post['id'];
+                    $this->sources[$ref] ??= ['kind' => 'blog', 'url' => 'blog-post.php?slug=' . rawurlencode($post['slug']), 'title' => $post['title'],
+                        'meta' => 'Blog · ' . date('d/m/Y', strtotime((string) $post['created_at']))];
+                    return ['ref' => $ref, 'title' => $post['title'], 'date' => date('d/m/Y', strtotime((string) $post['created_at'])),
+                        'chu_de' => implode(', ', array_column($post['tags'] ?? [], 'name'))];
+                }, $posts);
+                return ['ref' => 'guide:blog-tong-quan', 'tong_so_bai' => $overview['total'],
+                    'chu_de' => array_map(static fn(array $tag): array => ['ten' => $tag['name'], 'so_bai' => $tag['post_count']], $overview['tags']),
+                    'bai_moi_nhat' => $titles($overview['newest']), 'bai_duoc_yeu_thich' => $titles($overview['popular'])];
+            case 'huong_dan_su_dung':
+                $topics = site_guide_matches($query);
+                if ($topics === []) {
+                    return ['ket_qua' => [], 'cac_muc_huong_dan' => array_column(site_guide(), 'title'),
+                        'ghi_chu' => 'Không có mục khớp; thử lại với từ khóa của một mục trên.'];
+                }
+                return ['ket_qua' => array_map(function (array $topic): array {
+                    $ref = 'guide:' . $topic['key'];
+                    $this->sources[$ref] = ['kind' => 'guide', 'url' => $topic['url'], 'title' => $topic['title'], 'meta' => 'Hướng dẫn'];
+                    return ['ref' => $ref, 'title' => $topic['title'], 'trang' => $topic['url'], 'content' => $topic['content']];
+                }, $topics)];
             case 'tim_blog':
                 $items = array_map(fn(array $post): array => $this->remember(sau_post_item($post, 'blog'), $post, 'blog'),
                     notes_qa_select($this->load('public'), $query, 3, false));
@@ -183,7 +225,7 @@ final class SauContext
 /** Plain-text answer: Markdown emphasis and leaked references are removed. */
 function sau_clean_answer(string $answer): string
 {
-    $answer = preg_replace(['/\*\*(.+?)\*\*/su', '/\s*\(?\b(?:note|plant|blog|web)(?::\d+)+\)?/u', '/^#+\s*/mu'], ['$1', '', ''], trim($answer));
+    $answer = preg_replace(['/\*\*(.+?)\*\*/su', '/\s*\(?\b(?:note|plant|blog|web)(?::\d+)+\)?/u', '/\s*\(?\bguide:[a-z-]+\)?/u', '/^#+\s*/mu'], ['$1', '', '', ''], trim($answer));
     return mb_substr(trim((string) $answer), 0, 3000, 'UTF-8');
 }
 

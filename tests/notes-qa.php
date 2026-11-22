@@ -33,6 +33,8 @@ $public = [$note(20, 'Kinh nghiệm trồng sen đá', 'Sen đá cần nắng.',
 $context = static fn(?Closure $web = null): SauContext => new SauContext([
     'notes' => static fn(): array => $notes, 'favorites' => static fn(): array => $favorites,
     'catalog' => static fn(): array => $catalog, 'public' => static fn(): array => $public,
+    'blog_overview' => static fn(): array => ['total' => 2, 'tags' => [['id' => 1, 'name' => 'Chăm cây', 'post_count' => 2]],
+        'newest' => [$public[1] + ['tags' => []], $public[0] + ['tags' => [['id' => 1, 'name' => 'Chăm cây']]]], 'popular' => [$public[0] + ['tags' => []]]],
 ], $web);
 $call = static fn(string $name, array $arguments = []): array => ['id' => 'c' . random_int(1, 9999), 'type' => 'function',
     'function' => ['name' => $name, 'arguments' => json_encode($arguments, JSON_UNESCAPED_UNICODE)]];
@@ -117,5 +119,27 @@ check(str_contains($ctx->run('tim_so_tay', ['truy_van' => 'xương rồng'])['gh
 $ctx = $context();
 $blog = $ctx->run('tim_blog', ['truy_van' => 'sen đá']);
 check(count($blog['ket_qua']) === 1 && $blog['ket_qua'][0]['ref'] === 'blog:20', 'Blog search must return only matching public posts.');
+
+// The site is Là Lá La, and Sâu covers the collection, the blog and how to use the site.
+check(str_contains(sau_system_prompt(false), '"Là Lá La"') && !str_contains(sau_system_prompt(false), 'Vũ Điệu') && str_contains(SAU_OUT_OF_SCOPE, 'Là Lá La'), 'Sâu must use the site name Là Lá La.');
+$ctx = $context();
+$guide = $ctx->run('huong_dan_su_dung', ['truy_van' => 'làm sao khoá bài bằng mật khẩu']);
+check($guide['ket_qua'][0]['ref'] === 'guide:khoa-bai' && $ctx->sources['guide:khoa-bai']['kind'] === 'guide', 'Usage questions find the matching guide topic.');
+check(site_guide_matches('quên mật khẩu')[0]['url'] === 'forgot-password.php', 'Password help points to the forgot-password page.');
+check(isset($ctx->run('huong_dan_su_dung', ['truy_van' => 'zzz'])['cac_muc_huong_dan']), 'Unmatched usage questions list the guide topics.');
+foreach (site_guide() as $topic) {
+    check(is_file(__DIR__ . '/../' . $topic['url']), 'Guide page must exist: ' . $topic['url']);
+}
+$collection = $ctx->run('tong_quan_bo_suu_tap', []);
+check($collection['tong_so_cay'] === 2 && count($collection['theo_loai']) === 2 && $collection['theo_loai'][1]['ten_cay'] === ['Cây Sen Đá'], 'Collection overview counts plants by category.');
+$overview = $ctx->run('tong_quan_blog', []);
+check($overview['tong_so_bai'] === 2 && $overview['chu_de'][0] === ['ten' => 'Chăm cây', 'so_bai' => 2]
+    && array_column($overview['bai_moi_nhat'], 'ref') === ['blog:21', 'blog:20'] && $ctx->sources['blog:20']['kind'] === 'blog', 'Blog overview lists topics and newest posts as sources.');
+$fake = $script([
+    ['tool_calls' => [$call('huong_dan_su_dung', ['truy_van' => 'chia sẻ bài'])]],
+    ['tool_calls' => [$call('tra_loi', ['cau_tra_loi' => 'Mở bài, nhập email ở khung Bảo mật và chia sẻ (guide:chia-se).', 'nguon' => ['guide:chia-se'], 'kien_thuc_chung' => false])]],
+]);
+$result = sau_answer('Chia sẻ bài thế nào?', [], $context(), $fake);
+check($result['answer'] === 'Mở bài, nhập email ở khung Bảo mật và chia sẻ.' && $result['sources'][0]['url'] === 'shared.php', 'How-to answers cite the guide page without leaking its ref.');
 
 fwrite(STDOUT, "Sâu AI checks passed: $checks" . PHP_EOL);
