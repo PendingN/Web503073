@@ -64,7 +64,6 @@ require __DIR__ . '/includes/navbar.php';
                         <?php foreach ($sortOptions as $value => $option): ?>
                             <option value="<?= e($value) ?>"<?= $sort === $value ? ' selected' : '' ?>><?= e($option['label']) ?></option>
                         <?php endforeach; ?>
-                        <option value="rating" disabled>Đánh giá cao nhất (sắp có)</option>
                     </select>
                     <span class="catalog-count" aria-live="polite"><?= count($filteredPlants) ?> sản phẩm</span>
                 </div>

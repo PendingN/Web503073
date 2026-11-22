@@ -16,14 +16,22 @@ function plant_light_keywords(string $light): array
     };
 }
 
-// Whitelisted ORDER BY clauses for the collection sort menu. Add 'rating' here once plants have ratings.
+// Whitelisted ORDER BY clauses for the collection sort menu.
 function plant_sort_options(): array
 {
-    return [
+    $options = [
         '' => ['label' => 'Mặc định', 'order' => 'category, id'],
         'name_asc' => ['label' => 'Tên A → Z', 'order' => 'name ASC, id'],
         'name_desc' => ['label' => 'Tên Z → A', 'order' => 'name DESC, id'],
     ];
+    // Highest average first; on a tie the plant with more ratings wins, and unrated plants go last.
+    // Offered only once the plant_ratings table exists, so an old database never gets a broken query.
+    if (plant_reviews_ready()) {
+        $average = '(SELECT AVG(r.rating) FROM plant_ratings r WHERE r.plant_id = plants.id)';
+        $count = '(SELECT COUNT(*) FROM plant_ratings r WHERE r.plant_id = plants.id)';
+        $options['rating'] = ['label' => 'Đánh giá cao nhất', 'order' => "$average IS NULL, $average DESC, $count DESC, name, id"];
+    }
+    return $options;
 }
 
 function list_plants(string $search = '', string $category = '', string $light = '', string $sort = ''): array
