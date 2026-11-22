@@ -22,7 +22,7 @@ function blog_summary_hash(array $post): string
 function blog_summary_system_prompt(): string
 {
     return <<<PROMPT
-Bạn tóm tắt bài viết về cây cảnh cho website "Vũ Điệu Rừng Xanh".
+Bạn tóm tắt bài viết về cây cảnh cho website "Là Lá La".
 Chỉ dùng thông tin có trong bài. Không thêm lời khuyên, số liệu hay tên cây mà bài không nhắc tới.
 Viết tiếng Việt, ngắn gọn, giữ đúng ý của tác giả.
 Trả về JSON đúng dạng: {"summary": "1–2 câu nêu ý chính", "points": ["3 đến 5 ý quan trọng, mỗi ý một câu"]}

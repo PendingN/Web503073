@@ -12,7 +12,7 @@ $pageScripts = ['js/ask.js'];
 $last = $_SESSION['ask_last'] ?? null;
 unset($_SESSION['ask_last']);
 $noteCount = count(notes_qa_candidates((int) $user['id']));
-$examples = ['Cây nào trong sổ tay cần ít nước nhất?', 'Mình đã ghi gì về cách xử lý lá vàng?', 'Tóm tắt lịch chăm cây trong tuần của mình'];
+$examples = ['Mình đã ghi gì về cách xử lý lá vàng?', 'Bộ sưu tập có những cây để bàn nào?', 'Blog có những chủ đề gì?', 'Làm sao chia sẻ bài cho bạn bè?'];
 
 require __DIR__ . '/includes/header.php';
 require __DIR__ . '/includes/navbar.php';
@@ -21,7 +21,7 @@ require __DIR__ . '/includes/navbar.php';
         <main id="main-content" class="ask-page" tabindex="-1" data-ask-root>
             <header class="ask-head">
                 <h1>Hỏi AI về sổ tay của bạn</h1>
-                <p>Sâu đọc <strong><?= $noteCount ?></strong> bài trong sổ tay, cây bạn yêu thích, danh mục cây và blog, rồi trả lời bạn.</p>
+                <p>Sâu đọc <strong><?= $noteCount ?></strong> bài trong sổ tay, cây bạn yêu thích, bộ sưu tập cây, blog và hướng dẫn dùng Là Lá La, rồi trả lời bạn.</p>
             </header>
 
             <form class="ask-form" method="post" action="actions/ask-action.php" data-ask-form>
@@ -45,7 +45,7 @@ require __DIR__ . '/includes/navbar.php';
                         <p class="ask-question"><?= e($last['question']) ?></p>
                         <div class="ask-answer"><?= nl2br(e($last['answer'])) ?></div>
                         <?php if (($last['sources'] ?? []) !== []): ?>
-                            <p class="ask-notes"><?php foreach ($last['sources'] as $source): ?><a href="<?= e($source['url']) ?>">📝 <?= e($source['title']) ?></a><?php endforeach; ?></p>
+                            <p class="ask-notes"><?php foreach ($last['sources'] as $source): ?><a href="<?= e($source['url']) ?>"><?= ['blog' => '📰', 'plant' => '🌿', 'guide' => '🧭'][$source['kind'] ?? ''] ?? '📝' ?> <?= e($source['title']) ?></a><?php endforeach; ?></p>
                         <?php endif; ?>
                     </article>
                 <?php endif; ?>

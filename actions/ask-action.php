@@ -12,9 +12,10 @@ $user = require_login(app_url('ask.php'));
 $question = trim(preg_replace('/\s+/u', ' ', request_string($_POST, 'question')) ?? '');
 $respond = static function (int $status, array $data) use ($question): void {
     unset($data['route'], $data['general']);
-    // Only links to the user's own notebook are shown (criterion 28 asks for them); plants, blog and web stay internal.
+    // Links shown under the answer: notebook entries (criterion 28), blog posts, plants and the site pages a
+    // how-to answer points to. Web results stay internal.
     if (isset($data['sources'])) {
-        $data['sources'] = array_values(array_filter($data['sources'], static fn(array $source): bool => $source['kind'] === 'note'));
+        $data['sources'] = array_values(array_filter($data['sources'], static fn(array $source): bool => $source['kind'] !== 'web'));
     }
     if (wants_json()) {
         json_response($data, $status);
@@ -47,6 +48,12 @@ $context = new SauContext([
     'favorites' => static fn(): array => notes_qa_favorites($userId),
     'catalog' => static fn(): array => list_plants(),
     'public' => static fn(): array => notes_qa_public_posts($userId),
+    'blog_overview' => static function () use ($userId): array {
+        $newest = list_blog_posts('', 'new', 'all', $userId, 1);
+        return ['total' => (int) $newest['total'], 'newest' => array_slice($newest['posts'], 0, 5),
+            'popular' => array_slice(list_blog_posts('', 'popular', 'all', $userId, 1)['posts'], 0, 5),
+            'tags' => array_values(array_filter(list_tags(), static fn(array $tag): bool => $tag['post_count'] > 0))];
+    },
 ], $tavilyKey === '' ? null : static fn(string $query): ?array => tavily_search($tavilyKey, $query));
 $history = is_array($_SESSION['ask_history'] ?? null) ? $_SESSION['ask_history'] : [];
 

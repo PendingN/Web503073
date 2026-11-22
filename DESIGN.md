@@ -1,5 +1,5 @@
 ---
-name: Vũ Điệu Rừng Xanh — Indoor Living and Community Blog
+name: Là Lá La — Indoor Living and Community Blog
 description: An airy Floema-inspired botanical reference and living-room guide with an independent community blog.
 colors:
   paper: "#f2efea"

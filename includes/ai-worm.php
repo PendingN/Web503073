@@ -1,7 +1,7 @@
 <?php
 // The AI caterpillar: a floating button in the bottom-right corner that opens a chat about the user's notes.
 // Included by footer.php for signed-in users. Without JavaScript the caterpillar is a plain link to ask.php.
-$wormExamples = ['Cây nào trong sổ tay cần ít nước nhất?', 'Mình đã ghi gì về lá vàng?', 'Tóm tắt lịch chăm cây của mình'];
+$wormExamples = ['Mình đã ghi gì về lá vàng?', 'Bộ sưu tập có những cây để bàn nào?', 'Làm sao khoá bài bằng mật khẩu?'];
 ?>
 <div class="ai-worm" data-ai-worm>
     <section class="ai-worm-panel" id="ai-worm-panel" role="dialog" aria-modal="false" aria-labelledby="ai-worm-title" hidden data-ask-root data-ask-order="chat">
@@ -11,7 +11,7 @@ $wormExamples = ['Cây nào trong sổ tay cần ít nước nhất?', 'Mình đ
             </span>
             <div>
                 <h2 id="ai-worm-title">Sâu AI</h2>
-                <p>Hỏi về bài của bạn và bài được chia sẻ</p>
+                <p>Hỏi về sổ tay, cây, blog và cách dùng Là Lá La</p>
             </div>
             <button class="ai-worm-close" type="button" aria-label="Đóng Sâu AI" data-ai-worm-close>
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
@@ -75,6 +75,6 @@ $wormExamples = ['Cây nào trong sổ tay cần ít nước nhất?', 'Mình đ
             </g>
             <g class="ai-worm-spark"><path d="M110 30l1.6 4 4 1.6-4 1.6-1.6 4-1.6-4-4-1.6 4-1.6Z"/></g>
         </svg>
-        <span class="sr-only">Mở Sâu AI để hỏi về sổ tay của bạn</span>
+        <span class="sr-only">Mở Sâu AI để hỏi về sổ tay, cây, blog và cách dùng website</span>
     </a>
 </div>

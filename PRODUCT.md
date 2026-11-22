@@ -8,7 +8,7 @@ web
 
 ## Product Purpose
 
-Vũ Điệu Rừng Xanh is a Vietnamese plant reference and community website. Visitors browse plants and care notes, save favorites after signing in, and read or contribute blog posts. It does not sell plants.
+Là Lá La is a Vietnamese plant reference and community website. Visitors browse plants and care notes, save favorites after signing in, and read or contribute blog posts. It does not sell plants.
 
 ## Users
 
@@ -22,7 +22,7 @@ The landing-page brief addresses people interested in indoor plants and home dec
 
 ## Brand Commitments
 
-Keep the name Vũ Điệu Rừng Xanh and Vietnamese public copy. The user requests an indoor-plant/decor landing page with a room corner at the top and effects that encourage exploration. The confirmed visual preference is minimal, bright, airy, with few objects.
+Keep the name Là Lá La and Vietnamese public copy. The user requests an indoor-plant/decor landing page with a room corner at the top and effects that encourage exploration. The confirmed visual preference is minimal, bright, airy, with few objects.
 
 ## Evidence on Hand
 

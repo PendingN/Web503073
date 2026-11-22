@@ -29,11 +29,12 @@
             answer.appendChild(document.createTextNode(line));
         });
         turn.appendChild(answer);
-        // Links to the notebook entries the answer used, shown as one small line.
+        // Links to the notes, posts, plants or site pages the answer used, shown as one small line.
         if (data.sources.length) {
             var notes = element('p', 'ask-notes');
             data.sources.forEach(function (source) {
-                var link = element('a', '', '📝 ' + source.title);
+                var icons = { note: '📝', blog: '📰', plant: '🌿', guide: '🧭' };
+                var link = element('a', '', (icons[source.kind] || '📝') + ' ' + source.title);
                 link.href = source.url;
                 notes.appendChild(link);
             });

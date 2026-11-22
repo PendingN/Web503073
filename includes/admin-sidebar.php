@@ -23,7 +23,7 @@ if ($adminInitials === '') {
 <a class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[60] focus:rounded-lg focus:bg-primary-dark focus:p-3 focus:text-white" href="#admin-main">Đến nội dung chính</a>
 <aside id="admin-sidebar" class="fixed inset-y-0 left-0 z-50 flex w-[270px] -translate-x-full flex-col overflow-y-auto border-r border-border bg-white px-5 py-6 transition-transform duration-200 data-[open=true]:translate-x-0 motion-reduce:transition-none lg:translate-x-0" data-open="false">
     <div class="mb-10 flex items-center justify-between gap-2">
-        <a class="flex items-center gap-3" href="index.php" aria-label="Vũ Điệu Rừng Xanh — Trang chủ">
+        <a class="flex items-center gap-3" href="index.php" aria-label="Là Lá La — Trang chủ">
             <span class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary text-white"><?php admin_icon('leaf', 'size-6'); ?></span>
             <span class="text-sm font-bold leading-relaxed">VŨ ĐIỆU<br><span class="font-medium text-muted">RỪNG XANH</span></span>
         </a>
