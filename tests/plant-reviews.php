@@ -106,3 +106,13 @@ check($reviewGuest->request($reviewPage . '&page=999')['status'] === 200, 'Out-o
 // Removing a rating.
 check(test_review($raterOne, $reviewPage, ['operation' => 'unrate', 'plant_id' => $reviewPlant])['status'] === 303 && test_rating($reviewPlant, 'rater1@example.test') === null, 'Users must remove their rating.');
 check(str_contains($raterOne->request($reviewPage)['body'], '1 lượt đánh giá'), 'The count must drop after removing a rating.');
+
+// Collection sort "Đánh giá cao nhất": plant 22 keeps rater two's 2 stars, plant 23 gets 1 star,
+// so 22 comes first, then 23, then every unrated plant.
+check(test_review($raterOne, 'plant-detail.php?id=23', ['operation' => 'rate', 'plant_id' => 23, 'rating' => '1'])['status'] === 303, 'A second plant must take a rating.');
+$plantName = static fn(int $id): string => (string) db()->query('SELECT name FROM plants WHERE id = ' . $id)->fetchColumn();
+$sorted = $reviewGuest->request('collection.php?sort=rating')['body'];
+preg_match_all('/<h3><a href="[^"]*">([^<]+)<\/a><\/h3>/u', $sorted, $sortedNames);
+check(str_contains($sorted, '<option value="rating" selected>Đánh giá cao nhất</option>') && !str_contains($sorted, 'sắp có')
+    && array_slice($sortedNames[1], 0, 2) === [$plantName(22), $plantName(23)] && count($sortedNames[1]) > 2,
+    'Sorting by rating must list rated plants by average first, then the unrated ones.');
